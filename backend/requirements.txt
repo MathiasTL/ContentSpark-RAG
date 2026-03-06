@@ -1,0 +1,13 @@
+# Framework Web
+fastapi[standard]
+uvicorn
+python-dotenv
+pydantic
+
+# Ecosistema LangChain
+langchain
+langchain-core
+langchain-community
+langchain-groq
+langchain-google-genai
+
