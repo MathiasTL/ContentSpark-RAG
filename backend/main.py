@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import List, Optional
 
 # Import the services for LLM and embeddings
 from app.services.llm_services import llm_service
@@ -41,6 +42,15 @@ class SearchRequest(BaseModel):
     
 class ChatRequest(BaseModel):
     message: str
+    
+class MessageDict(BaseModel):
+    role: str
+    content: str
+    
+class ChatRequest(BaseModel):
+    message: str
+    # history es una lista opcional de mensajes anteriores. Si es el primer mensaje, vendrá vacía.
+    history: Optional[List[MessageDict]] = []
 
 @app.get("/")
 async def root():
@@ -127,7 +137,7 @@ async def chat_with_bot(request: ChatRequest):
     Este endpoint es la implementación completa del flujo RAG, donde el LLM actúa como el cerebro que procesa la información recuperada de la base de datos de conocimientos (Qdrant) para generar una respuesta informada y relevante.
     """
     try:
-        response = await rag_service.generate_response(request.message)
+        response = await rag_service.generate_response(request.message, request.history)
         return {
             "success": True,
             "response": response
