@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {sendMessageToBackend} from "@/lib/api"
 
 interface Message {
   role: "user" | "ai";
@@ -52,21 +55,21 @@ export default function Home() {
     const text = input.trim();
     if (!text || isLoading) return;
 
+    // 1. Save the current history before updating the state, to ensure we send the most up-to-date conversation to the backend.
+    // This is crusial to ensure that the backend receives the full conversation history
+    const currentHistory = [...messages];
+
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
-      });
+      // 3. Usamos nuestra capa de API profesional (Separation of Concerns)
+      // Le pasamos el texto nuevo y el historial de memoria
+      const data = await sendMessageToBackend(text, currentHistory);
 
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-
-      const data: { success: boolean; response: string } = await res.json();
+      // 4. Mostramos la respuesta en la pantalla
       setMessages((prev) => [
         ...prev,
         { role: "ai", content: data.response },
@@ -126,7 +129,19 @@ export default function Home() {
                   CS
                 </div>
                 <div className="max-w-[75%] bg-white/50 backdrop-blur-md border border-white/40 text-gray-800 rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm leading-relaxed shadow-sm">
-                  {msg.content}
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                      strong: ({ children }) => <strong className="font-semibold text-indigo-900">{children}</strong>,
+                      b: ({ children }) => <b className="font-semibold text-indigo-900">{children}</b>,
+                      ul: ({ children }) => <ul className="list-disc ml-4 mb-2 space-y-1">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal ml-4 mb-2 space-y-1">{children}</ol>,
+                      li: ({ children }) => <li>{children}</li>,
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             )
