@@ -95,14 +95,16 @@ async def test_embedding(request: EmbeddingRequest):
 @app.post("/api/ingest")
 async def ingest_document(request: IngestRequest):
     """
-    Recibe un texto, lo convierte en un vector de embedding y lo guarda en Qdrant.
+    Guarda un texto en la base de datos dividiéndolo en chunks inteligentes.
     """
     try:
         metadata = {"source": request.source}
-        qdrant_search_service.add_document(request.text, metadata)
+        # Save the result of the add_document function, which includes the number of chunks created, to return in the response
+        result = qdrant_search_service.add_document(request.text, metadata)
         return {
             "success": True,
-            "message": "Documento ingestado correctamente en Qdrant."
+            "message": "Documento ingestado correctamente en Qdrant.",
+            "chunks_created": result["chunks_created"] #Mostramos cuántos chunks se crearon a partir del texto original para tener una idea de cómo se dividió el documento
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

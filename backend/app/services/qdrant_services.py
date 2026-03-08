@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
 from langchain_qdrant import QdrantVectorStore
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 #Import the embeddings service to use the same vector generation for indexing and querying
 from .embeddings_service import embeddings_service
@@ -48,10 +49,25 @@ class QdrantSearchService:
         
     def add_document(self, text: str, metadata: dict=None):
         """
-        Convierte un texto en un vector de embedding y lo guarda en Qdrant.
+        Corta textos largos en fragmentos pequeños (chunks) y los guarda en Qdrant.
         """
-        self.vector_store.add_texts([text], metadatas=[metadata or {}])
-        return True 
+        # 1. Configuration of text splitter
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000, # Max length of each chunk (aprox 200-250 palabras)
+            chunk_overlap=200, # Overlap between chunks to maintain context (aprox 40-50 palabras)
+            length_function=len,
+            separators=["\n\n", "\n", " ", ""]
+        )
+        
+        # 2. Cut the long text into chunks
+        chunks = text_splitter.split_text(text)
+        
+        # 3. Add each chunk to the vector store
+        # Nota: Si se proporciona metadata, se asigna a cada chunk. Si no, se asigna un diccionario vacío.
+        print(f"🔪 Documento dividido en {len(chunks)} fragmentos. Vectorizando y guardando...")
+        self.vector_store.add_texts(chunks, metadatas=[metadata or {} for _ in chunks])
+        
+        return {"chunks_created": len(chunks)}
         
     def search_similar(self, query: str, top_k: int=2):
         """
