@@ -10,6 +10,14 @@ interface Message {
   content: string;
 }
 
+const initialMessages: Message[] = [
+  {
+    role: "ai",
+    content:
+      "¡Hola! Soy ContentSpark ✨ Tu asistente de IA para creadores de contenido. ¿En qué puedo ayudarte hoy?",
+  },
+];
+
 function TypingIndicator() {
   return (
     <div className="flex items-end gap-2 justify-start">
@@ -28,17 +36,12 @@ function TypingIndicator() {
 }
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "ai",
-      content:
-        "¡Hola! Soy ContentSpark ✨ Tu asistente de IA para creadores de contenido. ¿En qué puedo ayudarte hoy?",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const requestVersionRef = useRef(0);
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -51,6 +54,17 @@ export default function Home() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
+  function resetChat() {
+    requestVersionRef.current += 1;
+    setMessages(initialMessages);
+    setInput("");
+    setIsLoading(false);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  }
+
   async function sendMessage() {
     const text = input.trim();
     if (!text || isLoading) return;
@@ -58,6 +72,7 @@ export default function Home() {
     // 1. Save the current history before updating the state, to ensure we send the most up-to-date conversation to the backend.
     // This is crusial to ensure that the backend receives the full conversation history
     const currentHistory = [...messages];
+    const requestVersion = requestVersionRef.current;
 
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
@@ -69,12 +84,20 @@ export default function Home() {
       // Le pasamos el texto nuevo y el historial de memoria
       const data = await sendMessageToBackend(text, currentHistory);
 
+      if (requestVersion !== requestVersionRef.current) {
+        return;
+      }
+
       // 4. Mostramos la respuesta en la pantalla
       setMessages((prev) => [
         ...prev,
         { role: "ai", content: data.response },
       ]);
     } catch {
+      if (requestVersion !== requestVersionRef.current) {
+        return;
+      }
+
       setMessages((prev) => [
         ...prev,
         {
@@ -83,7 +106,9 @@ export default function Home() {
         },
       ]);
     } finally {
-      setIsLoading(false);
+      if (requestVersion === requestVersionRef.current) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -96,90 +121,119 @@ export default function Home() {
 
   return (
     <main className="min-h-screen w-full bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-100 flex items-center justify-center p-4">
-      {/* Glass chat container */}
-      <div className="w-full max-w-2xl h-[85vh] flex flex-col bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl overflow-hidden">
+      <div className="w-full max-w-6xl h-[85vh] flex flex-col gap-4 md:flex-row">
+        <aside className="w-full md:w-72 md:shrink-0 bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl overflow-hidden">
+          <div className="flex h-full flex-col bg-white/10">
+            <div className="px-5 py-5 border-b border-white/20">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-indigo-500/80">Workspace</p>
+              <h2 className="mt-2 text-xl font-semibold text-gray-800">Chats</h2>
+              <p className="mt-1 text-sm font-light text-gray-500">Inicia una conversación nueva y limpia el estado actual.</p>
+            </div>
 
-        {/* Header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-white/20 bg-white/10 backdrop-blur-md shrink-0">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-md">
-            <span className="text-white text-sm font-semibold">CS</span>
+            <div className="flex-1 p-4">
+              <button
+                onClick={resetChat}
+                type="button"
+                className="flex w-full items-center justify-between rounded-2xl border border-white/40 bg-white/35 px-4 py-3 text-left text-gray-800 shadow-sm backdrop-blur-md transition-all hover:bg-white/50 hover:shadow-md"
+              >
+                <span>
+                  <span className="block text-sm font-semibold text-gray-800">Nuevo Chat</span>
+                  <span className="block text-xs font-light text-gray-500">Reinicia la conversación actual</span>
+                </span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-md cursor-pointer transition-all hover:scale-110">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                    <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                  </svg>
+                </span>
+              </button>
+            </div>
           </div>
-          <div>
-            <h1 className="text-base font-semibold text-gray-800 leading-tight">ContentSpark</h1>
-            <p className="text-xs text-gray-500 font-light">IA para Creadores de Contenido</p>
-          </div>
-          <div className="ml-auto flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-400 shadow-sm shadow-green-300" />
-            <span className="text-xs text-gray-500">En línea</span>
-          </div>
-        </div>
+        </aside>
 
-        {/* Messages area */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-          {messages.map((msg, i) =>
-            msg.role === "user" ? (
-              <div key={i} className="flex items-end gap-2 justify-end">
-                <div className="max-w-[75%] bg-blue-500 text-white rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed shadow-md">
-                  {msg.content}
-                </div>
-              </div>
-            ) : (
-              <div key={i} className="flex items-end gap-2 justify-start">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/40 backdrop-blur-md border border-white/40 text-sm font-semibold text-indigo-600 shrink-0">
-                  CS
-                </div>
-                <div className="max-w-[75%] bg-white/50 backdrop-blur-md border border-white/40 text-gray-800 rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm leading-relaxed shadow-sm">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                      strong: ({ children }) => <strong className="font-semibold text-indigo-900">{children}</strong>,
-                      b: ({ children }) => <b className="font-semibold text-indigo-900">{children}</b>,
-                      ul: ({ children }) => <ul className="list-disc ml-4 mb-2 space-y-1">{children}</ul>,
-                      ol: ({ children }) => <ol className="list-decimal ml-4 mb-2 space-y-1">{children}</ol>,
-                      li: ({ children }) => <li>{children}</li>,
-                    }}
-                  >
+        <div className="flex min-w-0 flex-1 flex-col bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl overflow-hidden">
+
+          {/* Header */}
+          <div className="flex items-center gap-3 px-6 py-4 border-b border-white/20 bg-white/10 backdrop-blur-md shrink-0">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-md">
+              <span className="text-white text-sm font-semibold">CS</span>
+            </div>
+            <div>
+              <h1 className="text-base font-semibold text-gray-800 leading-tight">ContentSpark</h1>
+              <p className="text-xs text-gray-500 font-light">IA para Creadores de Contenido</p>
+            </div>
+            <div className="ml-auto flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-400 shadow-sm shadow-green-300" />
+              <span className="text-xs text-gray-500">En línea</span>
+            </div>
+          </div>
+
+          {/* Messages area */}
+          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+            {messages.map((msg, i) =>
+              msg.role === "user" ? (
+                <div key={i} className="flex items-end gap-2 justify-end">
+                  <div className="max-w-[75%] bg-blue-500 text-white rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed shadow-md">
                     {msg.content}
-                  </ReactMarkdown>
+                  </div>
                 </div>
-              </div>
-            )
-          )}
+              ) : (
+                <div key={i} className="flex items-end gap-2 justify-start">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/40 backdrop-blur-md border border-white/40 text-sm font-semibold text-indigo-600 shrink-0">
+                    CS
+                  </div>
+                  <div className="max-w-[75%] bg-white/50 backdrop-blur-md border border-white/40 text-gray-800 rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm leading-relaxed shadow-sm">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        strong: ({ children }) => <strong className="font-semibold text-indigo-900">{children}</strong>,
+                        b: ({ children }) => <b className="font-semibold text-indigo-900">{children}</b>,
+                        ul: ({ children }) => <ul className="list-disc ml-4 mb-2 space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal ml-4 mb-2 space-y-1">{children}</ol>,
+                        li: ({ children }) => <li>{children}</li>,
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              )
+            )}
 
-          {isLoading && <TypingIndicator />}
-          <div ref={bottomRef} />
-        </div>
-
-        {/* Input area */}
-        <div className="shrink-0 px-4 py-4 border-t border-white/20 bg-white/10 backdrop-blur-md">
-          <div className="flex items-end gap-3 bg-white/30 backdrop-blur-md border border-white/40 rounded-2xl px-4 py-2 shadow-inner">
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Escribe tu mensaje..."
-              disabled={isLoading}
-              className="flex-1 bg-transparent text-gray-800 placeholder-gray-400 text-sm outline-none resize-none overflow-hidden max-h-40 leading-relaxed py-1 disabled:opacity-50"
-            />
-            <button
-              onClick={sendMessage}
-              disabled={isLoading || !input.trim()}
-              aria-label="Enviar mensaje"
-              className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-md transition-all hover:scale-105 hover:shadow-indigo-300/50 hover:shadow-lg active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 shrink-0"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 translate-x-px">
-                <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z" />
-              </svg>
-            </button>
+            {isLoading && <TypingIndicator />}
+            <div ref={bottomRef} />
           </div>
-          <p className="text-center text-xs text-gray-400 mt-2 font-light">
-            Presiona <kbd className="px-1 py-0.5 rounded bg-white/30 border border-white/40 text-gray-500 text-[11px]">Enter</kbd> para enviar
-          </p>
-        </div>
 
+          {/* Input area */}
+          <div className="shrink-0 px-4 py-4 border-t border-white/20 bg-white/10 backdrop-blur-md">
+            <div className="flex items-end gap-3 bg-white/30 backdrop-blur-md border border-white/40 rounded-2xl px-4 py-2 shadow-inner">
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Escribe tu mensaje..."
+                disabled={isLoading}
+                className="flex-1 bg-transparent text-gray-800 placeholder-gray-400 text-sm outline-none resize-none overflow-hidden max-h-40 leading-relaxed py-1 disabled:opacity-50"
+              />
+              <button
+                onClick={sendMessage}
+                disabled={isLoading || !input.trim()}
+                aria-label="Enviar mensaje"
+                className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-md transition-all hover:scale-105 hover:shadow-indigo-300/50 hover:shadow-lg active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 shrink-0"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 translate-x-px">
+                  <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-center text-xs text-gray-400 mt-2 font-light">
+              Presiona <kbd className="px-1 py-0.5 rounded bg-white/30 border border-white/40 text-gray-500 text-[11px]">Enter</kbd> para enviar
+            </p>
+          </div>
+
+        </div>
       </div>
     </main>
   );
