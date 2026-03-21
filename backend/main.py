@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -135,7 +137,8 @@ async def search_similar(request: SearchRequest):
     
 @app.post("/api/chat")
 async def chat_with_bot(request: ChatRequest):
-    """Recibe un mensaje del usuario, busca información relevante en Qdrant y genera una respuesta usando el LLM.
+    """
+    Recibe un mensaje del usuario, busca información relevante en Qdrant y genera una respuesta usando el LLM.
     Este endpoint es la implementación completa del flujo RAG, donde el LLM actúa como el cerebro que procesa la información recuperada de la base de datos de conocimientos (Qdrant) para generar una respuesta informada y relevante.
     """
     try:
@@ -143,6 +146,35 @@ async def chat_with_bot(request: ChatRequest):
         return {
             "success": True,
             "response": response
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/sources")
+async def get_sources():
+    """
+    Endpoint que lee la carpeta 'data' y devuelve una lista de los archivos PDF disponibles para ingestión.
+    """
+    
+    try:
+        data_folder = Path("data")
+        sources = []
+        
+        #Check if the data folder exists
+        if data_folder.exists() and data_folder.is_dir():
+            #Search for ingested sources in Qdrant if the data folder doesn't exist, to provide some source options to the user
+            for file in data_folder.glob("*.pdf"):
+                clean_title = file.stem.replace("_", " ").replace("-", " ").title()  # Limpia el nombre del archivo para mostrarlo como título
+                sources.append({
+                    "id": file.name,
+                    "title": clean_title,
+                    "type": "PDF curado",
+                    "status": "Vectorizado y listo para usar"
+                })
+                
+        return {
+            "success": True,
+            "sources": sources
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

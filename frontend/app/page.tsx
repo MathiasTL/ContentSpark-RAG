@@ -3,11 +3,13 @@
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { sendMessageToBackend } from "@/lib/api";
+import { getSourcesFromBackend, sendMessageToBackend } from "@/lib/api";
 import ChatSidebar from "@/components/ChatSidebar";
 import ChatHeader from "@/components/ChatHeader";
 import Background from "@/components/Background";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import SourcesModal from "@/components/SourcesModal";
+import type { Source } from "@/lib/api";
 
 interface Message {
   role: "user" | "ai";
@@ -43,6 +45,10 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSourcesOpen, setIsSourcesOpen] = useState(false);
+  const [sources, setSources] = useState<Source[]>([]);
+  const [isSourcesLoading, setIsSourcesLoading] = useState(false);
+  const [sourcesError, setSourcesError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const requestVersionRef = useRef(0);
@@ -67,6 +73,30 @@ export default function Home() {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
+  }
+
+  async function openSourcesModal() {
+    setIsSourcesOpen(true);
+    setIsSourcesLoading(true);
+    setSourcesError(null);
+
+    const result = await getSourcesFromBackend();
+
+    if (!result.success) {
+      setSources([]);
+      setSourcesError("No fue posible cargar las fuentes en este momento.");
+      setIsSourcesLoading(false);
+      return;
+    }
+
+    const pdfSources = result.sources.filter((source) => {
+      const type = source.type.toLowerCase();
+      const title = source.title.toLowerCase();
+      return type.includes("pdf") || title.endsWith(".pdf");
+    });
+
+    setSources(pdfSources);
+    setIsSourcesLoading(false);
   }
 
   async function sendMessage() {
@@ -131,7 +161,7 @@ export default function Home() {
         <ChatSidebar onNewChat={resetChat} />
 
         <div className="flex min-w-0 flex-1 flex-col bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl overflow-hidden">
-          <ChatHeader />
+          <ChatHeader onOpenSources={openSourcesModal} />
 
           {/* Messages area */}
           <ScrollArea className="flex-1">
@@ -203,6 +233,14 @@ export default function Home() {
 
         </div>
       </div>
+
+      <SourcesModal
+        isOpen={isSourcesOpen}
+        isLoading={isSourcesLoading}
+        sources={sources}
+        error={sourcesError}
+        onClose={() => setIsSourcesOpen(false)}
+      />
     </main>
   );
 }

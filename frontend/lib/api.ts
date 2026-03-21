@@ -10,10 +10,22 @@ export interface ChatResponse {
   response: string;
 }
 
-export interface IngestResponse {
+// export interface IngestResponse {
+//   success: boolean;
+//   message: string;
+//   chunksAdded?: number;
+// }
+
+export interface Source {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+}
+
+export interface SourcesResponse {
   success: boolean;
-  message: string;
-  chunksAdded?: number;
+  sources: Source[];
 }
 
 // 2. Define URL for the API endpoint
@@ -52,28 +64,54 @@ export async function sendMessageToBackend(currentMessage: string, chatHistory: 
 }
 
 // 4. Función para enviar documentos al backend
-export async function ingestDocumentToBackend(file: File): Promise<IngestResponse> {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
+// export async function ingestDocumentToBackend(file: File): Promise<IngestResponse> {
+//   try {
+//     const formData = new FormData();
+//     formData.append('file', file);
 
-    const response = await fetch(`${BACKEND_URL}/api/ingest`, {
-      method: 'POST',
-      body: formData,
+//     const response = await fetch(`${BACKEND_URL}/api/ingest`, {
+//       method: 'POST',
+//       body: formData,
+//     });
+
+//     if (!response.ok) {
+//       throw new Error(`Error en el servidor: ${response.status}`);
+//     }
+
+//     const data: IngestResponse = await response.json();
+//     return data;
+
+//   } catch (error) {
+//     console.error("Error conectando con ContentSpark:", error);
+//     return {
+//       success: false,
+//       message: "No pude subir el documento. Por favor, inténtalo de nuevo."
+//     };
+//   }
+// }
+
+//5. Ingest of documents from pdfs
+export async function getSourcesFromBackend(): Promise<SourcesResponse> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/sources`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
       throw new Error(`Error en el servidor: ${response.status}`);
     }
 
-    const data: IngestResponse = await response.json();
+    const data: SourcesResponse = await response.json();
     return data;
 
   } catch (error) {
     console.error("Error conectando con ContentSpark:", error);
     return {
       success: false,
-      message: "No pude subir el documento. Por favor, inténtalo de nuevo."
+      sources: []
     };
   }
 }
