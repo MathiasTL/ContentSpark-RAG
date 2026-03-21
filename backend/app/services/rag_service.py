@@ -1,9 +1,10 @@
+from typing import AsyncGenerator
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from app.services.llm_services import llm_service
 from app.services.qdrant_services import qdrant_search_service
 
 class RAGService:
-    async def generate_response(self, user_message: str, history: list = None) -> str:
+    async def generate_response_stream(self, user_message: str, history: list = None) -> AsyncGenerator[str, None]:
         """
         Función principal del servicio RAG que recibe un mensaje del usuario, busca información relevante en Qdrant y genera una respuesta usando el LLM.
         """
@@ -42,9 +43,13 @@ class RAGService:
         messages.append(HumanMessage(content=user_message))
         
         print("🧠 Procesando respuesta con Llama 3...")
-        response = await llm_service.llm.ainvoke(messages)
         
-        return response.content
+        # En lugar de esperar la respuesta completa, usamos .astream() para recibir palabra por palabra
+        async for chunk in llm_service.llm.astream(messages):
+            if hasattr(chunk, "content"):
+                yield chunk.content
+            elif isinstance(chunk, str):
+                yield chunk
     
 #Instancia del servicio RAG para ser utilizada en los endpoints de la API
 rag_service = RAGService()

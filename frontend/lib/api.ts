@@ -115,3 +115,39 @@ export async function getSourcesFromBackend(): Promise<SourcesResponse> {
     };
   }
 }
+
+export async function streamMessageFromBackend(currentMessage: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<void> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: currentMessage,
+        history: chatHistory,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error en el servidor: ${response.status}`);
+    }
+
+    //initialize reader to read the stream of data coming from the backend
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    //infinite loop to read the stream until it's done, and call onChunk for each new piece of data received
+    while (reader) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      //Decode the chunk of data and pass it to the onChunk callback to update the UI in real time
+      const chunk = decoder.decode(value, { stream: true });
+      onChunk(chunk);
+    }
+    
+  } catch (error) {
+    console.error("Error conectando con ContentSpark:", error);
+    onChunk("Lo siento, tuve un problema de conexión con mis servidores. ¿Podemos intentarlo de nuevo?");
+  }
+}

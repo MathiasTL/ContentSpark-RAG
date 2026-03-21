@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getSourcesFromBackend, sendMessageToBackend } from "@/lib/api";
+import { getSourcesFromBackend, streamMessageFromBackend } from "@/lib/api";
 import ChatSidebar from "@/components/ChatSidebar";
 import ChatHeader from "@/components/ChatHeader";
 import Background from "@/components/Background";
@@ -45,6 +45,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [hasStartedStreaming, setHasStartedStreaming] = useState(false);
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [sources, setSources] = useState<Source[]>([]);
   const [isSourcesLoading, setIsSourcesLoading] = useState(false);
@@ -69,6 +70,7 @@ export default function Home() {
     setMessages(initialMessages);
     setInput("");
     setIsLoading(false);
+    setHasStartedStreaming(false);
 
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -109,39 +111,47 @@ export default function Home() {
     const requestVersion = requestVersionRef.current;
 
     setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setHasStartedStreaming(false);
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsLoading(true);
 
     try {
-      // 3. Usamos nuestra capa de API profesional (Separation of Concerns)
-      // Le pasamos el texto nuevo y el historial de memoria
-      const data = await sendMessageToBackend(text, currentHistory);
+      await streamMessageFromBackend(text, currentHistory, (chunk) => {
+        if (requestVersion !== requestVersionRef.current) {
+          return;
+        }
 
-      if (requestVersion !== requestVersionRef.current) {
-        return;
-      }
+        if (chunk.length > 0) {
+          setHasStartedStreaming(true);
+        }
 
-      // 4. Mostramos la respuesta en la pantalla
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", content: data.response },
-      ]);
+        setMessages((prev) => {
+          const next = [...prev];
+          const lastIndex = next.length - 1;
+          
+          // If the last message is already from the AI and we're streaming the answer, append to it.
+          // Otherwise, it's the first chunk of the AI's response, so push a new message.
+          if (lastIndex >= 0 && next[lastIndex].role === "ai") {
+            next[lastIndex] = {
+              ...next[lastIndex],
+              content: next[lastIndex].content + chunk,
+            };
+          } else {
+            next.push({ role: "ai", content: chunk });
+          }
+          
+          return next;
+        });
+      });
     } catch {
       if (requestVersion !== requestVersionRef.current) {
         return;
       }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "ai",
-          content: "Lo siento, hubo un error al conectar con el servidor. Por favor, inténtalo de nuevo.",
-        },
-      ]);
     } finally {
       if (requestVersion === requestVersionRef.current) {
         setIsLoading(false);
+        setHasStartedStreaming(false);
       }
     }
   }
@@ -197,7 +207,7 @@ export default function Home() {
                 )
               )}
 
-              {isLoading && <TypingIndicator />}
+              {isLoading && !hasStartedStreaming && <TypingIndicator />}
               <div ref={bottomRef} />
             </div>
           </ScrollArea>

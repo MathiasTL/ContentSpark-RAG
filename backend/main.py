@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -142,11 +143,10 @@ async def chat_with_bot(request: ChatRequest):
     Este endpoint es la implementación completa del flujo RAG, donde el LLM actúa como el cerebro que procesa la información recuperada de la base de datos de conocimientos (Qdrant) para generar una respuesta informada y relevante.
     """
     try:
-        response = await rag_service.generate_response(request.message, request.history)
-        return {
-            "success": True,
-            "response": response
-        }
+        return StreamingResponse(
+            rag_service.generate_response_stream(request.message, request.history),
+            media_type="text/event-stream"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
