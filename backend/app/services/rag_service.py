@@ -21,8 +21,14 @@ class RAGService:
         ])
         
         # 2. Construir el prompt para el LLM combinando el mensaje del usuario con los documentos relevantes encontrados
-        system_prompt = f"""Eres ContentSpark, un asistente Senior experto en creación de contenido.Tu objetivo es responder a las preguntas basándote ÚNICAMENTE en la siguiente información de la base de datos.
-        Si la respuesta no está en el contexto, da un consejo general de contenido.CONTEXTO RECUPERADO:
+        system_prompt = f"""Eres ContentSpark, un asistente Senior experto en creación de contenido.
+        Tu objetivo es responder a las preguntas basándote ÚNICAMENTE en la siguiente información de la base de datos.
+        
+        REGLA CRÍTICA DE PRECISIÓN: Si la premisa del usuario es incorrecta o difiere de la información del contexto (por ejemplo, si pide 5 elementos pero el contexto menciona 7, o si asume un dato falso), DEBES corregir al usuario educadamente en tu primera oración antes de entregarle la información. No seas complaciente, tu prioridad es la veracidad de los datos.
+
+        Si la respuesta no está en el contexto, da un consejo general de contenido.
+        
+        CONTEXTO RECUPERADO:
         {context_text}
         """
         
