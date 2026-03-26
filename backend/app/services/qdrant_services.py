@@ -44,7 +44,9 @@ class QdrantSearchService:
         self.vector_store = QdrantVectorStore(
             client=self.client,
             collection_name=self.collection_name,
-            embedding=embeddings_service.embeddings  # Usamos el mismo servicio de embeddings para mantener la consistencia
+            embedding=embeddings_service.embeddings,  # Usamos el mismo servicio de embeddings para mantener la consistencia
+            validate_embeddings=False,
+            validate_collection_config=False,
         )
         
     def add_document(self, text: str, metadata: dict=None):

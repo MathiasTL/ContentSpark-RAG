@@ -18,6 +18,7 @@ langgraph
 qdrant-client
 duckduckgo-search
 
-# Procesamiento de documentos
+# Procesamiento de documentos de pdfs y web scraping
 pypdf
+trafilatura
 

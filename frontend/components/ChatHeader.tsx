@@ -6,7 +6,7 @@ interface ChatHeaderProps {
 
 export default function ChatHeader({ onOpenSources }: ChatHeaderProps) {
   return (
-    <div className="flex items-center gap-3 px-6 py-3 border-b border-white/20 bg-white/10 backdrop-blur-md shrink-0">
+    <div className="flex items-center gap-3 px-6 py-3 bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl shrink-0">
       <Image
         src="/logo_content .png"
         alt="ContentSpark"

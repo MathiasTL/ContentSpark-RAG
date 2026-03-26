@@ -1,6 +1,52 @@
-[
-    "7-PILARES-EN-CREACION-DE-CONTENIDO-1.pdf",
-    "Ebook-Content-Creation-Guide.pdf",
-    "Free-Guide-Copy-Posse-Power-Words-Cheatsheet-2.pdf",
-    "Guia_Completa_Creacion_Contenido_2025.pdf"
-]
+{
+    "ingested": {
+        "7-PILARES-EN-CREACION-DE-CONTENIDO-1.pdf": {
+            "date": "unknown",
+            "type": "pdf"
+        },
+        "Ebook-Content-Creation-Guide.pdf": {
+            "date": "unknown",
+            "type": "pdf"
+        },
+        "Free-Guide-Copy-Posse-Power-Words-Cheatsheet-2.pdf": {
+            "date": "unknown",
+            "type": "pdf"
+        },
+        "Guia_Completa_Creacion_Contenido_2025.pdf": {
+            "date": "unknown",
+            "type": "pdf"
+        },
+        "fulltext.pdf": {
+            "date": "2026-03-26T00:01:07.633919",
+            "type": "pdf",
+            "category": "plataformas_algoritmos",
+            "language": "en",
+            "chunks": 143,
+            "pages": 39
+        },
+        "IAB_Creator_Economy_Definitions_Taxonomy_April-2025.pdf": {
+            "date": "2026-03-26T00:02:50.180062",
+            "type": "pdf",
+            "category": "monetizacion",
+            "language": "en",
+            "chunks": 70,
+            "pages": 18
+        },
+        "Network-Content-Strategy-Data-Report-Final.pdf": {
+            "date": "2026-03-26T00:03:39.190737",
+            "type": "pdf",
+            "category": "plataformas_algoritmos",
+            "language": "en",
+            "chunks": 82,
+            "pages": 33
+        },
+        "newsfeed_contentcreation_short_2-FINAL-compressed.pdf": {
+            "date": "2026-03-26T00:05:04.677466",
+            "type": "pdf",
+            "category": "storytelling_copywriting",
+            "language": "en",
+            "chunks": 41,
+            "pages": 12
+        }
+    }
+}
