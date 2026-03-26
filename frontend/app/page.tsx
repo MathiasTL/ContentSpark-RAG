@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getSourcesFromBackend, streamMessageFromBackend } from "@/lib/api";
@@ -19,8 +20,7 @@ interface Message {
 const initialMessages: Message[] = [
   {
     role: "ai",
-    content:
-      "¡Hola! Soy ContentSpark ✨ Tu asistente de IA para creadores de contenido. ¿En qué puedo ayudarte hoy?",
+    content: "", // placeholder — WelcomeMessage renders independently
   },
 ];
 
@@ -29,6 +29,31 @@ const SUGGESTED_PROMPTS = [
   "Estrategia de contenido para esta semana",
   "Ideas de contenido trending",
 ];
+
+function WelcomeMessage() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-6 text-center">
+      <div className="flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-200/50 via-purple-200/40 to-pink-200/50 backdrop-blur-md border border-purple-300/50 shadow-lg shadow-purple-200/30">
+        <Image
+          src="/only_logo.png"
+          alt="ContentSpark"
+          width={52}
+          height={52}
+          priority
+        />
+      </div>
+      <div className="space-y-2">
+        <h2 className="text-2xl font-semibold text-indigo-800 tracking-tight">
+          Desata tu creatividad con ContentSpark
+        </h2>
+        <p className="text-sm text-indigo-600/70 font-light max-w-xs leading-relaxed mx-auto">
+          Consulta tu base de conocimiento. ContentSpark busca en sus documentos
+          ingestados y genera respuestas contextualizadas.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function TypingIndicator() {
   return (
@@ -50,6 +75,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasStartedStreaming, setHasStartedStreaming] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [welcomeFading, setWelcomeFading] = useState(false);
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [sources, setSources] = useState<Source[]>([]);
   const [isSourcesLoading, setIsSourcesLoading] = useState(false);
@@ -58,6 +85,7 @@ export default function Home() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const requestVersionRef = useRef(0);
 
+  // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -65,9 +93,19 @@ export default function Home() {
     el.style.height = `${el.scrollHeight}px`;
   }, [input]);
 
+  // Auto-scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // Fade out welcome when the user sends their first message
+  useEffect(() => {
+    if (messages.length > 1 && showWelcome && !welcomeFading) {
+      setWelcomeFading(true);
+      const timer = setTimeout(() => setShowWelcome(false), 450);
+      return () => clearTimeout(timer);
+    }
+  }, [messages.length, showWelcome, welcomeFading]);
 
   function resetChat() {
     requestVersionRef.current += 1;
@@ -75,7 +113,8 @@ export default function Home() {
     setInput("");
     setIsLoading(false);
     setHasStartedStreaming(false);
-
+    setShowWelcome(true);
+    setWelcomeFading(false);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -160,6 +199,9 @@ export default function Home() {
     }
   }
 
+  // Conversation messages: skip index 0 (the welcome placeholder in state)
+  const conversationMessages = messages.slice(1);
+
   return (
     <main className="relative isolate min-h-screen w-full overflow-hidden flex items-center justify-center p-4">
       <Background />
@@ -168,16 +210,39 @@ export default function Home() {
         <ChatSidebar onNewChat={resetChat} />
 
         <div className="flex min-w-0 flex-1 flex-col gap-3">
-          {/* Header independiente con su propio glass */}
           <ChatHeader onOpenSources={openSourcesModal} />
 
-          {/* Contenedor del chat */}
           <div className="flex flex-1 flex-col bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl overflow-hidden min-h-0">
 
-            {/* Área de mensajes */}
             <ScrollArea className="flex-1">
-              <div className="px-4 py-6 space-y-4">
-                {messages.map((msg, i) =>
+              <div className="px-4 py-4 space-y-3">
+
+                {/* Welcome screen — fades out on first query */}
+                {showWelcome && (
+                  <div
+                    className={`transition-all duration-450 ease-in-out ${
+                      welcomeFading
+                        ? "opacity-0 -translate-y-2 scale-[0.98] pointer-events-none"
+                        : "opacity-100 translate-y-0 scale-100"
+                    }`}
+                  >
+                    <WelcomeMessage />
+                    <div className="flex flex-wrap gap-2 justify-center mt-1 pb-2">
+                      {SUGGESTED_PROMPTS.map((prompt) => (
+                        <button
+                          key={prompt}
+                          onClick={() => handleSend(prompt)}
+                          className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl px-4 py-2 text-sm text-indigo-700/80 hover:bg-white/40 hover:text-indigo-800 transition cursor-pointer"
+                        >
+                          {prompt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Conversation messages */}
+                {conversationMessages.map((msg, i) =>
                   msg.role === "user" ? (
                     <div key={i} className="flex items-end justify-end">
                       <div className="max-w-[75%] bg-blue-500 text-white rounded-2xl rounded-br-none px-4 py-2.5 text-sm leading-relaxed shadow-md">
@@ -200,28 +265,12 @@ export default function Home() {
                         >
                           {msg.content}
                         </ReactMarkdown>
-                        {/* Citación de fuente — placeholder estático, se conectará al backend */}
-                        {i > 0 && (
-                          <p className="text-xs text-gray-400/60 mt-2 italic">Fuente: ContentSpark Knowledge Base</p>
-                        )}
+                        <p className="text-xs text-gray-400/60 mt-2 italic">
+                          Fuente: ContentSpark Knowledge Base
+                        </p>
                       </div>
                     </div>
                   )
-                )}
-
-                {/* Suggested prompts — visibles solo cuando el chat está vacío */}
-                {messages.length === 1 && !isLoading && (
-                  <div className="flex flex-wrap gap-2 justify-center mt-2">
-                    {SUGGESTED_PROMPTS.map((prompt) => (
-                      <button
-                        key={prompt}
-                        onClick={() => handleSend(prompt)}
-                        className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl px-4 py-2 text-sm text-gray-700 hover:bg-white/40 transition cursor-pointer"
-                      >
-                        {prompt}
-                      </button>
-                    ))}
-                  </div>
                 )}
 
                 {isLoading && !hasStartedStreaming && <TypingIndicator />}
