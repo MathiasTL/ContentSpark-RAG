@@ -14,13 +14,14 @@ ContentSpark es una plataforma SaaS para creadores de contenido que combina RAG 
 - **Framework:** Next.js 16 (App Router)
 - **UI:** React 19 + Tailwind CSS 4
 - **Auth:** Supabase Auth (`@supabase/supabase-js`, `@supabase/ssr`)
-- **ORM:** Prisma Client (queries type-safe desde API routes)
 - **Markdown:** react-markdown + remark-gfm
 - **Componentes:** Radix UI (Scroll Area)
 - **Directorio:** `frontend/`
+- **Nota:** El frontend NO tiene ORM ni acceso directo a la base de datos. Toda comunicación con la DB pasa por el backend FastAPI.
 
 ### Backend (Python)
 - **Framework:** FastAPI + Uvicorn
+- **ORM:** SQLAlchemy 2.0 (async) + Alembic (migraciones)
 - **LLM:** Groq (Llama 3.1 8B) vía LangChain
 - **Embeddings:** Google Gemini (`gemini-embedding-001`, 3072 dims)
 - **Vector DB:** Qdrant (colección: `contentspark_knowledge`)
@@ -30,7 +31,8 @@ ContentSpark es una plataforma SaaS para creadores de contenido que combina RAG 
 
 ### Base de datos
 - **PostgreSQL** via Supabase (usuarios, perfiles, chats, calendarios)
-- **Prisma ORM** (schema, migrations, type-safe queries)
+- **SQLAlchemy 2.0** (modelos, queries async, relaciones)
+- **Alembic** (migraciones versionadas)
 - **Qdrant Cloud** (vector store para RAG)
 
 ### Integraciones
@@ -47,7 +49,7 @@ ContentSpark/
 ├── docker-compose.dev.yml
 ├── .claude/skills/
 │   ├── contentspark-dev/SKILL.md
-│   ├── supabase-prisma/SKILL.md
+│   ├── supabase-sqlalchemy/SKILL.md
 │   └── langgraph-agents/SKILL.md
 ├── .github/workflows/
 │   ├── ci.yml
@@ -57,12 +59,23 @@ ContentSpark/
 │   ├── main.py                    # Solo imports de routers + CORS
 │   ├── ingest_data.py
 │   ├── requirements.txt
+│   ├── alembic.ini                # Configuración de Alembic
+│   ├── alembic/                   # Migraciones de base de datos
+│   │   ├── env.py
+│   │   └── versions/
 │   ├── data/
 │   └── app/
 │       ├── config.py              # Pydantic BaseSettings centralizado
+│       ├── database.py            # Engine SQLAlchemy async + SessionLocal
 │       ├── dependencies.py        # get_current_user, get_db (Fase 1)
 │       ├── core/                  # Configuración base
-│       ├── models/                # Modelos de DB (user, chat, profile, calendar)
+│       ├── models/                # Modelos SQLAlchemy (user, chat, profile, calendar)
+│       │   ├── __init__.py        # Importa todos los modelos + Base
+│       │   ├── base.py            # DeclarativeBase compartido
+│       │   ├── user.py
+│       │   ├── chat.py
+│       │   ├── profile.py
+│       │   └── calendar.py
 │       ├── schemas/               # Validación Pydantic (auth, chat, profile, calendar)
 │       ├── services/
 │       │   ├── llm_services.py
@@ -82,7 +95,7 @@ ContentSpark/
 │       │   ├── calendar.py        # Fase 3
 │       │   └── webhooks.py        # Fase 4 (n8n callbacks)
 │       └── middleware/
-│           ├── auth.py            # JWT verification (Fase 1)
+│           ├── auth.py            # Verificación de tokens via Supabase (Fase 1)
 │           └── rate_limiter.py    # Por tier (Fase 5)
 ├── tests/                         # pytest
 ├── frontend/
@@ -111,20 +124,19 @@ ContentSpark/
 │   │   ├── lib/                   # api-client.ts, supabase.ts, utils.ts
 │   │   ├── types/                 # User, ApiResponse
 │   │   └── constants/             # NICHES, PLATFORMS, FORMATS
-│   └── prisma/
-│       └── schema.prisma          # Schema completo (todas las fases)
+│   └── package.json
 └── n8n/workflows/                 # JSON placeholders (Fase 4)
 ```
 
 ## Flujo RAG (pipeline optimizado)
 1. Usuario escribe en chat → frontend envía `message` + `history` + JWT a `POST /api/chat`
-2. Backend verifica JWT, extrae `user_id`, carga perfil del creador
+2. Backend verifica token via Supabase Auth (usando `sb_secret_...`), extrae `user_id`, carga perfil del creador
 3. Recorta historial a los últimos 6 turnos (ventana deslizante)
 4. Si hay historial, reescribe el query para que sea autocontenido (query rewriting vía LLM)
 5. Grafo CRAG: busca en Qdrant (top_k=4) → filtra por score threshold (0.35) → fallback a DuckDuckGo
 6. Construye prompt con: contexto RAG + perfil del creador + historial recortado
 7. LLM (Groq) genera respuesta en streaming → se retorna al frontend
-8. Mensaje se persiste en PostgreSQL (tabla Message)
+8. Mensaje se persiste en PostgreSQL (tabla Message) via SQLAlchemy
 9. Frontend renderiza respuesta con Markdown
 
 ## Pipeline de ingesta (mejorado)
@@ -142,21 +154,26 @@ GOOGLE_API_KEY=...
 QDRANT_URL=...
 QDRANT_API_KEY=...
 SUPABASE_URL=...
-SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-DATABASE_URL=postgresql://...
-SUPABASE_JWT_SECRET=...
+SUPABASE_ANON_KEY=sb_publishable_...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
+DATABASE_URL=postgresql+asyncpg://...
 N8N_WEBHOOK_URL=...
 ```
 
 ### Frontend (frontend/.env.local)
 ```
 NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-## Modelos de datos (Prisma)
+### Notas sobre API keys de Supabase
+- `sb_publishable_...` reemplaza a la antigua `anon` key. Segura para el frontend.
+- `sb_secret_...` reemplaza a la antigua `service_role` key. Solo en el backend, bypasea RLS.
+- Ya NO se necesita `SUPABASE_JWT_SECRET`. El backend verifica tokens de usuario llamando a Supabase Auth con la secret key, no decodificando JWTs manualmente.
+- Las keys legacy (`anon` y `service_role` en formato JWT) aún funcionan durante la transición, pero se recomienda usar las nuevas.
+
+## Modelos de datos (SQLAlchemy)
 - `User` — id, email, name, avatar_url, onboarding_completed
 - `CreatorProfile` — nicho, sub_nicho, objetivo, tono, audiencia, frecuencia
 - `SocialAccount` — plataforma, handle, url
@@ -179,18 +196,21 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 - Auth middleware en todo endpoint protegido
 - Siempre async/await
 - Logging con prints descriptivos
-- Modelos Pydantic para validación
+- Modelos Pydantic para validación (schemas/)
+- Modelos SQLAlchemy para DB (models/)
 
 ### Frontend
 - Componentes funcionales con TypeScript
 - `"use client"` solo donde se necesite estado
 - JWT en Authorization header en cada request al backend
 - Estado global mínimo
+- NO accede a la base de datos directamente — todo pasa por la API del backend
 
 ### Base de datos
-- Migración tras cada cambio: `npx prisma migrate dev --name descripcion`
+- Migración tras cada cambio: `alembic revision --autogenerate -m "descripcion"` + `alembic upgrade head`
 - SIEMPRE filtrar queries por user_id
-- NUNCA exponer SUPABASE_SERVICE_ROLE_KEY en frontend
+- NUNCA exponer SUPABASE_SERVICE_ROLE_KEY (`sb_secret_...`) en frontend
+- Usar async sessions de SQLAlchemy (`AsyncSession`)
 
 ### Agentes LangGraph
 - StateGraph con TypedDict para estado

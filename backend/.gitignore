@@ -1,5 +1,23 @@
+# Variables de entorno — nunca subir al repositorio
 .env
+.env.*
+.env.local
+.env.production
+.env.staging
+
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.egg-info/
+.venv/
+venv/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ruff / linting
+.ruff_cache/

@@ -4,7 +4,7 @@
 
 | Fase | Nombre | Duración estimada | Descripción |
 |------|--------|-------------------|-------------|
-| 0 | Setup de infraestructura | 1 semana | Supabase, Prisma, estructura de proyecto |
+| 0 | Setup de infraestructura | 1 semana | Supabase, SQLAlchemy, estructura de proyecto |
 | 1 | Auth + multi-chat | 2 semanas | Login/signup, persistencia de chats |
 | 2 | Onboarding inteligente | 2 semanas | Agente LangGraph para perfil del creador |
 | 3 | Calendario de contenido | 2-3 semanas | Generación AI + UI del calendario |
@@ -19,67 +19,85 @@
 
 ### Objetivos
 - Configurar Supabase (proyecto, base de datos, auth).
-- Configurar Prisma ORM con los schemas iniciales.
+- Configurar SQLAlchemy 2.0 + Alembic con los modelos iniciales.
 - Reestructurar el proyecto para soportar SaaS.
 
 ### Tareas
 
 **0.1 — Crear proyecto en Supabase**
 - Crear cuenta/proyecto en supabase.com.
-- Obtener las credenciales: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`.
+- Obtener las credenciales: `SUPABASE_URL`, publishable key (`sb_publishable_...`), secret key (`sb_secret_...`), `DATABASE_URL`.
 - Habilitar autenticación con email/password y Google OAuth.
 - Configurar las URLs de redirect para auth (localhost:3000 para dev).
 
-**0.2 — Configurar Prisma**
-- Instalar Prisma en el proyecto: `npm install prisma @prisma/client`.
-- Crear `prisma/schema.prisma` con los modelos iniciales:
-  - User, CreatorProfile, SocialAccount, Chat, Message.
-- Ejecutar primera migración: `npx prisma migrate dev --name init`.
-- Generar Prisma Client: `npx prisma generate`.
+**0.2 — Configurar SQLAlchemy + Alembic**
+- Instalar dependencias en el backend: `pip install sqlalchemy[asyncio] asyncpg alembic`.
+- Crear `backend/app/database.py` con engine async y session factory.
+- Crear `backend/app/models/base.py` con `DeclarativeBase` compartido.
+- Crear modelos SQLAlchemy en `backend/app/models/`:
+  - `user.py` — User
+  - `profile.py` — CreatorProfile, SocialAccount
+  - `chat.py` — Chat, Message
+  - `calendar.py` — ContentCalendar, ContentEntry
+- Inicializar Alembic: `alembic init alembic`.
+- Configurar `alembic.ini` con `DATABASE_URL` y `alembic/env.py` con los modelos.
+- Ejecutar primera migración: `alembic revision --autogenerate -m "init"` + `alembic upgrade head`.
 
 **0.3 — Reestructurar el proyecto**
 ```
 ContentSpark/
 ├── backend/
 │   ├── main.py
+│   ├── alembic.ini
+│   ├── alembic/
+│   │   ├── env.py
+│   │   └── versions/
 │   ├── app/
-│   │   ├── services/          # Servicios existentes (RAG, LLM, etc.)
-│   │   ├── agents/            # NUEVO: Agentes LangGraph
+│   │   ├── database.py            # NUEVO: Engine SQLAlchemy async + SessionLocal
+│   │   ├── config.py              # Pydantic BaseSettings
+│   │   ├── dependencies.py        # get_current_user, get_db
+│   │   ├── models/                # NUEVO: Modelos SQLAlchemy
+│   │   │   ├── __init__.py
+│   │   │   ├── base.py
+│   │   │   ├── user.py
+│   │   │   ├── profile.py
+│   │   │   ├── chat.py
+│   │   │   └── calendar.py
+│   │   ├── schemas/               # Validación Pydantic
+│   │   ├── services/              # Servicios existentes (RAG, LLM, etc.)
+│   │   ├── agents/                # Agentes LangGraph
 │   │   │   ├── onboarding_agent.py
 │   │   │   └── calendar_agent.py
-│   │   ├── routers/           # NUEVO: Endpoints organizados por módulo
+│   │   ├── routers/               # Endpoints organizados por módulo
 │   │   │   ├── auth.py
 │   │   │   ├── chat.py
 │   │   │   ├── profile.py
 │   │   │   ├── calendar.py
 │   │   │   └── ingest.py
-│   │   └── middleware/        # NUEVO: Auth middleware
+│   │   └── middleware/            # Auth middleware
 │   │       └── auth.py
 │   └── requirements.txt
 ├── frontend/
 │   ├── app/
-│   │   ├── (auth)/            # NUEVO: Rutas de auth
+│   │   ├── (auth)/                # Rutas de auth
 │   │   │   ├── login/
 │   │   │   └── signup/
-│   │   ├── (app)/             # NUEVO: App autenticada
+│   │   ├── (app)/                 # App autenticada
 │   │   │   ├── chat/[id]/
 │   │   │   ├── onboarding/
 │   │   │   ├── calendar/
 │   │   │   └── profile/
 │   │   └── layout.tsx
-│   ├── components/
-│   │   ├── chat/              # Componentes de chat
-│   │   ├── calendar/          # Componentes de calendario
-│   │   ├── onboarding/        # Componentes de onboarding
-│   │   └── ui/                # Componentes reutilizables
-│   ├── lib/
-│   │   ├── supabase.ts        # NUEVO: Cliente Supabase
-│   │   ├── api.ts             # Cliente API actualizado
-│   │   └── prisma.ts          # NUEVO: Prisma client
-│   └── prisma/
-│       └── schema.prisma
+│   ├── features/                  # Módulos por feature
+│   ├── shared/
+│   │   ├── components/ui/
+│   │   ├── hooks/
+│   │   ├── lib/                   # api-client.ts, supabase.ts
+│   │   ├── types/
+│   │   └── constants/
+│   └── package.json
 └── n8n/
-    └── workflows/             # NUEVO: Exportaciones de workflows n8n
+    └── workflows/                 # Exportaciones de workflows n8n
 ```
 
 **0.4 — Variables de entorno actualizadas**
@@ -92,25 +110,26 @@ GOOGLE_API_KEY=...
 QDRANT_URL=...
 QDRANT_API_KEY=...
 
-# Nuevas
+# Nuevas (formato actualizado de Supabase)
 SUPABASE_URL=...
-SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-DATABASE_URL=postgresql://...
-JWT_SECRET=...
+SUPABASE_ANON_KEY=sb_publishable_...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
+DATABASE_URL=postgresql+asyncpg://...
 N8N_WEBHOOK_URL=...
 ```
 
 Frontend `.env.local`:
 ```
 NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
+**Nota sobre API keys:** Supabase migró a un nuevo formato de keys. `sb_publishable_...` reemplaza a la antigua `anon` key y `sb_secret_...` reemplaza a la antigua `service_role`. Ya NO se necesita `SUPABASE_JWT_SECRET` — el backend verifica tokens llamando a Supabase Auth con la secret key.
+
 ### Entregable
-- Proyecto reestructurado con Supabase conectado y Prisma configurado.
-- Base de datos creada con tablas iniciales.
+- Proyecto reestructurado con Supabase conectado y SQLAlchemy configurado.
+- Base de datos creada con tablas iniciales via Alembic.
 - Verificar conexión desde backend y frontend.
 
 ---
@@ -133,31 +152,31 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 - Redirect: si no autenticado → login. Si autenticado y no onboarded → onboarding.
 
 **1.2 — Auth middleware en backend**
-- Crear middleware FastAPI que verifica el JWT de Supabase en cada request.
-- Extraer `user_id` del token y pasarlo al endpoint.
+- Crear middleware FastAPI que verifica el token del usuario via Supabase Auth (usando la secret key `sb_secret_...` para llamar a `supabase.auth.get_user(token)`).
+- Extraer `user_id` del resultado y pasarlo al endpoint.
 - Endpoints públicos: `/`, `/api/test-*`.
 - Endpoints protegidos: todo lo demás.
 
 **1.3 — Multi-chat: Backend**
-- Crear endpoints CRUD para chats:
+- Crear endpoints CRUD para chats (usando SQLAlchemy AsyncSession):
   - `POST /api/chats` — Crear nuevo chat.
   - `GET /api/chats` — Listar chats del usuario (ordenados por updated_at).
   - `GET /api/chats/{id}` — Obtener chat con sus mensajes.
   - `DELETE /api/chats/{id}` — Eliminar chat.
   - `PATCH /api/chats/{id}` — Renombrar chat.
-- Modificar `POST /api/chat` para recibir `chat_id` y persistir mensajes en DB.
+- Modificar `POST /api/chat` para recibir `chat_id` y persistir mensajes en DB via SQLAlchemy.
 - Auto-generar título del chat basado en el primer mensaje (usando LLM).
 
 **1.4 — Multi-chat: Frontend**
 - Rediseñar sidebar para mostrar lista de chats.
 - Cada chat muestra: título, fecha de última actividad.
 - Botón "Nuevo Chat" crea un chat y navega a él.
-- Click en un chat carga su historial desde la DB.
+- Click en un chat carga su historial desde la DB (via API del backend).
 - Implementar las mejoras de UI del documento PROMPT_CLAUDE_CODE_FRONTEND.md.
 
 ### Entregable
 - Usuario puede registrarse, hacer login, crear múltiples chats y navegar entre ellos.
-- Los mensajes persisten en PostgreSQL.
+- Los mensajes persisten en PostgreSQL via SQLAlchemy.
 
 ---
 
@@ -184,7 +203,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
   - Si es ambigua, pide clarificación sin avanzar.
 - El nodo `generate_summary` muestra un resumen formateado del perfil.
 - El nodo `confirm` espera confirmación del usuario.
-- El nodo `save_profile` persiste en PostgreSQL.
+- El nodo `save_profile` persiste en PostgreSQL via SQLAlchemy.
 
 **2.2 — Endpoints de perfil**
 - `GET /api/profile` — Obtener perfil del creador.
@@ -203,7 +222,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ### Entregable
 - Flujo de onboarding funcional con agente conversacional.
-- Perfil guardado en DB y utilizado en respuestas del RAG.
+- Perfil guardado en DB via SQLAlchemy y utilizado en respuestas del RAG.
 
 ---
 
@@ -349,17 +368,19 @@ Para cada fase, puedes usar estos prompts en Claude Code:
 
 ### Fase 0
 ```
-Lee el CLAUDE.md. Necesito configurar Supabase Auth y Prisma ORM en el proyecto. 
-Crea el schema de Prisma con los modelos User, CreatorProfile, SocialAccount, Chat y Message 
-según el documento CONTENTSPARK_SAAS_PROJECT.md. Configura la conexión a Supabase PostgreSQL 
-y ejecuta la primera migración.
+Lee el CLAUDE.md. Necesito configurar SQLAlchemy 2.0 (async) + Alembic en el backend.
+Crea backend/app/database.py con engine async (asyncpg) y session factory.
+Crea los modelos SQLAlchemy en backend/app/models/ con los modelos User, CreatorProfile, 
+SocialAccount, Chat, Message, ContentCalendar y ContentEntry según CONTENTSPARK_SAAS_PROJECT.md.
+Inicializa Alembic y ejecuta la primera migración contra Supabase PostgreSQL.
 ```
 
 ### Fase 1
 ```
 Lee el CLAUDE.md. Implementa autenticación con Supabase Auth en el frontend (login/signup 
-con email y Google OAuth). Crea middleware de auth en FastAPI que verifique JWT de Supabase. 
-Implementa endpoints CRUD para chats y modifica el sistema de chat actual para soportar 
+con email y Google OAuth). Crea middleware de auth en FastAPI que verifique tokens de usuario
+llamando a Supabase Auth con la secret key (sb_secret_...). Implementa endpoints CRUD para 
+chats usando SQLAlchemy AsyncSession y modifica el sistema de chat actual para soportar 
 múltiples conversaciones persistentes en PostgreSQL.
 ```
 
@@ -369,7 +390,7 @@ Lee el CLAUDE.md. Crea un agente LangGraph en backend/app/agents/onboarding_agen
 que guíe al usuario a través de un onboarding conversacional para recopilar su perfil 
 de creador (nicho, redes sociales, objetivos, tono, audiencia). El agente debe validar 
 respuestas y pedir clarificación cuando sea ambiguo. Al finalizar, guarda el perfil 
-en PostgreSQL via Prisma. Modifica el RAG service para inyectar el perfil como contexto.
+en PostgreSQL via SQLAlchemy. Modifica el RAG service para inyectar el perfil como contexto.
 ```
 
 ### Fase 3

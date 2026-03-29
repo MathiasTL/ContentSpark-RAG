@@ -27,14 +27,17 @@ ContentSpark resuelve los tres: centraliza el conocimiento del creador en una ba
 - React 19 + TypeScript
 - Tailwind CSS 4
 - Diseño glassmorphism (estilo Apple/Liquid Glass)
+- Supabase Auth client (solo para login/signup, NO accede a la DB)
 
 ### Backend
 - FastAPI + Uvicorn
 - Python 3.10+
+- SQLAlchemy 2.0 (async) + Alembic (migraciones)
 
 ### Base de datos
 - **PostgreSQL** via Supabase (usuarios, perfiles, chats, calendarios)
-- **Prisma ORM** (schema management, migrations, type-safe queries)
+- **SQLAlchemy 2.0** (ORM async nativo de Python — modelos, queries, relaciones)
+- **Alembic** (migraciones versionadas con auto-generate)
 - **Qdrant** (vector store para RAG — se mantiene)
 
 ### IA y agentes
@@ -78,7 +81,7 @@ User
 └── onboarding_completed (boolean)
 ```
 
-**Tecnología:** Supabase Auth + Prisma ORM.
+**Tecnología:** Supabase Auth + SQLAlchemy ORM en el backend.
 
 ---
 
@@ -101,7 +104,7 @@ User
    - Tono de comunicación (profesional, casual, humorístico, inspiracional)
    - Audiencia objetivo (edad, intereses, nivel)
 3. El agente valida las respuestas, pide clarificación si es ambiguo, y al finalizar genera un resumen del perfil.
-4. El usuario confirma y el perfil se guarda en PostgreSQL.
+4. El usuario confirma y el perfil se guarda en PostgreSQL via SQLAlchemy.
 5. El perfil se inyecta como contexto adicional en todas las consultas RAG futuras.
 
 **¿Por qué LangGraph y no Google ADK?**
@@ -155,7 +158,7 @@ SocialAccount
 - El contexto del perfil del creador se inyecta automáticamente en cada chat.
 
 **Flujo:**
-1. Usuario hace click en "Nuevo Chat" → se crea un registro en DB.
+1. Usuario hace click en "Nuevo Chat" → se crea un registro en DB via SQLAlchemy.
 2. Cada mensaje se guarda en DB (user message + AI response).
 3. El historial se carga desde DB al abrir un chat existente.
 4. El sidebar muestra chats ordenados por última actividad.
@@ -322,11 +325,12 @@ Permitir que un equipo (editor, camarógrafo, community manager) acceda al calen
 - Row Level Security (RLS) de Supabase protege los datos por usuario sin lógica extra en el backend.
 - Supabase tiene un free tier generoso para MVP.
 
-### ¿Por qué Prisma ORM?
-- Type-safe queries que se integran bien con TypeScript en el frontend.
-- Migrations automatizadas con versionado.
-- Funciona con Supabase PostgreSQL sin problemas.
-- Nota: Prisma se usará desde el backend FastAPI via Prisma Client Python o como alternativa se puede usar SQLAlchemy con los mismos schemas.
+### ¿Por qué SQLAlchemy y no Prisma?
+- **Nativo de Python:** SQLAlchemy es el ORM estándar del ecosistema Python. Como el backend es FastAPI (Python), usar un ORM de Python es lo natural. Prisma está diseñado para TypeScript/JavaScript.
+- **Async support maduro:** SQLAlchemy 2.0 tiene soporte async completo con `asyncpg`, ideal para FastAPI que es 100% async.
+- **Sin dependencia de Node.js en el backend:** Prisma Client Python requiere Node.js para generar el client, lo cual agrega complejidad innecesaria al backend Python.
+- **Alembic para migraciones:** Alembic (de los mismos creadores de SQLAlchemy) soporta auto-generate de migraciones y es el estándar en proyectos Python.
+- **El frontend no necesita ORM:** El frontend React/Next.js no accede a la base de datos directamente — toda comunicación pasa por la API del backend. Solo necesita Supabase Auth para login/signup.
 
 ### ¿Por qué LangGraph para agentes?
 - Ya está en el stack (el CRAG actual usa LangGraph).
@@ -339,3 +343,9 @@ Permitir que un equipo (editor, camarógrafo, community manager) acceda al calen
 - n8n abstrae toda esa complejidad con nodos visuales.
 - Permite agregar nuevas integraciones (Notion, Slack, WhatsApp) sin código.
 - Self-hosteable o cloud, sin vendor lock-in.
+
+### API Keys de Supabase (formato nuevo)
+- **`sb_publishable_...`** (reemplaza a `anon`): Para el frontend. Segura para exponer en el navegador. Sujeta a RLS.
+- **`sb_secret_...`** (reemplaza a `service_role`): Solo para el backend. Bypasea RLS, acceso total a la DB.
+- Ya NO se necesita `SUPABASE_JWT_SECRET`. El backend verifica tokens de usuario llamando a Supabase Auth con la secret key.
+- Las keys legacy (formato JWT) siguen funcionando durante la transición.

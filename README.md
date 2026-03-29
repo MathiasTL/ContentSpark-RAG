@@ -33,13 +33,13 @@ ContentSpark resuelve esto ofreciendo:
 - **Embeddings:** Google Gemini (`gemini-embedding-001`)
 
 ### Base de datos & Integraciones
-- **Relacional:** PostgreSQL vía Supabase + Prisma ORM
+- **Relacional:** PostgreSQL vía Supabase + SQLAlchemy 2.0 (asyncio) + Alembic
 - **Vectorial:** Qdrant Cloud (búsqueda semántica, colecciones RAG)
 - **Automatización:** n8n (Google Calendar y Gmail)
 
 ## Arquitectura y Módulos Principales
 
-1. **Gestión de Usuarios & Auth:** Flujo seguro con Supabase + persistencia en DB relacional vía Prisma.
+1. **Gestión de Usuarios & Auth:** Flujo seguro con Supabase Auth + persistencia en PostgreSQL administrada desde el backend con SQLAlchemy.
 2. **Onboarding Inteligente:** Agente (LangGraph) que conversa para extraer el *CreatorProfile* (nicho, tono, formatos).
 3. **Flujo CRAG Optimizado:** Búsqueda en Qdrant con query rewriting, filtrado por score y enriquecimiento de prompt.
 4. **Calendario de Contenido:** Generación de contenido con LLM en base a prioridades y exportación mediante webhooks a n8n.
@@ -52,16 +52,19 @@ ContentSpark/
 ├── backend/
 │   ├── main.py
 │   ├── ingest_data.py          # Pipeline de ingesta optimizado (PDF/URLs)
+│   ├── alembic.ini             # Configuración de migraciones
+│   ├── alembic/                # Historial de migraciones DB
 │   ├── app/
 │   │   ├── agents/             # Agentes LangGraph (onboarding, calendar)
+│   │   ├── models/             # Modelos SQLAlchemy nativos
 │   │   ├── routers/            # Endpoints API segregados (auth, chat, ...)
+│   │   ├── schemas/            # Validación con Pydantic
 │   │   ├── services/           # Lógica de RAG, embeddings y DB vectorial
 │   │   └── middleware/         # Auth y verificación de tokens
 ├── frontend/
 │   ├── app/                    # Auth, App principal (Chat, Calendario, Perfil)
 │   ├── components/             # Componentes modulares, UI, Markdown
-│   ├── lib/                    # Supabase Client, Prisma, fetch APIs
-│   └── prisma/                 # Schema PostgreSQL y migraciones
+│   └── lib/                    # Supabase Client, API Fetchers
 └── n8n/                        # Workflows configurados (próximos)
 ```
 
@@ -80,40 +83,36 @@ GOOGLE_API_KEY=...
 QDRANT_URL=...
 QDRANT_API_KEY=...
 SUPABASE_URL=...
-SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-DATABASE_URL=postgresql://...
-SUPABASE_JWT_SECRET=...
+SUPABASE_ANON_KEY=sb_publishable_...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
+DATABASE_URL=postgresql+asyncpg://...
 N8N_WEBHOOK_URL=...
 ```
 
 **Frontend (`frontend/.env.local`):**
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 ## Instalación y ejecución
 
-### 1) DB & ORM (Desde el frontend)
-```bash
-cd frontend
-npm install
-npx prisma generate
-npx prisma migrate dev
-```
-
-### 2) Backend
+### 1) Backend & Setup de DB
+El backend gestiona la base de datos de manera nativa utilizando SQLAlchemy y Alembic.
 ```bash
 cd backend
 pip install -r requirements.txt
+# Aplicar migraciones pendientes
+alembic upgrade head
+# Levantar el servidor
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 3) Frontend
+### 2) Frontend
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
 (La app operará en *localhost:3000* y la API en *localhost:8000*).
@@ -130,10 +129,10 @@ python ingest_data.py all
 ## Roadmap del Proyecto (SaaS)
 
 El estado del proyecto sigue el siguiente plan:
-- ✅ **Fase 0:** Setup de Infraestructura (Prisma, Supabase, Qdrant, Estructura).
+- ✅ **Fase 0:** Setup de Infraestructura (SQLAlchemy, Alembic, Supabase, Qdrant).
 - 🔄 **Fase 1:** Auth + Multi-chat (Integración Supabase, Historial DB).
-- 🔜 **Fase 2:** Onboarding Inteligente (Agente LangGraph para perfiles).
+- 🔄 **Fase 2:** Onboarding Inteligente (Agente LangGraph para perfiles).
 - 🔜 **Fase 3:** Calendario de Contenido y Generación Asistida.
 - 🔜 **Fase 4:** Integración n8n (Google Calendar + Gmail).
 
-Para más detalles, consulta el documento estratégico `CONTENTSPARK_SAAS_ROADMAP.md`.
+Para más detalles, consulta el documento estratégico `CONTENTSPARK_SAAS_ROADMAP.md` y `CLAUDE.md`.

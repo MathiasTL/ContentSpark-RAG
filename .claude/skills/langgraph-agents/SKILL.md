@@ -1,7 +1,17 @@
+---
+name: langgraph-agents
+description: >
+  Skill para crear y modificar agentes LangGraph en ContentSpark. Usar cuando se trabaje
+  con el agente de onboarding (recopilación de perfil del creador), el agente de calendario
+  (generación de planes de contenido), o el pipeline CRAG (búsqueda RAG con fallback web).
+  Contiene patrones de StateGraph, nodos conversacionales, nodos generadores, y reglas de
+  streaming async para FastAPI.
+---
+
 # LangGraph Agent Development Skill
 
 ## Contexto
-ContentSpark usa LangGraph para dos tipos de agentes: onboarding del creador y generación de calendarios de contenido.
+ContentSpark usa LangGraph para dos tipos de agentes: onboarding del creador y generación de calendarios de contenido, además del pipeline CRAG para búsqueda RAG.
 
 ## Estructura base de un agente
 
@@ -23,10 +33,12 @@ class AgentState(TypedDict):
 # 2. Definir nodos (funciones)
 def step_one(state: AgentState) -> dict:
     """Cada nodo recibe el estado y retorna updates."""
+    print("   [AGENTE] Nodo: step_one")
     # Lógica del paso
     return {"current_step": "step_two", "collected_data": {...}}
 
 def step_two(state: AgentState) -> dict:
+    print("   [AGENTE] Nodo: step_two")
     return {"current_step": "done", "is_complete": True}
 
 # 3. Definir routing condicional
@@ -66,6 +78,7 @@ FIELDS_ORDER = [
 
 def ask_question(state: OnboardingState) -> dict:
     """Genera la pregunta para el campo actual."""
+    print(f"   [ONBOARDING] Preguntando sobre: {state['current_field']}")
     field = state["current_field"]
     profile = state["profile_data"]
     
@@ -82,6 +95,7 @@ def ask_question(state: OnboardingState) -> dict:
 
 def validate_answer(state: OnboardingState) -> dict:
     """Valida la respuesta del usuario para el campo actual."""
+    print(f"   [ONBOARDING] Validando respuesta para: {state['current_field']}")
     field = state["current_field"]
     answer = state["user_message"]
     
@@ -117,23 +131,28 @@ class CalendarState(TypedDict):
     entries: list              # Entries generadas
     is_optimized: bool
 
-def load_profile(state: CalendarState) -> dict:
-    """Carga el perfil del creador desde la DB."""
-    # Query a Prisma/PostgreSQL
+async def load_profile(state: CalendarState) -> dict:
+    """Carga el perfil del creador desde la DB via SQLAlchemy."""
+    print(f"   [CALENDARIO] Cargando perfil para user: {state['user_id']}")
+    # Query con AsyncSession de SQLAlchemy
+    # async with get_session() as session:
+    #     result = await session.execute(select(CreatorProfile).where(...))
     return {"profile": profile_data}
 
-def query_rag(state: CalendarState) -> dict:
+async def query_rag(state: CalendarState) -> dict:
     """Consulta la base RAG para obtener frameworks relevantes."""
+    print(f"   [CALENDARIO] Consultando RAG para nicho: {state['profile']['niche']}")
     niche = state["profile"]["niche"]
-    results = qdrant_search_service.search_similar(
+    results = qdrant_search_service.vector_store.similarity_search(
         f"estrategia de contenido para {niche} formatos y frecuencia",
-        top_k=4
+        k=4
     )
     context = "\n".join([r.page_content for r in results])
     return {"rag_context": context}
 
-def generate_entries(state: CalendarState) -> dict:
+async def generate_entries(state: CalendarState) -> dict:
     """Genera las entries del calendario."""
+    print(f"   [CALENDARIO] Generando {state['frequency']} entries/semana")
     prompt = f"""Genera un calendario de contenido para un creador de {state['profile']['niche']}.
     
     Perfil: {state['profile']}
@@ -149,8 +168,9 @@ def generate_entries(state: CalendarState) -> dict:
     # Generar con LLM
     return {"entries": parsed_entries}
 
-def optimize_distribution(state: CalendarState) -> dict:
+async def optimize_distribution(state: CalendarState) -> dict:
     """Optimiza: no repetir formatos consecutivos, variar temas."""
+    print("   [CALENDARIO] Optimizando distribución")
     entries = state["entries"]
     # Lógica de optimización
     return {"entries": optimized_entries, "is_optimized": True}
@@ -170,5 +190,6 @@ def optimize_distribution(state: CalendarState) -> dict:
            if hasattr(chunk, "content"):
                yield chunk.content
    ```
-7. Los agentes no acceden directamente a la DB — los servicios intermedian.
+7. Los agentes no acceden directamente a la DB — usan servicios que manejan SQLAlchemy `AsyncSession`.
 8. Manejar errores con try/catch en cada nodo — un fallo en un nodo no debe crashear el grafo completo.
+9. Para persistir datos (perfil, calendario), pasar la sesión de SQLAlchemy al servicio correspondiente, no al agente directamente.
