@@ -1,0 +1,24 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-frontend:
+    name: Deploy Frontend (Vercel)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO Fase 5: Configurar Vercel deployment
+      - name: Deploy placeholder
+        run: echo "Frontend deployment — configurar en Fase 5"
+
+  deploy-backend:
+    name: Deploy Backend (Railway/Render)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO Fase 5: Configurar Railway/Render deployment
+      - name: Deploy placeholder
+        run: echo "Backend deployment — configurar en Fase 5"

@@ -1,0 +1,126 @@
+// Prisma Schema para ContentSpark SaaS
+// Conecta con Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Fase 1 ──────────────────────────────────────────
+
+model User {
+  id                   String          @id @default(uuid())
+  email                String          @unique
+  name                 String?
+  avatar_url           String?
+  onboarding_completed Boolean         @default(false)
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+  chats                Chat[]
+  profile              CreatorProfile?
+  calendars            ContentCalendar[]
+
+  @@map("users")
+}
+
+model Chat {
+  id         String    @id @default(uuid())
+  user_id    String
+  title      String    @default("Nuevo Chat")
+  is_archived Boolean  @default(false)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages   Message[]
+
+  @@map("chats")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  chat_id    String
+  role       String   // "user" | "ai"
+  content    String
+  sources    Json?
+  created_at DateTime @default(now())
+  chat       Chat     @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// ── Fase 2 ──────────────────────────────────────────
+
+model CreatorProfile {
+  id                String          @id @default(uuid())
+  user_id           String          @unique
+  display_name      String
+  bio               String?
+  niche             String
+  sub_niche         String?
+  primary_goal      String
+  tone              String
+  target_audience   String
+  current_frequency Int
+  desired_frequency Int
+  preferred_formats Json            @default("[]")
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
+  user              User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  social_accounts   SocialAccount[]
+
+  @@map("creator_profiles")
+}
+
+model SocialAccount {
+  id             String         @id @default(uuid())
+  profile_id     String
+  platform       String         // tiktok | instagram | youtube | linkedin | x
+  handle         String
+  url            String?
+  follower_count Int?
+  added_at       DateTime       @default(now())
+  profile        CreatorProfile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@map("social_accounts")
+}
+
+// ── Fase 3 ──────────────────────────────────────────
+
+model ContentCalendar {
+  id         String         @id @default(uuid())
+  user_id    String
+  name       String
+  start_date DateTime
+  end_date   DateTime
+  frequency  Int
+  status     String         @default("draft") // draft | confirmed | synced
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+  user       User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  entries    ContentEntry[]
+
+  @@map("content_calendars")
+}
+
+model ContentEntry {
+  id                      String          @id @default(uuid())
+  calendar_id             String
+  date                    DateTime
+  time_slot               String          @default("morning") // morning | afternoon | evening
+  title                   String
+  format                  String          // short_video | carousel | story | long_video | post
+  platform                String          // tiktok | instagram | youtube | linkedin
+  hook                    String?
+  description             String
+  status                  String          @default("idea") // idea | drafted | recorded | published
+  google_calendar_event_id String?
+  created_at              DateTime        @default(now())
+  updated_at              DateTime        @updatedAt
+  calendar                ContentCalendar @relation(fields: [calendar_id], references: [id], onDelete: Cascade)
+
+  @@map("content_entries")
+}

@@ -1,0 +1,9 @@
+{
+  "name": "ContentSpark — Sync Calendar to Google Calendar",
+  "description": "Fase 4: Recibe webhook de ContentSpark y crea eventos en Google Calendar",
+  "nodes": [],
+  "connections": {},
+  "active": false,
+  "settings": {},
+  "tags": ["contentspark", "calendar", "fase-4"]
+}

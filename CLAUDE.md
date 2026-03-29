@@ -43,57 +43,77 @@ ContentSpark/
 ├── CLAUDE.md
 ├── CONTENTSPARK_SAAS_PROJECT.md
 ├── CONTENTSPARK_SAAS_ROADMAP.md
+├── docker-compose.yml
+├── docker-compose.dev.yml
 ├── .claude/skills/
 │   ├── contentspark-dev/SKILL.md
 │   ├── supabase-prisma/SKILL.md
 │   └── langgraph-agents/SKILL.md
+├── .github/workflows/
+│   ├── ci.yml
+│   └── deploy.yml
+├── docs/                          # Documentación de diseño (01-07)
 ├── backend/
-│   ├── main.py
+│   ├── main.py                    # Solo imports de routers + CORS
 │   ├── ingest_data.py
-│   ├── urls_to_ingest.json
 │   ├── requirements.txt
 │   ├── data/
 │   └── app/
+│       ├── config.py              # Pydantic BaseSettings centralizado
+│       ├── dependencies.py        # get_current_user, get_db (Fase 1)
+│       ├── core/                  # Configuración base
+│       ├── models/                # Modelos de DB (user, chat, profile, calendar)
+│       ├── schemas/               # Validación Pydantic (auth, chat, profile, calendar)
 │       ├── services/
 │       │   ├── llm_services.py
 │       │   ├── embeddings_service.py
 │       │   ├── qdrant_services.py
 │       │   └── rag_service.py
 │       ├── agents/
+│       │   ├── shared_state.py    # TypedDicts compartidos entre agentes
+│       │   ├── crag_agent.py      # Pipeline CRAG (extraído de rag_service)
 │       │   ├── onboarding_agent.py
 │       │   └── calendar_agent.py
-│       ├── routers/
-│       │   ├── auth.py
-│       │   ├── chat.py
-│       │   ├── profile.py
-│       │   ├── calendar.py
-│       │   └── ingest.py
+│       ├── routers/               # Endpoints por módulo
+│       │   ├── chat.py            # POST /api/chat (activo)
+│       │   ├── ingest.py          # Ingesta + búsqueda + test endpoints (activo)
+│       │   ├── auth.py            # Fase 1
+│       │   ├── profile.py         # Fase 2
+│       │   ├── calendar.py        # Fase 3
+│       │   └── webhooks.py        # Fase 4 (n8n callbacks)
 │       └── middleware/
-│           └── auth.py
+│           ├── auth.py            # JWT verification (Fase 1)
+│           └── rate_limiter.py    # Por tier (Fase 5)
+├── tests/                         # pytest
 ├── frontend/
-│   ├── app/
-│   │   ├── (auth)/
-│   │   │   ├── login/
-│   │   │   └── signup/
-│   │   ├── (app)/
-│   │   │   ├── chat/[id]/
-│   │   │   ├── onboarding/
-│   │   │   ├── calendar/
-│   │   │   └── profile/
-│   │   └── layout.tsx
-│   ├── components/
-│   │   ├── chat/
-│   │   ├── calendar/
-│   │   ├── onboarding/
-│   │   └── ui/
-│   ├── lib/
-│   │   ├── supabase.ts
-│   │   ├── api.ts
-│   │   └── prisma.ts
+│   ├── app/                       # Solo routing — cada page importa de features/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx               # → importa ChatView (temporal, Fase 5: landing)
+│   │   ├── (auth)/login/
+│   │   ├── (auth)/signup/
+│   │   ├── (auth)/callback/       # OAuth callback
+│   │   └── (app)/                 # Rutas protegidas
+│   │       ├── layout.tsx         # Auth guard (Fase 1)
+│   │       ├── chat/[id]/
+│   │       ├── onboarding/
+│   │       ├── calendar/
+│   │       └── profile/
+│   ├── features/                  # Módulos autocontenidos por feature
+│   │   ├── chat/                  # ChatView + componentes + hooks + types
+│   │   ├── auth/                  # Fase 1
+│   │   ├── onboarding/            # Fase 2
+│   │   ├── calendar/              # Fase 3
+│   │   ├── profile/               # Fase 2
+│   │   └── landing/               # Fase 5
+│   ├── shared/                    # Código compartido entre features
+│   │   ├── components/ui/         # Background, scroll-area y futuros
+│   │   ├── hooks/                 # useApi
+│   │   ├── lib/                   # api-client.ts, supabase.ts, utils.ts
+│   │   ├── types/                 # User, ApiResponse
+│   │   └── constants/             # NICHES, PLATFORMS, FORMATS
 │   └── prisma/
-│       └── schema.prisma
-└── n8n/
-    └── workflows/
+│       └── schema.prisma          # Schema completo (todas las fases)
+└── n8n/workflows/                 # JSON placeholders (Fase 4)
 ```
 
 ## Flujo RAG (pipeline optimizado)
@@ -195,9 +215,10 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 - Typing indicator 3 dots, sidebar multi-chat, responsive
 
 ## Estado actual del desarrollo
+- Estructura SaaS: reorganizada (features/, shared/, routers/, agents/, schemas/)
 - RAG pipeline: optimizado (query rewriting, score filtering, ventana deslizante)
 - Ingesta: PDFs + URLs con metadata rica
-- Frontend: glassmorphism base, pendiente mejoras UI
+- Frontend: ChatView en features/chat/, glassmorphism base
 - Auth: pendiente (Fase 1)
 - Onboarding: pendiente (Fase 2)
 - Calendario: pendiente (Fase 3)

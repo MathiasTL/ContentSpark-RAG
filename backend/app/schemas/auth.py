@@ -1,0 +1,19 @@
+# Fase 1: Esquemas Pydantic para auth
+from pydantic import BaseModel, EmailStr
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class SignupRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: str

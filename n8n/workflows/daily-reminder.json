@@ -1,0 +1,9 @@
+{
+  "name": "ContentSpark — Daily Content Reminder",
+  "description": "Fase 4: Cron diario a las 8:00 AM para recordatorios de contenido",
+  "nodes": [],
+  "connections": {},
+  "active": false,
+  "settings": {},
+  "tags": ["contentspark", "email", "fase-4"]
+}

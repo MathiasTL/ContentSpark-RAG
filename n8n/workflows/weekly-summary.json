@@ -1,0 +1,9 @@
+{
+  "name": "ContentSpark — Weekly Summary",
+  "description": "Fase 4: Resumen semanal los domingos",
+  "nodes": [],
+  "connections": {},
+  "active": false,
+  "settings": {},
+  "tags": ["contentspark", "email", "fase-4"]
+}
