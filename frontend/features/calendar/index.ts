@@ -1,2 +1,1 @@
-// Fase 3: Calendario de contenido generado por AI
-export { };
+export { default as CalendarView } from "./CalendarView";

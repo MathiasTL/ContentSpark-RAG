@@ -1,8 +1,5 @@
-// Fase 3: Calendario de contenido
+import { CalendarView } from "@/features/calendar";
+
 export default function CalendarPage() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p className="text-white">Calendario — Fase 3</p>
-    </div>
-  );
+  return <CalendarView />;
 }
