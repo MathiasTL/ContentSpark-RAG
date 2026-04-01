@@ -14,7 +14,13 @@ langchain-text-splitters
 langchain-qdrant
 langgraph
 
-# Bases de datos y Búsqueda
+# ORM y Base de datos relacional
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic-settings
+
+# Vector DB y Búsqueda
 qdrant-client
 duckduckgo-search
 
