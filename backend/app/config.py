@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     def async_database_url(self) -> str:
         """Convierte la URL de PostgreSQL a formato asyncpg."""
         url = self.database_url
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
         if url.startswith("postgresql://"):
             return url.replace("postgresql://", "postgresql+asyncpg://", 1)
         return url

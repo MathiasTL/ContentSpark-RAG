@@ -1,4 +1,5 @@
 import asyncio
+import ssl
 from logging.config import fileConfig
 
 from sqlalchemy import pool
@@ -8,6 +9,11 @@ from alembic import context
 
 from app.config import settings
 from app.models import Base  # Importa todos los modelos via __init__.py
+
+# SSL para Supabase pooler
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
 
 # Alembic Config object
 config = context.config
@@ -50,6 +56,10 @@ async def run_async_migrations() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args={
+            "ssl": ssl_context,
+            "statement_cache_size": 0,
+        },
     )
 
     async with connectable.connect() as connection:
