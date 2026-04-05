@@ -1,11 +1,5 @@
-// Fase 1: Página de signup
-// import { SignupPage } from '@/features/auth';
-// export default SignupPage;
+import { SignupView } from "@/features/auth";
 
 export default function SignupPage() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p className="text-white">Signup — Fase 1</p>
-    </div>
-  );
+  return <SignupView />;
 }

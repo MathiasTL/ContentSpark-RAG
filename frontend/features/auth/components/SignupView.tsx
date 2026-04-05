@@ -4,7 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import AuthBackground from "./AuthBackground";
 
-export default function LoginView() {
+export default function SignupView() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -13,8 +14,8 @@ export default function LoginView() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO Fase 1: Integrar Supabase Auth
-    console.log("Login:", { email, password });
+    // TODO Fase 1: Integrar Supabase Auth Signup
+    console.log("Signup:", { name, email, password });
     setTimeout(() => setIsLoading(false), 1000);
   };
 
@@ -29,9 +30,9 @@ export default function LoginView() {
 
       <main className="relative flex min-h-dvh items-center justify-center px-4 py-6 sm:py-8 overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, x: -20, scale: 0.95 }}
+          initial={{ opacity: 0, x: 20, scale: 0.95 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: 20, scale: 0.95 }}
+          exit={{ opacity: 0, x: -20, scale: 0.95 }}
           transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
           className="w-full max-w-[420px] sm:max-w-[458px]"
         >
@@ -40,7 +41,7 @@ export default function LoginView() {
             {/* Header */}
             <div className="mb-5 flex flex-col items-center sm:mb-6">
               <motion.img
-                initial={{ rotate: 10, scale: 0.8 }}
+                initial={{ rotate: -10, scale: 0.8 }}
                 animate={{ rotate: 0, scale: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                 src="/only_logo.png"
@@ -48,15 +49,46 @@ export default function LoginView() {
                 className="mb-3 h-12 w-12 sm:h-14 sm:w-14"
               />
               <h1 className="text-xl font-semibold tracking-tight text-[#2c2f33] sm:text-2xl">
-                ContentSpark
+                Únete a ContentSpark
               </h1>
               <p className="mt-1 text-center text-sm font-light text-[#595c60]">
-                Entra a tu espacio de trabajo
+                Crea tu cuenta y empieza a brillar
               </p>
             </div>
 
             {/* Formulario */}
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-4">
+              {/* Nombre Completo */}
+              <div className="space-y-1.5">
+                <label className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]">
+                  Nombre completo
+                </label>
+                <div className="relative">
+                  <svg
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#75777b]"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Tu nombre"
+                    required
+                    className="w-full rounded-xl border border-white/40 bg-white/30 py-3 pl-11 pr-4 text-sm font-light text-[#2c2f33] outline-none transition-all placeholder:text-[#75777b]/50 focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20 sm:rounded-2xl sm:py-3.5 sm:pl-12 sm:text-base"
+                  />
+                </div>
+              </div>
+
               {/* Email */}
               <div className="space-y-1.5">
                 <label className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]">
@@ -90,17 +122,9 @@ export default function LoginView() {
 
               {/* Password */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between px-1">
-                  <label className="text-xs font-medium uppercase tracking-widest text-[#595c60]">
-                    Contraseña
-                  </label>
-                  <a
-                    href="#"
-                    className="text-xs font-medium text-[#6e2ce0] transition-colors hover:text-[#6216d4]"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </a>
-                </div>
+                <label className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]">
+                  Contraseña
+                </label>
                 <div className="relative">
                   <svg
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-[#75777b]"
@@ -149,9 +173,9 @@ export default function LoginView() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-full bg-gradient-to-r from-[#6e2ce0] to-[#b08cff] py-3 font-semibold text-white shadow-lg shadow-[#6e2ce0]/20 transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100 sm:py-3.5"
+                className="w-full rounded-full bg-gradient-to-r from-[#6e2ce0] to-[#b08cff] py-3 font-semibold text-white shadow-lg shadow-[#6e2ce0]/20 transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100 sm:py-3.5 mt-2"
               >
-                {isLoading ? "Ingresando..." : "Iniciar sesión"}
+                {isLoading ? "Creando cuenta..." : "Crear cuenta"}
               </button>
             </form>
 
@@ -159,7 +183,7 @@ export default function LoginView() {
             <div className="my-5 flex w-full items-center gap-3 sm:my-6 sm:gap-4">
               <div className="h-px flex-1 bg-[#abadb2]/20" />
               <span className="text-[10px] font-medium uppercase tracking-widest text-[#75777b] sm:text-xs">
-                O continúa con
+                O regístrate con
               </span>
               <div className="h-px flex-1 bg-[#abadb2]/20" />
             </div>
@@ -175,17 +199,17 @@ export default function LoginView() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Continuar con Google
+              Google
             </button>
 
-            {/* Link a signup */}
+            {/* Link a login */}
             <p className="mt-5 text-center text-sm font-light text-[#595c60] sm:mt-6">
-              ¿No tienes cuenta?{" "}
+              ¿Ya tienes cuenta?{" "}
               <a
-                href="/signup"
+                href="/login"
                 className="ml-1 font-medium text-[#6e2ce0] hover:underline"
               >
-                Crea una cuenta
+                Inicia sesión
               </a>
             </p>
           </div>
