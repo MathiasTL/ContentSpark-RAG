@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp:*)",
+      "Bash(mkdir -p /mnt/c/Users/Mathias/ContentSpark/.claude/skills/ui-ux-pro-max)",
+      "Bash(mkdir -p /mnt/c/Users/Mathias/ContentSpark/.claude/skills/frontend-design)",
+      "Bash(mkdir -p /mnt/c/Users/Mathias/ContentSpark/.claude/skills/skill-creator)",
+      "WebFetch(domain:lh3.googleusercontent.com)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "WebFetch(domain:21st.dev)",
+      "Bash(npm install:*)",
+      "Bash(pip install:*)"
+    ]
+  }
+}
