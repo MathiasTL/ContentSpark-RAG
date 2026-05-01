@@ -19,6 +19,7 @@ sqlalchemy[asyncio]
 asyncpg
 alembic
 pydantic-settings
+supabase
 
 # Vector DB y Búsqueda
 qdrant-client

@@ -1,26 +1,68 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import AuthBackground from "./AuthBackground";
+import { createClient } from "@/shared/lib/supabase";
 
 export default function LoginView() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     setIsLoading(true);
-    // TODO Fase 1: Integrar Supabase Auth
-    console.log("Login:", { email, password });
-    setTimeout(() => setIsLoading(false), 1000);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+      router.push("/chat");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
-    // TODO Fase 1: Integrar Supabase Google OAuth
-    console.log("Google OAuth");
+    const runOAuth = async () => {
+      setErrorMessage(null);
+      setIsLoading(true);
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}/callback`,
+          },
+        });
+
+        if (error) {
+          setErrorMessage(error.message);
+          return;
+        }
+
+        if (data?.url) {
+          window.location.href = data.url;
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void runOAuth();
   };
 
   return (
@@ -54,6 +96,12 @@ export default function LoginView() {
                 Entra a tu espacio de trabajo
               </p>
             </div>
+
+            {errorMessage ? (
+              <div className="mb-4 rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+                {errorMessage}
+              </div>
+            ) : null}
 
             {/* Formulario */}
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">

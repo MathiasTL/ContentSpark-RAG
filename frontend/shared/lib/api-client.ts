@@ -1,3 +1,5 @@
+import { createClient } from "@/shared/lib/supabase";
+
 // 1. Define types for API requests and responses
 //This assure type safety when making API calls and handling responses, and also serves as documentation for the expected data structures.
 export interface Message {
@@ -25,13 +27,32 @@ export interface SourcesResponse {
 // 2. Define URL for the API endpoint
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  const supabase = createClient();
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) {
+    return {};
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 // 3. Create the service function to send messages to the backend
 export async function sendMessageToBackend(currentMessage: string, chatHistory: Message[]): Promise<ChatResponse> {
   try {
+    const authHeaders = await getAuthHeaders();
     const response = await fetch(`${BACKEND_URL}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders,
       },
       // Empaquetamos el mensaje actual y la memoria histórica exactamente como lo pide FastAPI
       body: JSON.stringify({
@@ -60,10 +81,12 @@ export async function sendMessageToBackend(currentMessage: string, chatHistory: 
 //Ingest of documents from pdfs
 export async function getSourcesFromBackend(): Promise<SourcesResponse> {
   try {
+    const authHeaders = await getAuthHeaders();
     const response = await fetch(`${BACKEND_URL}/api/sources`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders,
       },
     });
 
@@ -85,10 +108,12 @@ export async function getSourcesFromBackend(): Promise<SourcesResponse> {
 
 export async function streamMessageFromBackend(currentMessage: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<void> {
   try {
+    const authHeaders = await getAuthHeaders();
     const response = await fetch(`${BACKEND_URL}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders,
       },
       body: JSON.stringify({
         message: currentMessage,
