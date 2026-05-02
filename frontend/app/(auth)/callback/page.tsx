@@ -13,16 +13,44 @@ export default function CallbackPage() {
     const finalizeLogin = async () => {
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
+      const errorParam =
+        params.get("error_description") ?? params.get("error") ?? null;
 
-      if (!code) {
-        setErrorMessage("No se encontro el codigo de autenticacion.");
+      if (errorParam) {
+        setErrorMessage(decodeURIComponent(errorParam));
         return;
       }
 
       const supabase = createClient();
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-      if (error) {
+        if (error || !data?.session) {
+          setErrorMessage("No pudimos completar el inicio de sesion.");
+          return;
+        }
+
+        router.replace("/chat");
+        return;
+      }
+
+      const hashParams = new URLSearchParams(
+        window.location.hash.replace(/^#/, "")
+      );
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+
+      if (!accessToken || !refreshToken) {
+        setErrorMessage("No pudimos completar el inicio de sesion.");
+        return;
+      }
+
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      if (error || !data?.session) {
         setErrorMessage("No pudimos completar el inicio de sesion.");
         return;
       }
