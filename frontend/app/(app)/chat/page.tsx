@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import { ChatView } from "@/features/chat";
 
 export default function ChatIndexPage() {
-  return <ChatView />;
+  return (
+    <Suspense fallback={null}>
+      <ChatView />
+    </Suspense>
+  );
 }

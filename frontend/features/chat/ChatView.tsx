@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Paperclip, Send, UserCircle2 } from "lucide-react";
 import { getSourcesFromBackend, streamMessageFromBackend } from "@/shared/lib/api-client";
-import ChatSidebar from "./components/ChatSidebar";
 import ChatHeader from "./components/ChatHeader";
-import Background from "@/shared/components/ui/Background";
+import ConversationsList from "./components/ConversationsList";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import SourcesModal from "./components/SourcesModal";
 import type { Source } from "@/shared/lib/api-client";
@@ -25,7 +26,7 @@ const initialMessages: Message[] = [
 ];
 
 const SUGGESTED_PROMPTS = [
-  "Dame hooks virales para mi próximo Reel",
+  "Dame hooks virales",
   "Estrategia de contenido para esta semana",
   "Ideas de contenido trending",
 ];
@@ -33,7 +34,7 @@ const SUGGESTED_PROMPTS = [
 function WelcomeMessage() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-6 text-center">
-      <div className="flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-200/50 via-purple-200/40 to-pink-200/50 backdrop-blur-md border border-purple-300/50 shadow-lg shadow-purple-200/30">
+      <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/20 bg-white/30 p-3 shadow-lg backdrop-blur-2xl">
         <Image
           src="/only_logo.png"
           alt="ContentSpark"
@@ -43,10 +44,10 @@ function WelcomeMessage() {
         />
       </div>
       <div className="space-y-2">
-        <h2 className="text-2xl font-semibold text-indigo-800 tracking-tight">
+        <h2 className="text-2xl font-semibold tracking-tight text-on-surface">
           Desata tu creatividad con ContentSpark
         </h2>
-        <p className="text-sm text-indigo-600/70 font-light max-w-xs leading-relaxed mx-auto">
+        <p className="mx-auto max-w-md text-sm font-light leading-relaxed text-on-surface-variant">
           Consulta tu base de conocimiento. ContentSpark busca en sus documentos
           ingestados y genera respuestas contextualizadas.
         </p>
@@ -57,12 +58,15 @@ function WelcomeMessage() {
 
 function TypingIndicator() {
   return (
-    <div className="flex items-end justify-start">
-      <div className="bg-white/50 backdrop-blur-md border border-white/40 text-gray-800 rounded-2xl rounded-bl-none px-4 py-3">
-        <span className="flex gap-1 items-center h-5">
-          <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-          <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-          <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" />
+    <div className="flex max-w-3xl gap-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/20 p-1.5 shadow-lg backdrop-blur-2xl">
+        <Image src="/only_logo.png" alt="AI" width={28} height={28} />
+      </div>
+      <div className="rounded-3xl rounded-tl-none border border-white/10 bg-white/40 px-6 py-4 backdrop-blur-2xl">
+        <span className="flex h-5 items-center gap-1">
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.3s]" />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.15s]" />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant" />
         </span>
       </div>
     </div>
@@ -74,7 +78,6 @@ export default function ChatView() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasStartedStreaming, setHasStartedStreaming] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [welcomeFading, setWelcomeFading] = useState(false);
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
@@ -84,6 +87,10 @@ export default function ChatView() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const requestVersionRef = useRef(0);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -101,6 +108,7 @@ export default function ChatView() {
   // Fade out welcome when the user sends their first message
   useEffect(() => {
     if (messages.length > 1 && showWelcome && !welcomeFading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWelcomeFading(true);
       const timer = setTimeout(() => setShowWelcome(false), 450);
       return () => clearTimeout(timer);
@@ -119,6 +127,16 @@ export default function ChatView() {
       textareaRef.current.style.height = "auto";
     }
   }
+
+  // Reset when AppSidebar's "New Chat" navigates here with ?new=1
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      resetChat();
+      router.replace(pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   async function openSourcesModal() {
     setIsSourcesOpen(true);
@@ -203,123 +221,136 @@ export default function ChatView() {
   const conversationMessages = messages.slice(1);
 
   return (
-    <main className="relative isolate min-h-screen w-full overflow-hidden flex items-center justify-center p-4">
-      <Background />
+    <div className="flex h-screen w-full">
+      <ConversationsList onNewChat={resetChat} />
 
-      <div className="relative z-10 w-full max-w-6xl h-[85vh] flex flex-col gap-4 md:flex-row">
-        <ChatSidebar onNewChat={resetChat} />
+      <section className="relative flex h-full min-w-0 flex-1 flex-col bg-surface/40 backdrop-blur-sm">
+        {/* Decorative blurs */}
+        <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/10 blur-[120px]" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-secondary/10 blur-[120px]" />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <ChatHeader onOpenSources={openSourcesModal} />
+        <ChatHeader onOpenSources={openSourcesModal} />
 
-          <div className="flex flex-1 flex-col bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl overflow-hidden min-h-0">
-
-            <ScrollArea className="flex-1">
-              <div className="px-4 py-4 space-y-3">
-
-                {/* Welcome screen — fades out on first query */}
-                {showWelcome && (
-                  <div
-                    className={`transition-all duration-450 ease-in-out ${
-                      welcomeFading
-                        ? "opacity-0 -translate-y-2 scale-[0.98] pointer-events-none"
-                        : "opacity-100 translate-y-0 scale-100"
-                    }`}
-                  >
-                    <WelcomeMessage />
-                    <div className="flex flex-wrap gap-2 justify-center mt-1 pb-2">
-                      {SUGGESTED_PROMPTS.map((prompt) => (
-                        <button
-                          key={prompt}
-                          onClick={() => handleSend(prompt)}
-                          className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl px-4 py-2 text-sm text-indigo-700/80 hover:bg-white/40 hover:text-indigo-800 transition cursor-pointer"
-                        >
-                          {prompt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Conversation messages */}
-                {conversationMessages.map((msg, i) =>
-                  msg.role === "user" ? (
-                    <div key={i} className="flex items-end justify-end">
-                      <div className="max-w-[75%] bg-blue-500 text-white rounded-2xl rounded-br-none px-4 py-2.5 text-sm leading-relaxed shadow-md">
-                        {msg.content}
-                      </div>
-                    </div>
-                  ) : (
-                    <div key={i} className="flex items-end justify-start">
-                      <div className="max-w-[75%] bg-white/50 backdrop-blur-md border border-white/40 text-gray-800 rounded-2xl rounded-bl-none px-4 py-2.5 text-sm leading-relaxed shadow-sm">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                            strong: ({ children }) => <strong className="font-semibold text-indigo-900">{children}</strong>,
-                            b: ({ children }) => <b className="font-semibold text-indigo-900">{children}</b>,
-                            ul: ({ children }) => <ul className="list-disc ml-4 mb-2 space-y-1">{children}</ul>,
-                            ol: ({ children }) => <ol className="list-decimal ml-4 mb-2 space-y-1">{children}</ol>,
-                            li: ({ children }) => <li>{children}</li>,
-                          }}
-                        >
-                          {msg.content}
-                        </ReactMarkdown>
-                        <p className="text-xs text-gray-400/60 mt-2 italic">
-                          Fuente: ContentSpark Knowledge Base
-                        </p>
-                      </div>
-                    </div>
-                  )
-                )}
-
-                {isLoading && !hasStartedStreaming && <TypingIndicator />}
-                <div ref={bottomRef} />
-              </div>
-            </ScrollArea>
-
-            {/* Input area */}
-            <div className="shrink-0 px-4 py-4 border-t border-white/20 bg-white/10 backdrop-blur-md">
+        <ScrollArea className="relative z-10 min-h-0 flex-1">
+          <div className="mx-auto w-full max-w-4xl space-y-8 p-12">
+            {showWelcome && (
               <div
-                className={`flex items-end gap-3 bg-white/30 backdrop-blur-md border rounded-2xl px-4 py-2 shadow-inner transition-colors duration-200 ${
-                  isFocused ? "border-white/50" : "border-white/20"
+                className={`transition-all duration-500 ease-in-out ${
+                  welcomeFading
+                    ? "pointer-events-none -translate-y-2 scale-[0.98] opacity-0"
+                    : "translate-y-0 scale-100 opacity-100"
                 }`}
               >
-                <textarea
-                  ref={textareaRef}
-                  rows={1}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  placeholder="Pregunta sobre tu contenido..."
-                  disabled={isLoading}
-                  className="flex-1 bg-transparent text-gray-800 placeholder-gray-400 text-sm outline-none resize-none overflow-hidden max-h-40 leading-relaxed py-1 disabled:opacity-50"
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={isLoading || !input.trim()}
-                  aria-label="Enviar mensaje"
-                  className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-md transition-all hover:scale-105 hover:shadow-indigo-300/50 hover:shadow-lg active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 shrink-0"
-                >
-                  {isLoading ? (
-                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 translate-x-px">
-                      <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z" />
-                    </svg>
-                  )}
-                </button>
+                <WelcomeMessage />
               </div>
-              <p className="text-center text-xs text-gray-400 mt-2 font-light">
-                Presiona <kbd className="px-1 py-0.5 rounded bg-white/30 border border-white/40 text-gray-500 text-[11px]">Enter</kbd> para enviar
-              </p>
-            </div>
+            )}
 
+            {conversationMessages.map((msg, i) =>
+              msg.role === "user" ? (
+                <div key={i} className="ml-auto flex max-w-3xl flex-row-reverse gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-primary-container shadow-lg">
+                    <UserCircle2 className="h-7 w-7 text-white/80" strokeWidth={1.25} />
+                  </div>
+                  <div className="liquid-gradient rounded-3xl rounded-tr-none border border-white/10 p-6 leading-relaxed text-white shadow-xl shadow-primary/10 backdrop-blur-2xl">
+                    <p className="font-light">{msg.content}</p>
+                  </div>
+                </div>
+              ) : (
+                <div key={i} className="flex max-w-3xl gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/20 p-1.5 shadow-lg backdrop-blur-2xl">
+                    <Image src="/only_logo.png" alt="AI" width={28} height={28} />
+                  </div>
+                  <div className="rounded-3xl rounded-tl-none border border-white/10 bg-white/40 p-6 leading-relaxed text-on-surface shadow-sm backdrop-blur-2xl">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => (
+                          <p className="mb-2 font-light leading-relaxed last:mb-0">{children}</p>
+                        ),
+                        strong: ({ children }) => (
+                          <strong className="font-semibold text-on-surface">{children}</strong>
+                        ),
+                        ul: ({ children }) => (
+                          <ul className="mt-3 list-disc space-y-2 pl-5 font-light text-on-surface-variant">
+                            {children}
+                          </ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol className="mt-3 list-decimal space-y-2 pl-5 font-light text-on-surface-variant">
+                            {children}
+                          </ol>
+                        ),
+                        li: ({ children }) => <li>{children}</li>,
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              )
+            )}
+
+            {isLoading && !hasStartedStreaming && <TypingIndicator />}
+            <div ref={bottomRef} />
           </div>
+        </ScrollArea>
+
+        <div className="relative z-10 mx-auto w-full max-w-4xl space-y-6 px-12 pb-12">
+          <div className="flex flex-wrap justify-center gap-3">
+            {SUGGESTED_PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => handleSend(prompt)}
+                disabled={isLoading}
+                className="rounded-full border border-white/10 bg-white/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-all hover:scale-105 hover:bg-white/40 disabled:opacity-40"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+
+          <div className="group relative">
+            <div className="absolute inset-0 rounded-full bg-primary/5 opacity-0 blur-2xl transition-opacity group-focus-within:opacity-100" />
+            <div className="relative flex items-end gap-2 rounded-full border border-white/10 bg-white/30 p-2 pl-8 shadow-2xl backdrop-blur-2xl">
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Pregunta a ContentSpark lo que necesites..."
+                disabled={isLoading}
+                className="max-h-40 flex-1 resize-none overflow-hidden border-none bg-transparent py-3 font-light leading-relaxed text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0 focus:outline-none disabled:opacity-50"
+              />
+              <button
+                type="button"
+                aria-label="Adjuntar archivo"
+                className="flex h-10 w-10 shrink-0 items-center justify-center text-on-surface-variant transition-colors hover:text-primary"
+              >
+                <Paperclip size={20} strokeWidth={1.5} />
+              </button>
+              <button
+                type="button"
+                onClick={sendMessage}
+                disabled={isLoading || !input.trim()}
+                aria-label="Enviar mensaje"
+                className="liquid-gradient flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg shadow-primary/30 transition-transform hover:scale-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+              >
+                {isLoading ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <Send size={18} strokeWidth={2} />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <p className="text-center text-[10px] uppercase tracking-widest text-on-surface-variant/50">
+            Powered by ContentSpark AI
+          </p>
         </div>
-      </div>
+      </section>
 
       <SourcesModal
         isOpen={isSourcesOpen}
@@ -328,6 +359,6 @@ export default function ChatView() {
         error={sourcesError}
         onClose={() => setIsSourcesOpen(false)}
       />
-    </main>
+    </div>
   );
 }
