@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -12,6 +13,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { createClient } from "@/shared/lib/supabase";
+import { useSidebar } from "./SidebarProvider";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -24,6 +26,7 @@ const NAV_ITEMS = [
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { collapsed, toggle } = useSidebar();
   const [user, setUser] = useState<{ name: string; avatar?: string } | null>(null);
 
   useEffect(() => {
@@ -43,16 +46,41 @@ export default function AppSidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col justify-between border-r border-white/10 bg-white/5 p-6 shadow-[0_40px_60px_rgba(0,0,0,0.04)] backdrop-blur-xl lg:flex">
+    <aside
+      className={`fixed left-0 top-0 z-50 hidden h-screen flex-col justify-between border-r border-white/10 bg-white/5 shadow-[0_40px_60px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-[width] duration-300 ease-out lg:flex ${
+        collapsed ? "w-20 p-3" : "w-64 p-6"
+      }`}
+    >
       <div>
-        <div className="mb-10 px-2">
-          <h1 className="bg-gradient-to-r from-[#6e2ce0] to-[#b08cff] bg-clip-text text-xl font-semibold tracking-tight text-transparent">
-            ContentSpark
-          </h1>
-          <p className="mt-1 text-xs font-light uppercase tracking-wide text-white/50">
-            Creator Suite
-          </p>
-        </div>
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+          className={`mb-10 flex w-full items-center gap-3 rounded-2xl px-2 py-1 transition-colors hover:bg-white/5 ${
+            collapsed ? "justify-center" : ""
+          }`}
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+            <Image
+              src="/only_logo.png"
+              alt="ContentSpark"
+              width={36}
+              height={36}
+              priority
+              className="h-full w-full object-contain"
+            />
+          </span>
+          {!collapsed && (
+            <span className="min-w-0 text-left">
+              <span className="block bg-gradient-to-r from-[#6e2ce0] to-[#b08cff] bg-clip-text text-xl font-semibold tracking-tight text-transparent">
+                ContentSpark
+              </span>
+              <span className="mt-0.5 block text-[10px] font-light uppercase tracking-wide text-on-surface-variant">
+                Creator Suite
+              </span>
+            </span>
+          )}
+        </button>
 
         <nav className="space-y-2">
           {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
@@ -61,14 +89,17 @@ export default function AppSidebar() {
               <Link
                 key={label}
                 href={href}
-                className={`flex items-center gap-3 px-4 py-3 transition-all duration-200 ${
+                title={collapsed ? label : undefined}
+                className={`flex items-center gap-3 rounded-2xl transition-all duration-200 ${
+                  collapsed ? "h-12 justify-center" : "px-4 py-3"
+                } ${
                   isActive
-                    ? "rounded-3xl bg-white/10 font-semibold text-white"
-                    : "font-light text-white/60 hover:scale-105 hover:text-white"
+                    ? "bg-primary/15 font-semibold text-primary"
+                    : "font-light text-on-surface-variant hover:bg-white/30 hover:text-primary"
                 }`}
               >
-                <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
-                <span className="text-sm">{label}</span>
+                <Icon size={20} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
+                {!collapsed && <span className="text-sm">{label}</span>}
               </Link>
             );
           })}
@@ -78,9 +109,12 @@ export default function AppSidebar() {
           <button
             onClick={handleNewChat}
             type="button"
-            className="liquid-gradient w-full rounded-full py-3 text-sm font-semibold text-white shadow-lg shadow-[#6e2ce0]/20 transition-transform hover:scale-105 active:scale-95"
+            aria-label="Nuevo chat"
+            className={`liquid-gradient flex w-full items-center justify-center text-sm font-semibold text-white shadow-lg shadow-[#6e2ce0]/20 transition-transform hover:scale-105 active:scale-95 ${
+              collapsed ? "h-10 rounded-2xl text-lg" : "rounded-full p-3"
+            }`}
           >
-            New Chat
+            {collapsed ? "+" : "New Chat"}
           </button>
         </div>
       </div>
@@ -88,14 +122,21 @@ export default function AppSidebar() {
       <div className="space-y-4">
         <Link
           href="#"
-          className="flex items-center gap-3 px-4 py-3 text-white/60 transition-colors hover:text-white"
+          title={collapsed ? "Soporte" : undefined}
+          className={`flex items-center gap-3 rounded-2xl text-on-surface-variant transition-colors hover:bg-white/30 hover:text-primary ${
+            collapsed ? "h-12 justify-center" : "px-4 py-3"
+          }`}
         >
-          <HelpCircle size={18} strokeWidth={1.5} />
-          <span className="text-sm font-light">Support</span>
+          <HelpCircle size={18} strokeWidth={1.5} className="shrink-0" />
+          {!collapsed && <span className="text-sm font-light">Support</span>}
         </Link>
 
-        <div className="flex items-center gap-3 border-t border-white/5 px-2 pt-4">
-          <div className="h-10 w-10 overflow-hidden rounded-full border border-white/20 bg-white/10">
+        <div
+          className={`flex items-center gap-3 border-t border-white/5 pt-4 ${
+            collapsed ? "justify-center px-0" : "px-2"
+          }`}
+        >
+          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/20 bg-white/10">
             {user?.avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
@@ -105,14 +146,16 @@ export default function AppSidebar() {
               </div>
             )}
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">
-              {user?.name ?? "Guest"}
-            </p>
-            <p className="text-[10px] uppercase tracking-widest text-white/40">
-              Pro Member
-            </p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-on-surface">
+                {user?.name ?? "Guest"}
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-on-surface-variant">
+                Pro Member
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </aside>

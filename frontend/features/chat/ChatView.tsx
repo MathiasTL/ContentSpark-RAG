@@ -8,7 +8,6 @@ import remarkGfm from "remark-gfm";
 import { Paperclip, Send, UserCircle2 } from "lucide-react";
 import { getSourcesFromBackend, streamMessageFromBackend } from "@/shared/lib/api-client";
 import ChatHeader from "./components/ChatHeader";
-import ConversationsList from "./components/ConversationsList";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import SourcesModal from "./components/SourcesModal";
 import type { Source } from "@/shared/lib/api-client";
@@ -221,18 +220,16 @@ export default function ChatView() {
   const conversationMessages = messages.slice(1);
 
   return (
-    <div className="flex h-screen w-full">
-      <ConversationsList onNewChat={resetChat} />
-
-      <section className="relative flex h-full min-w-0 flex-1 flex-col bg-surface/40 backdrop-blur-sm">
+    <div className="flex h-dvh w-full">
+      <section className="relative flex h-dvh min-w-0 flex-1 flex-col overflow-hidden bg-surface/60 backdrop-blur-sm">
         {/* Decorative blurs */}
         <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/10 blur-[120px]" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-secondary/10 blur-[120px]" />
 
-        <ChatHeader onOpenSources={openSourcesModal} />
+        <ChatHeader onOpenSources={openSourcesModal} onNewChat={resetChat} />
 
-        <ScrollArea className="relative z-10 min-h-0 flex-1">
-          <div className="mx-auto w-full max-w-4xl space-y-8 p-12">
+        <ScrollArea className="relative z-10 min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]>div]:!flex [&_[data-radix-scroll-area-viewport]>div]:!min-h-full [&_[data-radix-scroll-area-viewport]>div]:!flex-col [&_[data-radix-scroll-area-viewport]>div]:!justify-end">
+          <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-end space-y-8 px-12 pt-12 pb-6">
             {showWelcome && (
               <div
                 className={`transition-all duration-500 ease-in-out ${
@@ -295,20 +292,22 @@ export default function ChatView() {
           </div>
         </ScrollArea>
 
-        <div className="relative z-10 mx-auto w-full max-w-4xl space-y-6 px-12 pb-12">
-          <div className="flex flex-wrap justify-center gap-3">
-            {SUGGESTED_PROMPTS.map((prompt) => (
-              <button
-                key={prompt}
-                type="button"
-                onClick={() => handleSend(prompt)}
-                disabled={isLoading}
-                className="rounded-full border border-white/10 bg-white/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-all hover:scale-105 hover:bg-white/40 disabled:opacity-40"
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
+        <div className="relative z-10 mx-auto w-full max-w-4xl shrink-0 space-y-6 px-12 pb-8">
+          {conversationMessages.length === 0 && (
+            <div className="flex flex-wrap justify-center gap-3">
+              {SUGGESTED_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => handleSend(prompt)}
+                  disabled={isLoading}
+                  className="rounded-full border border-white/10 bg-white/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-all hover:scale-105 hover:bg-white/40 disabled:opacity-40"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="group relative">
             <div className="absolute inset-0 rounded-full bg-primary/5 opacity-0 blur-2xl transition-opacity group-focus-within:opacity-100" />
