@@ -1,7 +1,7 @@
-# Modelo User — sincronizado con Supabase Auth
+"""Modelo User — sincronizado con Supabase Auth."""
 import uuid
 
-from sqlalchemy import Boolean, String, Text
+from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -17,9 +17,6 @@ class User(Base, TimestampMixin):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    onboarding_completed: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
-    )
 
     # Relaciones
     profile: Mapped["CreatorProfile"] = relationship(
