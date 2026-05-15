@@ -1,6 +1,6 @@
 # Auth Completion Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Cerrar la pieza "Auth completo" del sprint MVP — lazy sync de usuarios de Supabase a la tabla local, endpoint `/api/auth/me`, logout desde sidebar, limpieza de duplicaciones, manejo de 401 en el cliente.
 
@@ -51,7 +51,7 @@
 - Modify: `backend/requirements.txt`
 - Modify: `backend/tests/conftest.py`
 
-- [ ] **Step 1: Anadir dependencias de testing a `requirements.txt`**
+- [x] **Step 1: Anadir dependencias de testing a `requirements.txt`**
 
 Anadir al final del archivo:
 
@@ -63,12 +63,12 @@ pytest-mock
 httpx
 ```
 
-- [ ] **Step 2: Instalar dependencias**
+- [x] **Step 2: Instalar dependencias**
 
 Run: `cd backend && pip install -r requirements.txt`
 Expected: instala pytest, pytest-asyncio, pytest-mock, httpx sin errores.
 
-- [ ] **Step 3: Reemplazar `backend/tests/conftest.py`**
+- [x] **Step 3: Reemplazar `backend/tests/conftest.py`**
 
 ```python
 """Fixtures compartidos para tests del backend."""
@@ -137,12 +137,12 @@ def client(mock_supabase_admin, mock_db_session):
     app.dependency_overrides.clear()
 ```
 
-- [ ] **Step 4: Verificar pytest descubre el conftest**
+- [x] **Step 4: Verificar pytest descubre el conftest**
 
 Run: `cd backend && pytest --collect-only -q`
 Expected: lista tests existentes sin "import errors". No tests fallan todavia.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd backend
@@ -157,7 +157,7 @@ git commit -m "test: add backend testing infrastructure (pytest + httpx + fixtur
 **Files:**
 - Modify: `backend/app/middleware/auth.py`
 
-- [ ] **Step 1: Refactorizar `verify_supabase_token`**
+- [x] **Step 1: Refactorizar `verify_supabase_token`**
 
 Reemplazar el cuerpo del archivo `backend/app/middleware/auth.py`:
 
@@ -208,12 +208,12 @@ def verify_supabase_token(token: str) -> Any:
         raise HTTPException(status_code=401, detail="Error de autenticacion")
 ```
 
-- [ ] **Step 2: Verificar que el unico consumidor sigue compilando**
+- [x] **Step 2: Verificar que el unico consumidor sigue compilando**
 
 Run: `cd backend && python -c "from app.middleware.auth import verify_supabase_token; print('ok')"`
 Expected: imprime "ok" sin errores.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd backend
@@ -230,7 +230,7 @@ git commit -m "refactor(auth): return full user object from verify_supabase_toke
 - Modify: `backend/app/schemas/auth.py`
 - Test: `backend/tests/test_auth.py`
 
-- [ ] **Step 1: Definir `UserResponse` en `schemas/auth.py`**
+- [x] **Step 1: Definir `UserResponse` en `schemas/auth.py`**
 
 Reemplazar contenido completo de `backend/app/schemas/auth.py`:
 
@@ -250,7 +250,7 @@ class UserResponse(BaseModel):
     avatar_url: Optional[str] = None
 ```
 
-- [ ] **Step 2: Escribir el test fallido del 401 sin token**
+- [x] **Step 2: Escribir el test fallido del 401 sin token**
 
 Sobrescribir `backend/tests/test_auth.py`:
 
@@ -267,12 +267,12 @@ def test_me_without_token_returns_401(client):
     assert response.status_code == 401
 ```
 
-- [ ] **Step 3: Verificar que el test falla porque el endpoint no existe**
+- [x] **Step 3: Verificar que el test falla porque el endpoint no existe**
 
 Run: `cd backend && pytest tests/test_auth.py::test_me_without_token_returns_401 -v`
 Expected: FAIL con 404 (el router no esta registrado todavia) o 401 si ya estuviera. Si pasa con 404 → seguimos. Si pasa con 401 → el endpoint ya retorna 401 sin token (improbable).
 
-- [ ] **Step 4: Modificar `get_current_user` para hacer lazy upsert**
+- [x] **Step 4: Modificar `get_current_user` para hacer lazy upsert**
 
 Reemplazar contenido completo de `backend/app/dependencies.py`:
 
@@ -335,12 +335,12 @@ async def get_current_user(
     return str(user_obj.id)
 ```
 
-- [ ] **Step 5: Verificar que el test del 401 sigue requiriendo el endpoint (404 todavia)**
+- [x] **Step 5: Verificar que el test del 401 sigue requiriendo el endpoint (404 todavia)**
 
 Run: `cd backend && pytest tests/test_auth.py::test_me_without_token_returns_401 -v`
 Expected: FAIL (404 — el endpoint /me todavia no existe). El cambio en deps todavia no esta probado hasta Task 6.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd backend
@@ -356,7 +356,7 @@ git commit -m "feat(auth): lazy upsert user on protected requests + UserResponse
 - Modify: `backend/app/models/user.py`
 - Create: `backend/alembic/versions/<id>_drop_users_onboarding_completed.py`
 
-- [ ] **Step 1: Quitar la columna del modelo `User`**
+- [x] **Step 1: Quitar la columna del modelo `User`**
 
 Reemplazar `backend/app/models/user.py`:
 
@@ -393,12 +393,12 @@ class User(Base, TimestampMixin):
     )
 ```
 
-- [ ] **Step 2: Generar la migracion con Alembic**
+- [x] **Step 2: Generar la migracion con Alembic**
 
 Run: `cd backend && alembic revision -m "drop_users_onboarding_completed"`
 Expected: crea un archivo nuevo en `alembic/versions/`. Anotar su ID (ej. `abcd1234efgh`).
 
-- [ ] **Step 3: Escribir el cuerpo de la migracion**
+- [x] **Step 3: Escribir el cuerpo de la migracion**
 
 Reemplazar el cuerpo del archivo recien creado:
 
@@ -441,17 +441,17 @@ def downgrade() -> None:
 
 (Mantener los valores `revision` y `Create Date` que Alembic genero — solo se modifica `down_revision`, `upgrade`, `downgrade`.)
 
-- [ ] **Step 4: Aplicar la migracion contra la DB local**
+- [x] **Step 4: Aplicar la migracion contra la DB local**
 
 Run: `cd backend && alembic upgrade head`
 Expected: log de Alembic confirmando upgrade a la nueva revision sin errores.
 
-- [ ] **Step 5: Verificar que la columna ya no existe**
+- [x] **Step 5: Verificar que la columna ya no existe**
 
 Run: `cd backend && python -c "from app.models.user import User; print([c.name for c in User.__table__.columns])"`
 Expected: lista sin `onboarding_completed`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd backend
@@ -466,21 +466,21 @@ git commit -m "feat(db): drop users.onboarding_completed (source of truth is sup
 **Files:**
 - Delete: `backend/app/models/profile.py`
 
-- [ ] **Step 1: Verificar que el archivo no es importado en ningun lado**
+- [x] **Step 1: Verificar que el archivo no es importado en ningun lado**
 
 Run: `cd backend && grep -rn "from app.models.profile\|app.models.profile" --include="*.py" .`
 Expected: 0 resultados.
 
-- [ ] **Step 2: Eliminar el archivo**
+- [x] **Step 2: Eliminar el archivo**
 
 Run: `cd backend && rm app/models/profile.py`
 
-- [ ] **Step 3: Verificar que la app sigue importando bien**
+- [x] **Step 3: Verificar que la app sigue importando bien**
 
 Run: `cd backend && python -c "import main; print('ok')"`
 Expected: imprime "ok".
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd backend
@@ -497,7 +497,7 @@ git commit -m "chore(models): remove empty profile.py (redundant with creator_pr
 - Modify: `backend/main.py`
 - Modify: `backend/tests/test_auth.py`
 
-- [ ] **Step 1: Escribir tests fallidos para los 4 escenarios**
+- [x] **Step 1: Escribir tests fallidos para los 4 escenarios**
 
 Reemplazar `backend/tests/test_auth.py`:
 
@@ -563,12 +563,12 @@ def test_me_triggers_lazy_upsert(client, mock_db_session, mock_supabase_user):
     assert mock_db_session.execute.await_count >= 2
 ```
 
-- [ ] **Step 2: Verificar que todos los tests fallan (endpoint no existe)**
+- [x] **Step 2: Verificar que todos los tests fallan (endpoint no existe)**
 
 Run: `cd backend && pytest tests/test_auth.py -v`
 Expected: 4 tests, todos FAIL con 404 (excepto el primero que ya falla con 404 por la misma razon).
 
-- [ ] **Step 3: Implementar el router `GET /me`**
+- [x] **Step 3: Implementar el router `GET /me`**
 
 Reemplazar `backend/app/routers/auth.py`:
 
@@ -607,7 +607,7 @@ async def get_me(
     )
 ```
 
-- [ ] **Step 4: Registrar el router en `main.py`**
+- [x] **Step 4: Registrar el router en `main.py`**
 
 Modificar `backend/main.py` — reemplazar contenido completo:
 
@@ -658,17 +658,17 @@ async def root():
     return {"status": "ok", "service": "ContentSpark API", "version": "0.2.0"}
 ```
 
-- [ ] **Step 5: Correr todos los tests de auth y verificar que pasan**
+- [x] **Step 5: Correr todos los tests de auth y verificar que pasan**
 
 Run: `cd backend && pytest tests/test_auth.py -v`
 Expected: 4 tests PASS.
 
-- [ ] **Step 6: Verificar que la app arranca**
+- [x] **Step 6: Verificar que la app arranca**
 
 Run: `cd backend && python -c "import main; print(main.app.routes[-1].path)"`
 Expected: imprime una ruta del API (sanity check sin levantar uvicorn).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd backend
@@ -683,17 +683,17 @@ git commit -m "feat(api): implement GET /api/auth/me with lazy user sync"
 **Files:**
 - Test: smoke test manual
 
-- [ ] **Step 1: Levantar el backend y comprobar /api/chat sigue protegido**
+- [x] **Step 1: Levantar el backend y comprobar /api/chat sigue protegido**
 
 Run: `cd backend && uvicorn main:app --port 8000 &` (o en otra terminal: `uvicorn main:app --port 8000`)
 Run: `curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:8000/api/chat -H "Content-Type: application/json" -d '{"message":"hi","history":[]}'`
 Expected: `401` (sin token).
 
-- [ ] **Step 2: Detener el backend**
+- [x] **Step 2: Detener el backend**
 
 Si quedo en background: `kill %1` (o `pkill -f "uvicorn main:app"`).
 
-- [ ] **Step 3: Confirmar tests pasan completos**
+- [x] **Step 3: Confirmar tests pasan completos**
 
 Run: `cd backend && pytest -v`
 Expected: todos los tests del repositorio PASS (los de auth y los placeholders vacios no rompen).
@@ -707,17 +707,17 @@ Expected: todos los tests del repositorio PASS (los de auth y los placeholders v
 **Files:**
 - Modify: `frontend/package.json`
 
-- [ ] **Step 1: Instalar la dependencia con pnpm**
+- [x] **Step 1: Instalar la dependencia con pnpm**
 
 Run: `cd frontend && pnpm add @radix-ui/react-popover`
 Expected: `package.json` actualizado, lock file modificado, sin errores.
 
-- [ ] **Step 2: Verificar que el paquete esta disponible**
+- [x] **Step 2: Verificar que el paquete esta disponible**
 
 Run: `cd frontend && node -e "console.log(require.resolve('@radix-ui/react-popover'))"`
 Expected: imprime una ruta valida en `node_modules`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd frontend
@@ -732,7 +732,7 @@ git commit -m "chore(deps): add @radix-ui/react-popover for user menu"
 **Files:**
 - Create: `frontend/shared/components/ui/Popover.tsx`
 
-- [ ] **Step 1: Crear el wrapper**
+- [x] **Step 1: Crear el wrapper**
 
 Crear `frontend/shared/components/ui/Popover.tsx`:
 
@@ -766,12 +766,12 @@ export const PopoverContent = forwardRef<HTMLDivElement, ContentProps>(
 PopoverContent.displayName = "PopoverContent";
 ```
 
-- [ ] **Step 2: Verificar typecheck**
+- [x] **Step 2: Verificar typecheck**
 
 Run: `cd frontend && pnpm exec tsc --noEmit`
 Expected: cero errores en el archivo nuevo (puede haber pre-existentes — solo mira los del archivo creado).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd frontend
@@ -786,7 +786,7 @@ git commit -m "feat(ui): add generic glassmorphism Popover wrapper"
 **Files:**
 - Create: `frontend/shared/components/layout/UserMenu.tsx`
 
-- [ ] **Step 1: Crear el componente**
+- [x] **Step 1: Crear el componente**
 
 Crear `frontend/shared/components/layout/UserMenu.tsx`:
 
@@ -889,12 +889,12 @@ export default function UserMenu({ name, email, avatar, collapsed }: Props) {
 }
 ```
 
-- [ ] **Step 2: Verificar typecheck**
+- [x] **Step 2: Verificar typecheck**
 
 Run: `cd frontend && pnpm exec tsc --noEmit`
 Expected: cero errores en el archivo nuevo.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd frontend
@@ -909,7 +909,7 @@ git commit -m "feat(auth): UserMenu popover with logout action"
 **Files:**
 - Modify: `frontend/shared/components/layout/AppSidebar.tsx`
 
-- [ ] **Step 1: Sustituir el bloque user del sidebar por `UserMenu`**
+- [x] **Step 1: Sustituir el bloque user del sidebar por `UserMenu`**
 
 Aplicar este cambio en `frontend/shared/components/layout/AppSidebar.tsx`:
 
@@ -963,17 +963,17 @@ Reemplazar el bloque `<div className="flex items-center gap-3 border-t border-wh
 </div>
 ```
 
-- [ ] **Step 2: Verificar typecheck**
+- [x] **Step 2: Verificar typecheck**
 
 Run: `cd frontend && pnpm exec tsc --noEmit`
 Expected: cero errores.
 
-- [ ] **Step 3: Verificar lint**
+- [x] **Step 3: Verificar lint**
 
 Run: `cd frontend && pnpm lint`
 Expected: cero errores nuevos (warnings pre-existentes ok).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd frontend
@@ -988,7 +988,7 @@ git commit -m "feat(sidebar): wire UserMenu into AppSidebar avatar block"
 **Files:**
 - Modify: `frontend/shared/lib/api-client.ts`
 
-- [ ] **Step 1: Anadir helper `handleAuthErrors`**
+- [x] **Step 1: Anadir helper `handleAuthErrors`**
 
 Modificar `frontend/shared/lib/api-client.ts` — anadir despues de `getAuthHeaders`:
 
@@ -1015,12 +1015,12 @@ if (!response.ok) {
 
 Aplicar identico patron en `getSourcesFromBackend` y `streamMessageFromBackend`.
 
-- [ ] **Step 2: Verificar typecheck**
+- [x] **Step 2: Verificar typecheck**
 
 Run: `cd frontend && pnpm exec tsc --noEmit`
 Expected: cero errores.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd frontend
@@ -1034,25 +1034,25 @@ git commit -m "feat(api-client): sign out and redirect on 401 responses"
 
 Sin commits. Solo verificacion.
 
-- [ ] **Step 1: Levantar backend y frontend**
+- [x] **Step 1: Levantar backend y frontend**
 
 Backend: `cd backend && uvicorn main:app --reload --port 8000`
 Frontend (otra terminal): `cd frontend && pnpm dev`
 
-- [ ] **Step 2: Validar checklist manual**
+- [x] **Step 2: Validar checklist manual**
 
 Probar en el navegador (`http://localhost:3000`):
 
-- [ ] Login email/password con cuenta existente → redirige a `/chat`.
-- [ ] Signup nuevo → email de confirmacion o entrada directa a `/chat` segun config Supabase.
-- [ ] Login Google OAuth → callback completa → `/chat`.
-- [ ] Sin sesion, intentar `/chat` directo → proxy redirige a `/login`.
-- [ ] Con sesion, click en avatar del sidebar → popover abre con nombre/email/avatar.
-- [ ] Click "Cerrar sesion" → vuelve a `/login`. El proximo intento de `/chat` redirige a `/login`.
-- [ ] Tras signup nuevo, verificar en DB: `SELECT id, email, name FROM users WHERE email = 'el_email';` debe tener una fila creada automaticamente.
-- [ ] Forzar token invalido (modificar cookie manualmente o esperar expiracion) → llamar al backend → frontend cierra sesion y redirige a `/login`.
+- [x] Login email/password con cuenta existente → redirige a `/chat`.
+- [x] Signup nuevo → email de confirmacion o entrada directa a `/chat` segun config Supabase.
+- [x] Login Google OAuth → callback completa → `/chat`.
+- [x] Sin sesion, intentar `/chat` directo → proxy redirige a `/login`.
+- [x] Con sesion, click en avatar del sidebar → popover abre con nombre/email/avatar.
+- [x] Click "Cerrar sesion" → vuelve a `/login`. El proximo intento de `/chat` redirige a `/login`.
+- [x] Tras signup nuevo, verificar en DB: `SELECT id, email, name FROM users WHERE email = 'el_email';` debe tener una fila creada automaticamente.
+- [x] Forzar token invalido (modificar cookie manualmente o esperar expiracion) → llamar al backend → frontend cierra sesion y redirige a `/login`.
 
-- [ ] **Step 3: Detener servidores**
+- [x] **Step 3: Detener servidores**
 
 Ctrl+C en ambas terminales.
 
