@@ -46,7 +46,7 @@ export default function AppSidebar() {
           data.user.email?.split("@")[0] ||
           "Creator",
         email: data.user.email ?? undefined,
-        avatar: meta.avatar_url,
+        avatar: meta.avatar_url ?? meta.picture,
       });
     });
   }, []);

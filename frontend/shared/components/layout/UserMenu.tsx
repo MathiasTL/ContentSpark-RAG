@@ -46,6 +46,7 @@ export default function UserMenu({ name, email, avatar, collapsed }: Props) {
             <img
               src={avatar}
               alt={name}
+              referrerPolicy="no-referrer"
               className="h-full w-full object-cover"
             />
           ) : (
