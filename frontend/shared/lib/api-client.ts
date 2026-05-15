@@ -44,6 +44,15 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   };
 }
 
+async function handleAuthError(response: Response): Promise<void> {
+  if (response.status !== 401) return;
+  if (typeof window === "undefined") return;
+
+  const supabase = createClient();
+  await supabase.auth.signOut();
+  window.location.href = "/login";
+}
+
 // 3. Create the service function to send messages to the backend
 export async function sendMessageToBackend(currentMessage: string, chatHistory: Message[]): Promise<ChatResponse> {
   try {
@@ -61,6 +70,7 @@ export async function sendMessageToBackend(currentMessage: string, chatHistory: 
       }),
     });
 
+    await handleAuthError(response);
     if (!response.ok) {
       throw new Error(`Error en el servidor: ${response.status}`);
     }
@@ -90,6 +100,7 @@ export async function getSourcesFromBackend(): Promise<SourcesResponse> {
       },
     });
 
+    await handleAuthError(response);
     if (!response.ok) {
       throw new Error(`Error en el servidor: ${response.status}`);
     }
@@ -121,6 +132,7 @@ export async function streamMessageFromBackend(currentMessage: string, chatHisto
       }),
     });
 
+    await handleAuthError(response);
     if (!response.ok) {
       throw new Error(`Error en el servidor: ${response.status}`);
     }
