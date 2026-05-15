@@ -1,19 +1,13 @@
-# Fase 1: Esquemas Pydantic para auth
+"""Schemas Pydantic para endpoints de auth."""
+from __future__ import annotations
+
+from typing import Optional
+
 from pydantic import BaseModel, EmailStr
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class SignupRequest(BaseModel):
-    email: EmailStr
-    password: str
-    name: str
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class UserResponse(BaseModel):
     user_id: str
+    email: EmailStr
+    name: Optional[str] = None
+    avatar_url: Optional[str] = None

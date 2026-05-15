@@ -1,2 +1,6 @@
-# Fase 1: Endpoints de autenticación con Supabase Auth
-# TODO Fase 1: Implementar signup, login, refresh, logout
+"""Router de auth: endpoints minimos para el frontend."""
+from __future__ import annotations
+
+from fastapi import APIRouter
+
+router = APIRouter(prefix="/api/auth", tags=["auth"])
