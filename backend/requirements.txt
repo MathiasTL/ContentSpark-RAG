@@ -29,3 +29,8 @@ duckduckgo-search
 pypdf
 trafilatura
 
+# Testing
+pytest
+pytest-asyncio
+pytest-mock
+httpx
