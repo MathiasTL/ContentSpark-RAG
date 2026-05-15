@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/shared/lib/supabase";
 import { useSidebar } from "./SidebarProvider";
+import UserMenu from "./UserMenu";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -27,7 +28,11 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { collapsed, toggle } = useSidebar();
-  const [user, setUser] = useState<{ name: string; avatar?: string } | null>(null);
+  const [user, setUser] = useState<{
+    name: string;
+    email?: string;
+    avatar?: string;
+  } | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -35,7 +40,12 @@ export default function AppSidebar() {
       if (!data.user) return;
       const meta = data.user.user_metadata ?? {};
       setUser({
-        name: meta.full_name || meta.name || data.user.email?.split("@")[0] || "Creator",
+        name:
+          meta.full_name ||
+          meta.name ||
+          data.user.email?.split("@")[0] ||
+          "Creator",
+        email: data.user.email ?? undefined,
         avatar: meta.avatar_url,
       });
     });
@@ -131,30 +141,14 @@ export default function AppSidebar() {
           {!collapsed && <span className="text-sm font-light">Support</span>}
         </Link>
 
-        <div
-          className={`flex items-center gap-3 border-t border-white/5 pt-4 ${
-            collapsed ? "justify-center px-0" : "px-2"
-          }`}
-        >
-          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/20 bg-white/10">
-            {user?.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-white/70">
-                {(user?.name ?? "?").charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-on-surface">
-                {user?.name ?? "Guest"}
-              </p>
-              <p className="text-[10px] uppercase tracking-widest text-on-surface-variant">
-                Pro Member
-              </p>
-            </div>
+        <div className="border-t border-white/5 pt-4">
+          {user && (
+            <UserMenu
+              name={user.name}
+              email={user.email}
+              avatar={user.avatar}
+              collapsed={collapsed}
+            />
           )}
         </div>
       </div>
