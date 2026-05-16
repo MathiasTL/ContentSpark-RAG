@@ -106,3 +106,46 @@ def test_get_chat_not_found_returns_404(client, patch_chat_service):
         headers={"Authorization": "Bearer valid"},
     )
     assert response.status_code == 404
+
+
+def test_patch_chat_updates_title(client, patch_chat_service):
+    updated = _fake_chat(title="Nuevo titulo")
+    patch_chat_service.update_chat.return_value = updated
+
+    response = client.patch(
+        "/api/chats/22222222-2222-2222-2222-222222222222",
+        headers={"Authorization": "Bearer valid"},
+        json={"title": "Nuevo titulo"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["title"] == "Nuevo titulo"
+    patch_chat_service.update_chat.assert_awaited_once()
+
+
+def test_patch_chat_archives(client, patch_chat_service):
+    updated = _fake_chat(title="X", is_archived=True)
+    patch_chat_service.update_chat.return_value = updated
+
+    response = client.patch(
+        "/api/chats/22222222-2222-2222-2222-222222222222",
+        headers={"Authorization": "Bearer valid"},
+        json={"is_archived": True},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["is_archived"] is True
+
+
+def test_patch_chat_empty_body_returns_422_or_400(client, patch_chat_service):
+    from fastapi import HTTPException
+
+    patch_chat_service.update_chat.side_effect = HTTPException(
+        status_code=400, detail="Debe enviar al menos un campo"
+    )
+    response = client.patch(
+        "/api/chats/22222222-2222-2222-2222-222222222222",
+        headers={"Authorization": "Bearer valid"},
+        json={},
+    )
+    assert response.status_code == 400

@@ -75,3 +75,20 @@ async def get_chat(
         updated_at=chat.updated_at,
         messages=[_to_message_item(m) for m in chat.messages],
     )
+
+
+@router.patch("/{chat_id}", response_model=ChatListItem)
+async def patch_chat(
+    chat_id: str,
+    payload: ChatUpdateRequest,
+    user_id: str = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ChatListItem:
+    chat = await chat_service.update_chat(
+        db,
+        user_id,
+        chat_id,
+        title=payload.title,
+        is_archived=payload.is_archived,
+    )
+    return _to_list_item(chat)
