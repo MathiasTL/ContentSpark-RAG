@@ -149,3 +149,26 @@ def test_patch_chat_empty_body_returns_422_or_400(client, patch_chat_service):
         json={},
     )
     assert response.status_code == 400
+
+
+def test_delete_chat_returns_204(client, patch_chat_service):
+    response = client.delete(
+        "/api/chats/22222222-2222-2222-2222-222222222222",
+        headers={"Authorization": "Bearer valid"},
+    )
+
+    assert response.status_code == 204
+    patch_chat_service.delete_chat.assert_awaited_once()
+
+
+def test_delete_chat_not_found_returns_404(client, patch_chat_service):
+    from fastapi import HTTPException
+
+    patch_chat_service.delete_chat.side_effect = HTTPException(
+        status_code=404, detail="Chat no encontrado"
+    )
+    response = client.delete(
+        "/api/chats/22222222-2222-2222-2222-222222222222",
+        headers={"Authorization": "Bearer valid"},
+    )
+    assert response.status_code == 404

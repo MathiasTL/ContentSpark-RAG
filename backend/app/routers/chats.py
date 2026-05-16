@@ -92,3 +92,12 @@ async def patch_chat(
         is_archived=payload.is_archived,
     )
     return _to_list_item(chat)
+
+
+@router.delete("/{chat_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_chat(
+    chat_id: str,
+    user_id: str = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    await chat_service.delete_chat(db, user_id, chat_id)
