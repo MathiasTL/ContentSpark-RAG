@@ -37,9 +37,9 @@ Dejar el proyecto listo para deploy con landing page, auth completa (login/signu
 ### 2) Multichat
 
 #### Backend
-- [ ] CRUD de chats: crear, listar, obtener con mensajes, renombrar, borrar.
-- [ ] Persistir mensajes con `chat_id` en DB.
-- [ ] Generar titulo automatico del chat desde el primer mensaje.
+- [x] CRUD de chats: crear, listar, obtener con mensajes, renombrar, borrar.
+- [x] Persistir mensajes con `chat_id` en DB.
+- [x] Generar titulo automatico del chat desde el primer mensaje.
 
 #### Frontend
 - [ ] Sidebar de chats (titulo + ultima actividad).
