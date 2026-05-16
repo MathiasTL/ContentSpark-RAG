@@ -10,6 +10,7 @@ from app.schemas.chat import (
     ChatDetail,
     ChatListItem,
     ChatUpdateRequest,
+    MessageItem,
 )
 from app.services.chat_service import chat_service
 
@@ -47,3 +48,30 @@ async def create_chat(
 ) -> ChatListItem:
     chat = await chat_service.create_chat(db, user_id, title=payload.title)
     return _to_list_item(chat)
+
+
+def _to_message_item(message) -> MessageItem:
+    return MessageItem(
+        id=str(message.id),
+        role=message.role,
+        content=message.content,
+        sources=message.sources,
+        created_at=message.created_at,
+    )
+
+
+@router.get("/{chat_id}", response_model=ChatDetail)
+async def get_chat(
+    chat_id: str,
+    user_id: str = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ChatDetail:
+    chat = await chat_service.get_chat_with_messages(db, user_id, chat_id)
+    return ChatDetail(
+        id=str(chat.id),
+        title=chat.title,
+        is_archived=chat.is_archived,
+        created_at=chat.created_at,
+        updated_at=chat.updated_at,
+        messages=[_to_message_item(m) for m in chat.messages],
+    )

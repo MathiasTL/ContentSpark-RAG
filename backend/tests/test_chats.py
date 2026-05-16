@@ -67,3 +67,42 @@ def test_list_chats_returns_ordered_list(client, patch_chat_service):
 def test_list_chats_without_token_returns_401(client):
     response = client.get("/api/chats")
     assert response.status_code == 401
+
+
+def test_get_chat_returns_messages(client, patch_chat_service):
+    msg = SimpleNamespace(
+        id=UUID("44444444-4444-4444-4444-444444444444"),
+        chat_id=UUID("22222222-2222-2222-2222-222222222222"),
+        role="user",
+        content="Hola",
+        sources=None,
+        created_at=datetime(2026, 5, 16, 12, 0, tzinfo=timezone.utc),
+    )
+    chat = _fake_chat(title="Hola")
+    chat.messages = [msg]
+    patch_chat_service.get_chat_with_messages.return_value = chat
+
+    response = client.get(
+        "/api/chats/22222222-2222-2222-2222-222222222222",
+        headers={"Authorization": "Bearer valid"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == "22222222-2222-2222-2222-222222222222"
+    assert len(body["messages"]) == 1
+    assert body["messages"][0]["role"] == "user"
+    assert body["messages"][0]["content"] == "Hola"
+
+
+def test_get_chat_not_found_returns_404(client, patch_chat_service):
+    from fastapi import HTTPException
+
+    patch_chat_service.get_chat_with_messages.side_effect = HTTPException(
+        status_code=404, detail="Chat no encontrado"
+    )
+    response = client.get(
+        "/api/chats/22222222-2222-2222-2222-222222222222",
+        headers={"Authorization": "Bearer valid"},
+    )
+    assert response.status_code == 404
