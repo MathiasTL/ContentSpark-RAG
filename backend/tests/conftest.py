@@ -106,3 +106,29 @@ def client(mock_supabase_admin, mock_db_session):
 
     auth_module.get_supabase_admin = original
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def seed_chat_id() -> str:
+    return "22222222-2222-2222-2222-222222222222"
+
+
+@pytest.fixture
+def patch_chat_service(monkeypatch):
+    """Reemplaza los metodos de chat_service por AsyncMocks para tests de router."""
+    from app.services import chat_service as cs_module
+
+    fakes = SimpleNamespace(
+        create_chat=AsyncMock(),
+        list_chats=AsyncMock(return_value=[]),
+        get_chat=AsyncMock(),
+        get_chat_with_messages=AsyncMock(),
+        update_chat=AsyncMock(),
+        delete_chat=AsyncMock(),
+        add_message=AsyncMock(),
+        load_history=AsyncMock(return_value=[]),
+        generate_title=AsyncMock(return_value="Titulo generado"),
+    )
+    for name in fakes.__dict__:
+        monkeypatch.setattr(cs_module.chat_service, name, getattr(fakes, name))
+    return fakes
