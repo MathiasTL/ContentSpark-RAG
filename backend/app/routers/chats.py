@@ -26,6 +26,15 @@ def _to_list_item(chat) -> ChatListItem:
     )
 
 
+@router.get("", response_model=list[ChatListItem])
+async def list_chats(
+    user_id: str = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[ChatListItem]:
+    chats = await chat_service.list_chats(db, user_id)
+    return [_to_list_item(c) for c in chats]
+
+
 @router.post(
     "",
     response_model=ChatListItem,
