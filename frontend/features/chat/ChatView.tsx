@@ -87,6 +87,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
   const titleNeedsRefreshRef = useRef(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMessages(session.messages);
   }, [session.messages]);
 

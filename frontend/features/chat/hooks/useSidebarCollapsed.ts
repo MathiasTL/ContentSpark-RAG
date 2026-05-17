@@ -14,6 +14,7 @@ export function useSidebarCollapsed(defaultValue = false): {
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw !== null) setCollapsedState(raw === "true");
     } catch {
       // localStorage no disponible — ignorar

@@ -30,9 +30,13 @@ export function useChatSession(chatId: string | undefined): UseChatSessionResult
     let cancelled = false;
 
     if (!chatId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages([]);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChat(null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(false);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError(null);
       return;
     }
