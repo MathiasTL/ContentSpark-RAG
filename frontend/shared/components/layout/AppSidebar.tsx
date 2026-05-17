@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
@@ -11,6 +11,7 @@ import {
   BarChart3,
   Settings,
   HelpCircle,
+  MessageSquare,
 } from "lucide-react";
 import { createClient } from "@/shared/lib/supabase";
 import { useSidebar } from "./SidebarProvider";
@@ -19,6 +20,7 @@ import UserMenu from "./UserMenu";
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Calendar", href: "/calendar", icon: CalendarDays },
+  { label: "Habla con Spark", href: "/chat", icon: MessageSquare },
   { label: "Creators", href: "/creators", icon: Users },
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
   { label: "Settings", href: "/settings", icon: Settings },
@@ -26,7 +28,6 @@ const NAV_ITEMS = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { collapsed, toggle } = useSidebar();
   const [user, setUser] = useState<{
     name: string;
@@ -51,10 +52,6 @@ export default function AppSidebar() {
     });
   }, []);
 
-  function handleNewChat() {
-    router.push("/chat?new=1");
-  }
-
   return (
     <aside
       className={`fixed left-0 top-0 z-50 hidden h-screen flex-col justify-between border-r border-white/10 bg-white/5 shadow-[0_40px_60px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-[width] duration-300 ease-out lg:flex ${
@@ -65,7 +62,7 @@ export default function AppSidebar() {
         <button
           type="button"
           onClick={toggle}
-          aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+          aria-label={collapsed ? "Expandir menu" : "Colapsar menu"}
           className={`mb-10 flex w-full items-center gap-3 rounded-2xl px-2 py-1 transition-colors hover:bg-white/5 ${
             collapsed ? "justify-center" : ""
           }`}
@@ -114,19 +111,6 @@ export default function AppSidebar() {
             );
           })}
         </nav>
-
-        <div className="mt-10 px-2">
-          <button
-            onClick={handleNewChat}
-            type="button"
-            aria-label="Nuevo chat"
-            className={`liquid-gradient flex w-full items-center justify-center text-sm font-semibold text-white shadow-lg shadow-[#6e2ce0]/20 transition-transform hover:scale-105 active:scale-95 ${
-              collapsed ? "h-10 rounded-2xl text-lg" : "rounded-full p-3"
-            }`}
-          >
-            {collapsed ? "+" : "New Chat"}
-          </button>
-        </div>
       </div>
 
       <div className="space-y-4">
