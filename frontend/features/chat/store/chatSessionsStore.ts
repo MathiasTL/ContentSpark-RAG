@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { ChatDetail } from '../services/chats-api';
+import * as chatsApi from '../services/chats-api';
 
 export interface SessionMessage {
   role: 'user' | 'ai';
@@ -61,8 +62,55 @@ export const useChatSessionsStore = create<ChatSessionsState>((set) => ({
 
   setOnChatListShouldRevalidate: (cb) => set({ onChatListShouldRevalidate: cb }),
 
-  loadChat: async () => {
-    throw new Error('loadChat not implemented');
+  loadChat: async (id) => {
+    const existing = useChatSessionsStore.getState().sessions[id];
+    if (existing?.isStreaming) return;
+
+    set((state) => ({
+      sessions: {
+        ...state.sessions,
+        [id]: {
+          ...emptySession(id),
+          ...existing,
+          isLoading: true,
+          error: null,
+        },
+      },
+    }));
+
+    const version = useChatSessionsStore.getState().sessions[id].requestVersion;
+
+    try {
+      const detail = await chatsApi.getChat(id);
+
+      const cur = useChatSessionsStore.getState().sessions[id];
+      if (!cur || cur.requestVersion !== version || cur.isStreaming) return;
+
+      set((state) => ({
+        sessions: {
+          ...state.sessions,
+          [id]: {
+            ...state.sessions[id],
+            chat: detail,
+            messages: detail.messages.map((m) => ({ role: m.role, content: m.content })),
+            isLoading: false,
+            error: null,
+          },
+        },
+      }));
+    } catch (err) {
+      set((state) => ({
+        sessions: {
+          ...state.sessions,
+          [id]: {
+            ...state.sessions[id],
+            isLoading: false,
+            error: err instanceof Error ? err.message : 'No se pudo cargar el chat',
+          },
+        },
+      }));
+      throw err;
+    }
   },
 
   sendMessage: async () => {
