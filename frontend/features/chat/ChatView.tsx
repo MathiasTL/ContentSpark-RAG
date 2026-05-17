@@ -1,28 +1,29 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Paperclip, Send, UserCircle2 } from "lucide-react";
+
 import { getSourcesFromBackend, streamMessageFromBackend } from "@/shared/lib/api-client";
-import ChatHeader from "./components/ChatHeader";
-import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import SourcesModal from "./components/SourcesModal";
 import type { Source } from "@/shared/lib/api-client";
+import { createChat } from "./services/chats-api";
+import { useChatList } from "./hooks/useChatList";
+import { useChatSession } from "./hooks/useChatSession";
+import ChatHeader from "./components/ChatHeader";
+import SourcesModal from "./components/SourcesModal";
+import { ScrollArea } from "@/shared/components/ui/scroll-area";
+
+interface ChatViewProps {
+  chatId?: string;
+}
 
 interface Message {
   role: "user" | "ai";
   content: string;
 }
-
-const initialMessages: Message[] = [
-  {
-    role: "ai",
-    content: "", // placeholder — WelcomeMessage renders independently
-  },
-];
 
 const SUGGESTED_PROMPTS = [
   "Dame hooks virales",
@@ -34,13 +35,7 @@ function WelcomeMessage() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-6 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/20 bg-white/30 p-3 shadow-lg backdrop-blur-2xl">
-        <Image
-          src="/only_logo.png"
-          alt="ContentSpark"
-          width={52}
-          height={52}
-          priority
-        />
+        <Image src="/only_logo.png" alt="ContentSpark" width={52} height={52} priority />
       </div>
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight text-on-surface">
@@ -72,26 +67,29 @@ function TypingIndicator() {
   );
 }
 
-export default function ChatView() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+export default function ChatView({ chatId }: ChatViewProps) {
+  const router = useRouter();
+  const session = useChatSession(chatId);
+  const { revalidate } = useChatList();
+
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasStartedStreaming, setHasStartedStreaming] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [welcomeFading, setWelcomeFading] = useState(false);
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [sources, setSources] = useState<Source[]>([]);
   const [isSourcesLoading, setIsSourcesLoading] = useState(false);
   const [sourcesError, setSourcesError] = useState<string | null>(null);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const requestVersionRef = useRef(0);
+  const titleNeedsRefreshRef = useRef(false);
 
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+  useEffect(() => {
+    setMessages(session.messages);
+  }, [session.messages]);
 
-  // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -99,43 +97,9 @@ export default function ChatView() {
     el.style.height = `${el.scrollHeight}px`;
   }, [input]);
 
-  // Auto-scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
-
-  // Fade out welcome when the user sends their first message
-  useEffect(() => {
-    if (messages.length > 1 && showWelcome && !welcomeFading) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setWelcomeFading(true);
-      const timer = setTimeout(() => setShowWelcome(false), 450);
-      return () => clearTimeout(timer);
-    }
-  }, [messages.length, showWelcome, welcomeFading]);
-
-  function resetChat() {
-    requestVersionRef.current += 1;
-    setMessages(initialMessages);
-    setInput("");
-    setIsLoading(false);
-    setHasStartedStreaming(false);
-    setShowWelcome(true);
-    setWelcomeFading(false);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  }
-
-  // Reset when AppSidebar's "New Chat" navigates here with ?new=1
-  useEffect(() => {
-    if (searchParams.get("new") === "1") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      resetChat();
-      router.replace(pathname);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
 
   async function openSourcesModal() {
     setIsSourcesOpen(true);
@@ -143,7 +107,6 @@ export default function ChatView() {
     setSourcesError(null);
 
     const result = await getSourcesFromBackend();
-
     if (!result.success) {
       setSources([]);
       setSourcesError("No fue posible cargar las fuentes en este momento.");
@@ -151,12 +114,11 @@ export default function ChatView() {
       return;
     }
 
-    const pdfSources = result.sources.filter((source) => {
-      const type = source.type.toLowerCase();
-      const title = source.title.toLowerCase();
+    const pdfSources = result.sources.filter((s) => {
+      const type = s.type.toLowerCase();
+      const title = s.title.toLowerCase();
       return type.includes("pdf") || title.endsWith(".pdf");
     });
-
     setSources(pdfSources);
     setIsSourcesLoading(false);
   }
@@ -164,25 +126,34 @@ export default function ChatView() {
   async function handleSend(text: string) {
     if (!text || isLoading) return;
 
-    const currentHistory = [...messages];
-    const requestVersion = requestVersionRef.current;
-
+    const requestVersion = ++requestVersionRef.current;
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setHasStartedStreaming(false);
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsLoading(true);
 
-    try {
-      await streamMessageFromBackend(text, currentHistory, (chunk) => {
-        if (requestVersion !== requestVersionRef.current) return;
+    let activeChatId = chatId;
+    const isFirstMessage =
+      !chatId || (session.chat?.title === null && session.messages.length === 0);
 
+    try {
+      if (!activeChatId) {
+        const created = await createChat();
+        activeChatId = created.id;
+        titleNeedsRefreshRef.current = true;
+        router.replace(`/chat/${activeChatId}`);
+      } else if (isFirstMessage) {
+        titleNeedsRefreshRef.current = true;
+      }
+
+      await streamMessageFromBackend(activeChatId, text, (chunk) => {
+        if (requestVersion !== requestVersionRef.current) return;
         if (chunk.length > 0) setHasStartedStreaming(true);
 
         setMessages((prev) => {
           const next = [...prev];
           const lastIndex = next.length - 1;
-
           if (lastIndex >= 0 && next[lastIndex].role === "ai") {
             next[lastIndex] = {
               ...next[lastIndex],
@@ -191,22 +162,35 @@ export default function ChatView() {
           } else {
             next.push({ role: "ai", content: chunk });
           }
-
           return next;
         });
       });
-    } catch {
-      if (requestVersion !== requestVersionRef.current) return;
+    } catch (err) {
+      console.error("[ChatView] handleSend fallo:", err);
+      if (requestVersion === requestVersionRef.current) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "ai",
+            content:
+              "Lo siento, tuve un problema enviando el mensaje. Intentalo de nuevo.",
+          },
+        ]);
+      }
     } finally {
       if (requestVersion === requestVersionRef.current) {
         setIsLoading(false);
         setHasStartedStreaming(false);
+        if (titleNeedsRefreshRef.current) {
+          titleNeedsRefreshRef.current = false;
+          revalidate();
+        }
       }
     }
   }
 
-  async function sendMessage() {
-    await handleSend(input.trim());
+  function sendMessage() {
+    handleSend(input.trim());
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
@@ -216,33 +200,35 @@ export default function ChatView() {
     }
   }
 
-  // Conversation messages: skip index 0 (the welcome placeholder in state)
-  const conversationMessages = messages.slice(1);
+  const showWelcome = messages.length === 0 && !session.isLoading;
 
   return (
     <div className="flex h-dvh w-full">
       <section className="relative flex h-dvh min-w-0 flex-1 flex-col overflow-hidden bg-surface/60 backdrop-blur-sm">
-        {/* Decorative blurs */}
         <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/10 blur-[120px]" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-secondary/10 blur-[120px]" />
 
-        <ChatHeader onOpenSources={openSourcesModal} onNewChat={resetChat} />
+        <ChatHeader onOpenSources={openSourcesModal} />
 
         <ScrollArea className="relative z-10 min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]>div]:!flex [&_[data-radix-scroll-area-viewport]>div]:!min-h-full [&_[data-radix-scroll-area-viewport]>div]:!flex-col [&_[data-radix-scroll-area-viewport]>div]:!justify-end">
           <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-end space-y-8 px-12 pt-12 pb-6">
-            {showWelcome && (
-              <div
-                className={`transition-all duration-500 ease-in-out ${
-                  welcomeFading
-                    ? "pointer-events-none -translate-y-2 scale-[0.98] opacity-0"
-                    : "translate-y-0 scale-100 opacity-100"
-                }`}
-              >
-                <WelcomeMessage />
+            {session.isLoading && (
+              <div className="space-y-6">
+                {[0, 1].map((i) => (
+                  <div key={i} className="h-20 animate-pulse rounded-3xl bg-white/10" />
+                ))}
               </div>
             )}
 
-            {conversationMessages.map((msg, i) =>
+            {session.error && (
+              <div className="rounded-3xl border border-red-300/30 bg-red-500/10 p-4 text-sm text-red-300">
+                {session.error}
+              </div>
+            )}
+
+            {showWelcome && <WelcomeMessage />}
+
+            {messages.map((msg, i) =>
               msg.role === "user" ? (
                 <div key={i} className="ml-auto flex max-w-3xl flex-row-reverse gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-primary-container shadow-lg">
@@ -284,7 +270,7 @@ export default function ChatView() {
                     </ReactMarkdown>
                   </div>
                 </div>
-              )
+              ),
             )}
 
             {isLoading && !hasStartedStreaming && <TypingIndicator />}
@@ -293,7 +279,7 @@ export default function ChatView() {
         </ScrollArea>
 
         <div className="relative z-10 mx-auto w-full max-w-4xl shrink-0 space-y-6 px-12 pb-8">
-          {conversationMessages.length === 0 && (
+          {messages.length === 0 && (
             <div className="flex flex-wrap justify-center gap-3">
               {SUGGESTED_PROMPTS.map((prompt) => (
                 <button
