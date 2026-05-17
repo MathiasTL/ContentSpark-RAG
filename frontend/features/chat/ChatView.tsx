@@ -7,8 +7,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Paperclip, Send, UserCircle2 } from "lucide-react";
 
-import { getSourcesFromBackend, streamMessageFromBackend } from "@/shared/lib/api-client";
+import { getSourcesFromBackend } from "@/shared/lib/api-client";
 import type { Source } from "@/shared/lib/api-client";
+import { streamMessage } from "./services/chat-stream";
 import { createChat } from "./services/chats-api";
 import { useChatList } from "./hooks/useChatList";
 import { useChatSession } from "./hooks/useChatSession";
@@ -148,7 +149,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
         titleNeedsRefreshRef.current = true;
       }
 
-      await streamMessageFromBackend(activeChatId, text, (chunk) => {
+      await streamMessage(activeChatId, text, new AbortController().signal, (chunk) => {
         if (requestVersion !== requestVersionRef.current) return;
         if (chunk.length > 0) setHasStartedStreaming(true);
 
