@@ -42,10 +42,10 @@ Dejar el proyecto listo para deploy con landing page, auth completa (login/signu
 - [x] Generar titulo automatico del chat desde el primer mensaje.
 
 #### Frontend
-- [ ] Sidebar de chats (titulo + ultima actividad).
-- [ ] Boton "Nuevo chat" crea chat y navega.
-- [ ] Abrir chat carga historial desde backend.
-- [ ] Envio de mensajes incluye `chat_id`.
+- [x] Sidebar de chats (titulo + ultima actividad).
+- [x] Boton "Nuevo chat" crea chat y navega.
+- [x] Abrir chat carga historial desde backend.
+- [x] Envio de mensajes incluye `chat_id`.
 
 ### 3) Landing page
 - [ ] Definir contenido (hero, beneficios, CTA, pricing basico).
