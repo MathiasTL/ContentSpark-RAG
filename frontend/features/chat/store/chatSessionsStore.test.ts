@@ -243,3 +243,114 @@ describe('sendMessage — chat nuevo', () => {
     expect(Object.keys(useChatSessionsStore.getState().sessions)).toHaveLength(0);
   });
 });
+
+describe('races, abort y reset', () => {
+  it('requestVersion filtra chunks de un sendMessage abortado por uno nuevo', async () => {
+    useChatSessionsStore.setState({
+      sessions: { abc: emptySession('abc') },
+    });
+
+    let firstOnChunk: ((c: string) => void) | null = null;
+    let firstStreamPromise: Promise<void> | null = null;
+    vi.spyOn(chatStream, 'streamMessage').mockImplementation(
+      async (_id, _msg, _signal, onChunk) => {
+        firstOnChunk = onChunk;
+        firstStreamPromise = new Promise(() => {});
+        return firstStreamPromise;
+      },
+    );
+
+    void useChatSessionsStore.getState().sendMessage('abc', 'primer msg');
+    await new Promise((r) => setTimeout(r, 20));
+
+    // Reemplazamos el spy por una segunda implementación
+    vi.spyOn(chatStream, 'streamMessage').mockImplementation(
+      async (_id, _msg, _signal, onChunk) => {
+        onChunk('segundo');
+      },
+    );
+
+    await useChatSessionsStore.getState().sendMessage('abc', 'segundo msg');
+    await new Promise((r) => setTimeout(r, 10));
+
+    // Ahora el primer onChunk llega tarde:
+    firstOnChunk!('chunk tardio');
+
+    const messages = useChatSessionsStore.getState().sessions.abc.messages;
+    // Debe contener segundo msg + respuesta "segundo" pero NO "chunk tardio"
+    expect(messages.find((m) => m.content.includes('chunk tardio'))).toBeUndefined();
+  });
+
+  it('removeSession aborta el stream activo y elimina la sesión', () => {
+    const abortController = new AbortController();
+    const abortSpy = vi.spyOn(abortController, 'abort');
+    useChatSessionsStore.setState({
+      sessions: { abc: emptySession('abc', { isStreaming: true, abortController }) },
+      activeChatId: 'abc',
+    });
+
+    useChatSessionsStore.getState().removeSession('abc');
+
+    expect(abortSpy).toHaveBeenCalled();
+    expect(useChatSessionsStore.getState().sessions.abc).toBeUndefined();
+    expect(useChatSessionsStore.getState().activeChatId).toBeNull();
+  });
+
+  it('cancelStream NO setea error en la sesión (es intencional)', async () => {
+    const abortController = new AbortController();
+    useChatSessionsStore.setState({
+      sessions: { abc: emptySession('abc', { isStreaming: true, abortController }) },
+    });
+
+    useChatSessionsStore.getState().cancelStream('abc');
+
+    const session = useChatSessionsStore.getState().sessions.abc;
+    expect(session.isStreaming).toBe(false);
+    expect(session.error).toBeNull();
+  });
+
+  it('resetAll aborta todos los streams y vacía el state', () => {
+    const ac1 = new AbortController();
+    const ac2 = new AbortController();
+    const abort1 = vi.spyOn(ac1, 'abort');
+    const abort2 = vi.spyOn(ac2, 'abort');
+    useChatSessionsStore.setState({
+      sessions: {
+        a: emptySession('a', { abortController: ac1 }),
+        b: emptySession('b', { abortController: ac2 }),
+      },
+      activeChatId: 'a',
+    });
+
+    useChatSessionsStore.getState().resetAll();
+
+    expect(abort1).toHaveBeenCalled();
+    expect(abort2).toHaveBeenCalled();
+    expect(useChatSessionsStore.getState().sessions).toEqual({});
+    expect(useChatSessionsStore.getState().activeChatId).toBeNull();
+  });
+
+  it('stream con error de red setea error y preserva mensaje parcial', async () => {
+    useChatSessionsStore.setState({
+      sessions: { abc: emptySession('abc') },
+    });
+
+    vi.spyOn(chatStream, 'streamMessage').mockImplementation(
+      async (_id, _msg, _signal, onChunk) => {
+        onChunk('parcial');
+        throw new Error('network');
+      },
+    );
+
+    await useChatSessionsStore.getState().sendMessage('abc', 'ping');
+    await new Promise((r) => setTimeout(r, 10));
+
+    const session = useChatSessionsStore.getState().sessions.abc;
+    expect(session.isStreaming).toBe(false);
+    expect(session.error).toBe('Conexión interrumpida');
+    expect(session.messages).toEqual([
+      { role: 'user', content: 'ping' },
+      { role: 'ai', content: 'parcial' },
+    ]);
+  });
+});

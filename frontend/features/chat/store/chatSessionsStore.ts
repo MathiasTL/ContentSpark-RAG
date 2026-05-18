@@ -242,15 +242,38 @@ export const useChatSessionsStore = create<ChatSessionsState>((set) => ({
     return { chatId };
   },
 
-  removeSession: () => {
-    throw new Error('removeSession not implemented');
-  },
+  removeSession: (id) =>
+    set((state) => {
+      const session = state.sessions[id];
+      session?.abortController?.abort();
+      const rest = { ...state.sessions };
+      delete rest[id];
+      return {
+        sessions: rest,
+        activeChatId: state.activeChatId === id ? null : state.activeChatId,
+      };
+    }),
 
-  cancelStream: () => {
-    throw new Error('cancelStream not implemented');
+  cancelStream: (id) => {
+    const session = useChatSessionsStore.getState().sessions[id];
+    if (!session) return;
+    session.abortController?.abort();
+    set((state) => ({
+      sessions: {
+        ...state.sessions,
+        [id]: {
+          ...state.sessions[id],
+          isStreaming: false,
+          abortController: null,
+        },
+      },
+    }));
   },
 
   resetAll: () => {
-    throw new Error('resetAll not implemented');
+    Object.values(useChatSessionsStore.getState().sessions).forEach((s) =>
+      s.abortController?.abort(),
+    );
+    set({ sessions: {}, activeChatId: null, pendingNewChat: false });
   },
 }));
