@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { ChatDetail } from '../services/chats-api';
 import * as chatsApi from '../services/chats-api';
+import * as chatStream from '../services/chat-stream';
 
 export interface SessionMessage {
   role: 'user' | 'ai';
@@ -50,6 +51,78 @@ export function emptySession(
     requestVersion: 0,
     ...overrides,
   };
+}
+
+async function streamInto(
+  chatId: string,
+  text: string,
+  abortController: AbortController,
+  versionAtStart: number,
+  isFirstMessage: boolean,
+): Promise<void> {
+  try {
+    await chatStream.streamMessage(chatId, text, abortController.signal, (chunk) => {
+      const cur = useChatSessionsStore.getState().sessions[chatId];
+      if (!cur || cur.requestVersion !== versionAtStart) return;
+
+      useChatSessionsStore.setState((state) => {
+        const session = state.sessions[chatId];
+        if (!session) return state;
+        const messages = [...session.messages];
+        const last = messages[messages.length - 1];
+        if (last?.role === 'ai') {
+          messages[messages.length - 1] = { ...last, content: last.content + chunk };
+        } else if (chunk.length > 0) {
+          messages.push({ role: 'ai', content: chunk });
+        }
+        return {
+          sessions: {
+            ...state.sessions,
+            [chatId]: {
+              ...session,
+              messages,
+              hasStartedStreaming: session.hasStartedStreaming || chunk.length > 0,
+            },
+          },
+        };
+      });
+    });
+
+    const final = useChatSessionsStore.getState().sessions[chatId];
+    if (!final || final.requestVersion !== versionAtStart) return;
+
+    const empty = !final.hasStartedStreaming;
+    useChatSessionsStore.setState((state) => ({
+      sessions: {
+        ...state.sessions,
+        [chatId]: {
+          ...state.sessions[chatId],
+          isStreaming: false,
+          abortController: null,
+          error: empty ? 'Sin respuesta del modelo' : null,
+        },
+      },
+    }));
+
+    if (isFirstMessage) {
+      useChatSessionsStore.getState().onChatListShouldRevalidate?.();
+    }
+  } catch (err) {
+    const isAbort = err instanceof DOMException && err.name === 'AbortError';
+    const cur = useChatSessionsStore.getState().sessions[chatId];
+    if (!cur || cur.requestVersion !== versionAtStart) return;
+    useChatSessionsStore.setState((state) => ({
+      sessions: {
+        ...state.sessions,
+        [chatId]: {
+          ...state.sessions[chatId],
+          isStreaming: false,
+          abortController: null,
+          error: isAbort ? null : 'Conexión interrumpida',
+        },
+      },
+    }));
+  }
 }
 
 export const useChatSessionsStore = create<ChatSessionsState>((set) => ({
@@ -113,8 +186,34 @@ export const useChatSessionsStore = create<ChatSessionsState>((set) => ({
     }
   },
 
-  sendMessage: async () => {
-    throw new Error('sendMessage not implemented');
+  sendMessage: async (maybeChatId, text) => {
+    if (maybeChatId) {
+      const abortController = new AbortController();
+      set((state) => {
+        const cur = state.sessions[maybeChatId] ?? emptySession(maybeChatId);
+        return {
+          sessions: {
+            ...state.sessions,
+            [maybeChatId]: {
+              ...cur,
+              messages: [...cur.messages, { role: 'user', content: text }],
+              isStreaming: true,
+              hasStartedStreaming: false,
+              error: null,
+              abortController,
+              requestVersion: cur.requestVersion + 1,
+            },
+          },
+        };
+      });
+      const cur = useChatSessionsStore.getState().sessions[maybeChatId];
+      const isFirst = cur.messages.length === 1;
+      void streamInto(maybeChatId, text, abortController, cur.requestVersion, isFirst);
+      return { chatId: maybeChatId };
+    }
+
+    // Caso new chat: implementado en task 6
+    throw new Error('sendMessage(null) not implemented yet');
   },
 
   removeSession: () => {

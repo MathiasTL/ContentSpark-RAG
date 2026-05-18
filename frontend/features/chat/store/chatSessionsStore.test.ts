@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptySession, useChatSessionsStore } from './chatSessionsStore';
 import * as chatsApi from '../services/chats-api';
 import { ApiError } from '@/shared/lib/api-fetch';
+import * as chatStream from '../services/chat-stream';
 
 function resetStore() {
   useChatSessionsStore.setState({
@@ -100,5 +101,83 @@ describe('setActiveChat', () => {
     useChatSessionsStore.getState().setActiveChat('abc');
     useChatSessionsStore.getState().setActiveChat(null);
     expect(useChatSessionsStore.getState().activeChatId).toBeNull();
+  });
+});
+
+describe('sendMessage — chat existente', () => {
+  function setupExistingChat(chatId: string) {
+    useChatSessionsStore.setState({
+      sessions: {
+        [chatId]: emptySession(chatId, {
+          chat: {
+            id: chatId,
+            title: 'existente',
+            is_archived: false,
+            created_at: '',
+            updated_at: '',
+            messages: [],
+          },
+        }),
+      },
+    });
+  }
+
+  it('empuja user msg optimista antes de que termine el stream', async () => {
+    setupExistingChat('abc');
+    let resolveStream: () => void;
+    const streamPromise = new Promise<void>((r) => { resolveStream = r; });
+
+    vi.spyOn(chatStream, 'streamMessage').mockImplementation(async () => {
+      await streamPromise;
+    });
+
+    const sendPromise = useChatSessionsStore.getState().sendMessage('abc', 'hola');
+
+    const stateMidStream = useChatSessionsStore.getState().sessions.abc;
+    expect(stateMidStream.messages).toEqual([{ role: 'user', content: 'hola' }]);
+    expect(stateMidStream.isStreaming).toBe(true);
+
+    resolveStream!();
+    await sendPromise;
+  });
+
+  it('acumula chunks AI en el último mensaje', async () => {
+    setupExistingChat('abc');
+
+    vi.spyOn(chatStream, 'streamMessage').mockImplementation(
+      async (_id, _msg, _signal, onChunk) => {
+        onChunk('Hola');
+        onChunk(' mundo');
+      },
+    );
+
+    await useChatSessionsStore.getState().sendMessage('abc', 'ping');
+    // Pequeña espera porque _streamInto se kickea fire-and-forget
+    await new Promise((r) => setTimeout(r, 10));
+
+    const messages = useChatSessionsStore.getState().sessions.abc.messages;
+    expect(messages).toEqual([
+      { role: 'user', content: 'ping' },
+      { role: 'ai', content: 'Hola mundo' },
+    ]);
+  });
+
+  it('marca hasStartedStreaming en el primer chunk no vacío', async () => {
+    setupExistingChat('abc');
+
+    let firstChunkHandled = false;
+    vi.spyOn(chatStream, 'streamMessage').mockImplementation(
+      async (_id, _msg, _signal, onChunk) => {
+        const before = useChatSessionsStore.getState().sessions.abc.hasStartedStreaming;
+        expect(before).toBe(false);
+        onChunk('x');
+        firstChunkHandled = useChatSessionsStore.getState().sessions.abc.hasStartedStreaming;
+      },
+    );
+
+    await useChatSessionsStore.getState().sendMessage('abc', 'ping');
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(firstChunkHandled).toBe(true);
   });
 });
