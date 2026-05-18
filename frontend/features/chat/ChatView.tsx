@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import { useEffect, useRef, useState, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
@@ -9,21 +9,17 @@ import { Paperclip, Send, UserCircle2 } from "lucide-react";
 
 import { getSourcesFromBackend } from "@/shared/lib/api-client";
 import type { Source } from "@/shared/lib/api-client";
-import { streamMessage } from "./services/chat-stream";
-import { createChat } from "./services/chats-api";
-import { useChatList } from "./hooks/useChatList";
-import { useChatSession } from "./hooks/useChatSession";
+import { useChatSessionsStore } from "./store/chatSessionsStore";
+import {
+  useChatSession,
+  useIsPendingNewChat,
+} from "./hooks/useChatSession";
 import ChatHeader from "./components/ChatHeader";
 import SourcesModal from "./components/SourcesModal";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 
 interface ChatViewProps {
   chatId?: string;
-}
-
-interface Message {
-  role: "user" | "ai";
-  content: string;
 }
 
 const SUGGESTED_PROMPTS = [
@@ -70,13 +66,13 @@ function TypingIndicator() {
 
 export default function ChatView({ chatId }: ChatViewProps) {
   const router = useRouter();
+  const setActiveChat = useChatSessionsStore((s) => s.setActiveChat);
+  const loadChat = useChatSessionsStore((s) => s.loadChat);
+  const sendMessage = useChatSessionsStore((s) => s.sendMessage);
   const session = useChatSession(chatId);
-  const { revalidate } = useChatList();
+  const pendingNewChat = useIsPendingNewChat();
 
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasStartedStreaming, setHasStartedStreaming] = useState(false);
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [sources, setSources] = useState<Source[]>([]);
   const [isSourcesLoading, setIsSourcesLoading] = useState(false);
@@ -84,13 +80,26 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const requestVersionRef = useRef(0);
-  const titleNeedsRefreshRef = useRef(false);
+
+  const messages = session?.messages ?? [];
+  const isLoading = session?.isLoading ?? false;
+  const isStreaming = session?.isStreaming ?? false;
+  const hasStartedStreaming = session?.hasStartedStreaming ?? false;
+  const error = session?.error ?? null;
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMessages(session.messages);
-  }, [session.messages]);
+    setActiveChat(chatId ?? null);
+  }, [chatId, setActiveChat]);
+
+  useEffect(() => {
+    if (!chatId) return;
+    if (session) return;
+    void loadChat(chatId).catch((err) => {
+      if (err?.status === 404) {
+        router.replace("/chat");
+      }
+    });
+  }, [chatId, session, loadChat, router]);
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -101,7 +110,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages, isStreaming]);
 
   async function openSourcesModal() {
     setIsSourcesOpen(true);
@@ -126,83 +135,33 @@ export default function ChatView({ chatId }: ChatViewProps) {
   }
 
   async function handleSend(text: string) {
-    if (!text || isLoading) return;
+    if (!text || isStreaming || pendingNewChat) return;
 
-    const requestVersion = ++requestVersionRef.current;
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
-    setHasStartedStreaming(false);
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
-    setIsLoading(true);
-
-    let activeChatId = chatId;
-    const isFirstMessage =
-      !chatId || (session.chat?.title === null && session.messages.length === 0);
 
     try {
-      if (!activeChatId) {
-        const created = await createChat();
-        activeChatId = created.id;
-        titleNeedsRefreshRef.current = true;
-        router.replace(`/chat/${activeChatId}`);
-      } else if (isFirstMessage) {
-        titleNeedsRefreshRef.current = true;
+      const { chatId: resultChatId } = await sendMessage(chatId ?? null, text);
+      if (!chatId) {
+        router.replace(`/chat/${resultChatId}`);
       }
-
-      await streamMessage(activeChatId, text, new AbortController().signal, (chunk) => {
-        if (requestVersion !== requestVersionRef.current) return;
-        if (chunk.length > 0) setHasStartedStreaming(true);
-
-        setMessages((prev) => {
-          const next = [...prev];
-          const lastIndex = next.length - 1;
-          if (lastIndex >= 0 && next[lastIndex].role === "ai") {
-            next[lastIndex] = {
-              ...next[lastIndex],
-              content: next[lastIndex].content + chunk,
-            };
-          } else {
-            next.push({ role: "ai", content: chunk });
-          }
-          return next;
-        });
-      });
     } catch (err) {
-      console.error("[ChatView] handleSend fallo:", err);
-      if (requestVersion === requestVersionRef.current) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "ai",
-            content:
-              "Lo siento, tuve un problema enviando el mensaje. Intentalo de nuevo.",
-          },
-        ]);
-      }
-    } finally {
-      if (requestVersion === requestVersionRef.current) {
-        setIsLoading(false);
-        setHasStartedStreaming(false);
-        if (titleNeedsRefreshRef.current) {
-          titleNeedsRefreshRef.current = false;
-          revalidate();
-        }
-      }
+      console.error("[ChatView] sendMessage falló:", err);
     }
   }
 
-  function sendMessage() {
+  function sendCurrentInput() {
     handleSend(input.trim());
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      sendCurrentInput();
     }
   }
 
-  const showWelcome = messages.length === 0 && !session.isLoading;
+  const showWelcome = messages.length === 0 && !isLoading && !pendingNewChat;
 
   return (
     <div className="flex h-dvh w-full">
@@ -214,17 +173,11 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
         <ScrollArea className="relative z-10 min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]>div]:!flex [&_[data-radix-scroll-area-viewport]>div]:!min-h-full [&_[data-radix-scroll-area-viewport]>div]:!flex-col [&_[data-radix-scroll-area-viewport]>div]:!justify-end">
           <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-end space-y-8 px-12 pt-12 pb-6">
-            {session.isLoading && (
+            {isLoading && (
               <div className="space-y-6">
                 {[0, 1].map((i) => (
                   <div key={i} className="h-20 animate-pulse rounded-3xl bg-white/10" />
                 ))}
-              </div>
-            )}
-
-            {session.error && (
-              <div className="rounded-3xl border border-red-300/30 bg-red-500/10 p-4 text-sm text-red-300">
-                {session.error}
               </div>
             )}
 
@@ -275,12 +228,18 @@ export default function ChatView({ chatId }: ChatViewProps) {
               ),
             )}
 
-            {isLoading && !hasStartedStreaming && <TypingIndicator />}
+            {isStreaming && !hasStartedStreaming && <TypingIndicator />}
             <div ref={bottomRef} />
           </div>
         </ScrollArea>
 
         <div className="relative z-10 mx-auto w-full max-w-4xl shrink-0 space-y-6 px-12 pb-8">
+          {error && (
+            <div className="rounded-2xl border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
+
           {messages.length === 0 && (
             <div className="flex flex-wrap justify-center gap-3">
               {SUGGESTED_PROMPTS.map((prompt) => (
@@ -288,7 +247,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
                   key={prompt}
                   type="button"
                   onClick={() => handleSend(prompt)}
-                  disabled={isLoading}
+                  disabled={isStreaming || pendingNewChat}
                   className="rounded-full border border-white/10 bg-white/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-all hover:scale-105 hover:bg-white/40 disabled:opacity-40"
                 >
                   {prompt}
@@ -307,7 +266,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Pregunta a ContentSpark lo que necesites..."
-                disabled={isLoading}
+                disabled={isStreaming || pendingNewChat}
                 className="max-h-40 flex-1 resize-none overflow-hidden border-none bg-transparent py-3 font-light leading-relaxed text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0 focus:outline-none disabled:opacity-50"
               />
               <button
@@ -319,12 +278,12 @@ export default function ChatView({ chatId }: ChatViewProps) {
               </button>
               <button
                 type="button"
-                onClick={sendMessage}
-                disabled={isLoading || !input.trim()}
+                onClick={sendCurrentInput}
+                disabled={isStreaming || pendingNewChat || !input.trim()}
                 aria-label="Enviar mensaje"
                 className="liquid-gradient flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg shadow-primary/30 transition-transform hover:scale-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
               >
-                {isLoading ? (
+                {isStreaming || pendingNewChat ? (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 ) : (
                   <Send size={18} strokeWidth={2} />
