@@ -13,6 +13,13 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
 export async function handleAuthError(response: Response): Promise<void> {
   if (response.status !== 401) return;
   if (typeof window === "undefined") return;
+
+  // Limpiar estado del chat antes de redirect (libera streams en vuelo)
+  const { useChatSessionsStore } = await import(
+    "@/features/chat/store/chatSessionsStore"
+  );
+  useChatSessionsStore.getState().resetAll();
+
   const supabase = createClient();
   await supabase.auth.signOut();
   window.location.href = "/login";
