@@ -1,74 +1,33 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useShallow } from 'zustand/react/shallow';
+import {
+  type ChatSession,
+  useChatSessionsStore,
+} from '../store/chatSessionsStore';
 
-import { ApiError } from "@/shared/lib/api-fetch";
-import { ChatDetail, getChat } from "../services/chats-api";
+export type { SessionMessage } from '../store/chatSessionsStore';
 
-export interface SessionMessage {
-  role: "user" | "ai";
-  content: string;
+export function useChatSession(chatId: string | null | undefined): ChatSession | undefined {
+  return useChatSessionsStore(
+    useShallow((state) => (chatId ? state.sessions[chatId] : undefined)),
+  );
 }
 
-interface UseChatSessionResult {
-  messages: SessionMessage[];
-  isLoading: boolean;
-  error: string | null;
-  setMessages: React.Dispatch<React.SetStateAction<SessionMessage[]>>;
-  chat: ChatDetail | null;
+export function useActiveChatId(): string | null {
+  return useChatSessionsStore((state) => state.activeChatId);
 }
 
-export function useChatSession(chatId: string | undefined): UseChatSessionResult {
-  const router = useRouter();
-  const [messages, setMessages] = useState<SessionMessage[]>([]);
-  const [chat, setChat] = useState<ChatDetail | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(Boolean(chatId));
-  const [error, setError] = useState<string | null>(null);
+export function useStreamingChatIds(): string[] {
+  return useChatSessionsStore(
+    useShallow((state) =>
+      Object.values(state.sessions)
+        .filter((s) => s.isStreaming)
+        .map((s) => s.chatId),
+    ),
+  );
+}
 
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!chatId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMessages([]);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setChat(null);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsLoading(false);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setError(null);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    getChat(chatId)
-      .then((detail) => {
-        if (cancelled) return;
-        setChat(detail);
-        setMessages(
-          detail.messages.map((m) => ({ role: m.role, content: m.content })),
-        );
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        if (err instanceof ApiError && err.status === 404) {
-          router.replace("/chat");
-          return;
-        }
-        console.error("[ChatSession] getChat fallo:", err);
-        setError("No se pudo cargar el chat");
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [chatId, router]);
-
-  return { messages, setMessages, chat, isLoading, error };
+export function useIsPendingNewChat(): boolean {
+  return useChatSessionsStore((state) => state.pendingNewChat);
 }
