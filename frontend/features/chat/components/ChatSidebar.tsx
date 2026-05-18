@@ -5,11 +5,14 @@ import { Plus } from "lucide-react";
 
 import { useChatList } from "../hooks/useChatList";
 import { useSidebarCollapsed } from "../hooks/useSidebarCollapsed";
+import { useStreamingChatIds } from "../hooks/useChatSession";
 import ChatListItem from "./ChatListItem";
 
 export default function ChatSidebar() {
   const { chats, isLoading, error, revalidate, removeChat } = useChatList();
   const { collapsed } = useSidebarCollapsed();
+  const streamingIds = useStreamingChatIds();
+  const streamingSet = new Set(streamingIds);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -93,6 +96,7 @@ export default function ChatSidebar() {
               updatedAt={chat.updated_at}
               isActive={chat.id === activeId}
               collapsed={collapsed}
+              isStreaming={streamingSet.has(chat.id)}
               onDelete={handleDelete}
             />
           ))}

@@ -10,6 +10,7 @@ interface ChatListItemProps {
   updatedAt: string;
   isActive: boolean;
   collapsed: boolean;
+  isStreaming: boolean;
   onDelete: (id: string) => Promise<void>;
 }
 
@@ -44,6 +45,7 @@ export default function ChatListItem({
   updatedAt,
   isActive,
   collapsed,
+  isStreaming,
   onDelete,
 }: ChatListItemProps) {
   const [confirming, setConfirming] = useState(false);
@@ -66,13 +68,16 @@ export default function ChatListItem({
       <Link
         href={`/chat/${id}`}
         title={displayTitle}
-        className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+        className={`relative flex h-10 w-10 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
           isActive
             ? "bg-primary/15 text-primary"
             : "bg-white/10 text-on-surface-variant hover:bg-white/30 hover:text-primary"
         }`}
       >
         {displayTitle.charAt(0).toUpperCase()}
+        {isStreaming && (
+          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-green-400 ring-2 ring-surface" />
+        )}
       </Link>
     );
   }
@@ -94,6 +99,12 @@ export default function ChatListItem({
           >
             {displayTitle}
           </span>
+          {isStreaming && (
+            <span
+              aria-label="Streameando"
+              className="ml-1 h-2 w-2 shrink-0 animate-pulse rounded-full bg-green-400"
+            />
+          )}
           <span className="shrink-0 text-[10px] text-on-surface-variant/70">
             {formatRelative(updatedAt)}
           </span>
