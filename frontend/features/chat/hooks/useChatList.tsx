@@ -14,6 +14,7 @@ import {
   deleteChat as deleteChatApi,
   listChats,
 } from "../services/chats-api";
+import { useChatSessionsStore } from '../store/chatSessionsStore';
 
 interface ChatListContextValue {
   chats: ChatListItem[];
@@ -53,6 +54,9 @@ export function ChatListProvider({ children }: { children: ReactNode }) {
     async (id: string) => {
       const previous = chats;
       setChats((prev) => prev.filter((c) => c.id !== id));
+
+      useChatSessionsStore.getState().removeSession(id);
+
       try {
         await deleteChatApi(id);
       } catch (err) {
