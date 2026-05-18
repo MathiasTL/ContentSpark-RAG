@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { emptySession, useChatSessionsStore } from './chatSessionsStore';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ChatSession, emptySession, useChatSessionsStore } from './chatSessionsStore';
 import * as chatsApi from '../services/chats-api';
 import { ApiError } from '@/shared/lib/api-fetch';
 import * as chatStream from '../services/chat-stream';
@@ -87,7 +87,7 @@ describe('loadChat', () => {
 describe('setActiveChat', () => {
   it('mueve el puntero sin tocar sessions', () => {
     useChatSessionsStore.setState({
-      sessions: { abc: { chatId: 'abc' } as any },
+      sessions: { abc: { chatId: 'abc' } as unknown as ChatSession },
     });
 
     useChatSessionsStore.getState().setActiveChat('abc');

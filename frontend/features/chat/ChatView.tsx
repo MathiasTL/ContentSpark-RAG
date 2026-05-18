@@ -110,7 +110,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isStreaming]);
+  }, [session?.messages, isStreaming]);
 
   async function openSourcesModal() {
     setIsSourcesOpen(true);
