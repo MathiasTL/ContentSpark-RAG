@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { AnimatePresence, motion } from "framer-motion";
 import { Paperclip, Send, UserCircle2 } from "lucide-react";
 
 import { getSourcesFromBackend } from "@/shared/lib/api-client";
@@ -109,7 +110,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
   }, [input]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [session?.messages, isStreaming]);
 
   async function openSourcesModal() {
@@ -171,8 +172,8 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
         <ChatHeader onOpenSources={openSourcesModal} />
 
-        <ScrollArea className="relative z-10 min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]>div]:!flex [&_[data-radix-scroll-area-viewport]>div]:!min-h-full [&_[data-radix-scroll-area-viewport]>div]:!flex-col [&_[data-radix-scroll-area-viewport]>div]:!justify-end">
-          <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-end space-y-8 px-12 pt-12 pb-6">
+        <ScrollArea className="relative z-10 min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]>div]:!flex [&_[data-radix-scroll-area-viewport]>div]:!min-h-full [&_[data-radix-scroll-area-viewport]>div]:!flex-col">
+          <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col space-y-8 px-12 pt-20 pb-6">
             {isLoading && (
               <div className="space-y-6">
                 {[0, 1].map((i) => (
@@ -181,54 +182,94 @@ export default function ChatView({ chatId }: ChatViewProps) {
               </div>
             )}
 
-            {showWelcome && <WelcomeMessage />}
+            <AnimatePresence mode="popLayout">
+              {showWelcome && (
+                <motion.div
+                  key="welcome"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -40 }}
+                  transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+                  className="flex flex-1 items-center justify-center"
+                >
+                  <WelcomeMessage />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            {messages.map((msg, i) =>
-              msg.role === "user" ? (
-                <div key={i} className="ml-auto flex max-w-3xl flex-row-reverse gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-primary-container shadow-lg">
-                    <UserCircle2 className="h-7 w-7 text-white/80" strokeWidth={1.25} />
-                  </div>
-                  <div className="liquid-gradient rounded-3xl rounded-tr-none border border-white/10 p-6 leading-relaxed text-white shadow-xl shadow-primary/10 backdrop-blur-2xl">
-                    <p className="font-light">{msg.content}</p>
-                  </div>
-                </div>
-              ) : (
-                <div key={i} className="flex max-w-3xl gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/20 p-1.5 shadow-lg backdrop-blur-2xl">
-                    <Image src="/only_logo.png" alt="AI" width={28} height={28} />
-                  </div>
-                  <div className="rounded-3xl rounded-tl-none border border-white/10 bg-white/40 p-6 leading-relaxed text-on-surface shadow-sm backdrop-blur-2xl">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        p: ({ children }) => (
-                          <p className="mb-2 font-light leading-relaxed last:mb-0">{children}</p>
-                        ),
-                        strong: ({ children }) => (
-                          <strong className="font-semibold text-on-surface">{children}</strong>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="mt-3 list-disc space-y-2 pl-5 font-light text-on-surface-variant">
-                            {children}
-                          </ul>
-                        ),
-                        ol: ({ children }) => (
-                          <ol className="mt-3 list-decimal space-y-2 pl-5 font-light text-on-surface-variant">
-                            {children}
-                          </ol>
-                        ),
-                        li: ({ children }) => <li>{children}</li>,
-                      }}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
-                  </div>
-                </div>
-              ),
-            )}
+            <AnimatePresence initial={false}>
+              {messages.map((msg, i) =>
+                msg.role === "user" ? (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.08, ease: [0.4, 0, 0.2, 1] }}
+                    className="ml-auto flex max-w-3xl flex-row-reverse gap-4"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-primary-container shadow-lg">
+                      <UserCircle2 className="h-7 w-7 text-white/80" strokeWidth={1.25} />
+                    </div>
+                    <div className="liquid-gradient rounded-3xl rounded-tr-none border border-white/10 p-6 leading-relaxed text-white shadow-xl shadow-primary/10 backdrop-blur-2xl">
+                      <p className="font-light">{msg.content}</p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                    className="flex max-w-3xl gap-4"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/20 p-1.5 shadow-lg backdrop-blur-2xl">
+                      <Image src="/only_logo.png" alt="AI" width={28} height={28} />
+                    </div>
+                    <div className="rounded-3xl rounded-tl-none border border-white/10 bg-white/40 p-6 leading-relaxed text-on-surface shadow-sm backdrop-blur-2xl">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ children }) => (
+                            <p className="mb-2 font-light leading-relaxed last:mb-0">{children}</p>
+                          ),
+                          strong: ({ children }) => (
+                            <strong className="font-semibold text-on-surface">{children}</strong>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="mt-3 list-disc space-y-2 pl-5 font-light text-on-surface-variant">
+                              {children}
+                            </ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="mt-3 list-decimal space-y-2 pl-5 font-light text-on-surface-variant">
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children }) => <li>{children}</li>,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  </motion.div>
+                ),
+              )}
+            </AnimatePresence>
 
-            {isStreaming && !hasStartedStreaming && <TypingIndicator />}
+            <AnimatePresence>
+              {isStreaming && !hasStartedStreaming && (
+                <motion.div
+                  key="typing"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <TypingIndicator />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div ref={bottomRef} />
           </div>
         </ScrollArea>
@@ -240,21 +281,30 @@ export default function ChatView({ chatId }: ChatViewProps) {
             </div>
           )}
 
-          {messages.length === 0 && (
-            <div className="flex flex-wrap justify-center gap-3">
-              {SUGGESTED_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  onClick={() => handleSend(prompt)}
-                  disabled={isStreaming || pendingNewChat}
-                  className="rounded-full border border-white/10 bg-white/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-all hover:scale-105 hover:bg-white/40 disabled:opacity-40"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-          )}
+          <AnimatePresence>
+            {messages.length === 0 && !pendingNewChat && (
+              <motion.div
+                key="suggested-prompts"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                className="flex flex-wrap justify-center gap-3"
+              >
+                {SUGGESTED_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => handleSend(prompt)}
+                    disabled={isStreaming || pendingNewChat}
+                    className="rounded-full border border-white/10 bg-white/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-all hover:scale-105 hover:bg-white/40 disabled:opacity-40"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="group relative">
             <div className="absolute inset-0 rounded-full bg-primary/5 opacity-0 blur-2xl transition-opacity group-focus-within:opacity-100" />
