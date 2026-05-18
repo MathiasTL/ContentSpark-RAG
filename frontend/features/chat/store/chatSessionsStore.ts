@@ -212,8 +212,34 @@ export const useChatSessionsStore = create<ChatSessionsState>((set) => ({
       return { chatId: maybeChatId };
     }
 
-    // Caso new chat: implementado en task 6
-    throw new Error('sendMessage(null) not implemented yet');
+    set({ pendingNewChat: true });
+    let chatId: string;
+    try {
+      const created = await chatsApi.createChat();
+      chatId = created.id;
+    } catch (err) {
+      set({ pendingNewChat: false });
+      throw err;
+    }
+
+    const abortController = new AbortController();
+    set((state) => ({
+      pendingNewChat: false,
+      activeChatId: chatId,
+      sessions: {
+        ...state.sessions,
+        [chatId]: emptySession(chatId, {
+          messages: [{ role: 'user', content: text }],
+          isStreaming: true,
+          abortController,
+          requestVersion: 1,
+        }),
+      },
+    }));
+
+    useChatSessionsStore.getState().onChatListShouldRevalidate?.();
+    void streamInto(chatId, text, abortController, 1, true);
+    return { chatId };
   },
 
   removeSession: () => {

@@ -181,3 +181,65 @@ describe('sendMessage — chat existente', () => {
     expect(firstChunkHandled).toBe(true);
   });
 });
+
+describe('sendMessage — chat nuevo', () => {
+  it('devuelve {chatId} antes de que termine el stream (regresión bug original)', async () => {
+    vi.spyOn(chatsApi, 'createChat').mockResolvedValue({
+      id: 'new-1',
+      title: null,
+      is_archived: false,
+      created_at: '',
+      updated_at: '',
+    });
+
+    let streamResolve: () => void;
+    const streamBlocked = new Promise<void>((r) => { streamResolve = r; });
+    vi.spyOn(chatStream, 'streamMessage').mockImplementation(async () => {
+      await streamBlocked;
+    });
+
+    const result = await useChatSessionsStore.getState().sendMessage(null, 'hola');
+
+    expect(result.chatId).toBe('new-1');
+
+    const session = useChatSessionsStore.getState().sessions['new-1'];
+    expect(session.messages).toEqual([{ role: 'user', content: 'hola' }]);
+    expect(session.isStreaming).toBe(true);
+    expect(useChatSessionsStore.getState().activeChatId).toBe('new-1');
+    expect(useChatSessionsStore.getState().pendingNewChat).toBe(false);
+
+    streamResolve!();
+  });
+
+  it('llama onChatListShouldRevalidate dos veces: tras createChat y tras completar el primer stream', async () => {
+    vi.spyOn(chatsApi, 'createChat').mockResolvedValue({
+      id: 'new-2',
+      title: null,
+      is_archived: false,
+      created_at: '',
+      updated_at: '',
+    });
+    vi.spyOn(chatStream, 'streamMessage').mockImplementation(
+      async (_id, _msg, _signal, onChunk) => {
+        onChunk('respuesta');
+      },
+    );
+
+    const revalidate = vi.fn();
+    useChatSessionsStore.getState().setOnChatListShouldRevalidate(revalidate);
+
+    await useChatSessionsStore.getState().sendMessage(null, 'hola');
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(revalidate).toHaveBeenCalledTimes(2);
+  });
+
+  it('limpia pendingNewChat si createChat falla', async () => {
+    vi.spyOn(chatsApi, 'createChat').mockRejectedValue(new Error('boom'));
+
+    await expect(useChatSessionsStore.getState().sendMessage(null, 'hola')).rejects.toThrow('boom');
+
+    expect(useChatSessionsStore.getState().pendingNewChat).toBe(false);
+    expect(Object.keys(useChatSessionsStore.getState().sessions)).toHaveLength(0);
+  });
+});
