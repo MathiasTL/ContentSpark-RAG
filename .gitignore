@@ -20,3 +20,17 @@ npm-debug.log*
 
 # Docker
 docker-compose.override.yml
+
+# Herramientas de agentes IA
+# La configuración compartida (.claude/agents, commands, skills, output-styles)
+# SÍ se versiona: es el contrato de equipo. Se excluye solo lo local o generado.
+.claude/settings.local.json
+.agents/settings.local.json
+
+# Registro de skills autogenerado — contiene rutas absolutas de cada máquina.
+# Se regenera con `gentle-ai skill-registry refresh`.
+.atl/
+
+# Caches de Python
+__pycache__/
+*.py[cod]
