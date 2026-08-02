@@ -67,6 +67,81 @@ def test_put_profile_without_token_returns_401(client):
     assert response.status_code == 401
 
 
+def test_put_profile_with_social_accounts_forwards_them(client, patch_profile_service):
+    """Spec creator-profile: 'Social accounts submitted with profile update' se persisten."""
+    updated = _fake_profile(
+        social_accounts=[
+            {
+                "platform": "tiktok",
+                "handle": "@maria",
+                "url": None,
+                "follower_count": None,
+            }
+        ]
+    )
+    patch_profile_service.update_profile.return_value = updated
+
+    response = client.put(
+        "/api/profile",
+        headers={"Authorization": "Bearer valid"},
+        json={"social_accounts": [{"platform": "tiktok", "handle": "@maria"}]},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["social_accounts"] == [
+        {
+            "platform": "tiktok",
+            "handle": "@maria",
+            "url": None,
+            "follower_count": None,
+        }
+    ]
+    kwargs = patch_profile_service.update_profile.call_args.kwargs
+    assert kwargs["social_accounts"] == [
+        {
+            "platform": "tiktok",
+            "handle": "@maria",
+            "url": None,
+            "follower_count": None,
+        }
+    ]
+
+
+def test_put_profile_omitting_social_accounts_leaves_them_untouched(
+    client, patch_profile_service
+):
+    """Omitir `social_accounts` en el body no debe tocar las cuentas existentes."""
+    updated = _fake_profile(bio="Nueva bio")
+    patch_profile_service.update_profile.return_value = updated
+
+    response = client.put(
+        "/api/profile",
+        headers={"Authorization": "Bearer valid"},
+        json={"bio": "Nueva bio"},
+    )
+
+    assert response.status_code == 200
+    kwargs = patch_profile_service.update_profile.call_args.kwargs
+    assert kwargs["social_accounts"] is None
+
+
+def test_put_profile_empty_social_accounts_clears_them(client, patch_profile_service):
+    """Enviar una lista vacia es distinguible de omitir el campo: limpia las cuentas."""
+    updated = _fake_profile(social_accounts=[])
+    patch_profile_service.update_profile.return_value = updated
+
+    response = client.put(
+        "/api/profile",
+        headers={"Authorization": "Bearer valid"},
+        json={"social_accounts": []},
+    )
+
+    assert response.status_code == 200
+    kwargs = patch_profile_service.update_profile.call_args.kwargs
+    assert kwargs["social_accounts"] == []
+
+
 def test_post_onboarding_creates_profile_with_string_frequency(
     client, patch_profile_service
 ):

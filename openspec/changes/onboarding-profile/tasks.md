@@ -328,16 +328,21 @@ Not required by any spec requirement; purely dead-reference removal tied to
 the dropped `users.onboarding_completed` column. Proposed as its own
 follow-up task so it can be deferred without blocking slices 1-3.
 
-- **C.1** Remove `onboardingCompleted: boolean` from
+- [x] **C.1** Remove `onboardingCompleted: boolean` from
   `frontend/shared/types/index.ts:6` (the `User` type) — currently unused by
   any consumer after this change lands. ~1 line changed, plus updating any
   object literals that set it (none expected — grep found no writers).
-- **C.2** Remove the `onboarding_completed` column from
+  Done in `36ce44b`: field removed from the shared `User` type.
+- [x] **C.2** Remove the `onboarding_completed` column from
   `frontend/prisma/schema.prisma:20`. Note: `prisma` is not a dependency in
   `frontend/package.json` (confirmed), so this file is an orphan — no
   `prisma generate`/migration tooling runs against it. ~1 line changed.
   Estimated total for C.1 + C.2: **~5-10 changed lines**, zero risk (no
   runtime code path exercises either file today).
+  Done in `36ce44b`, more thoroughly than scoped: the entire
+  `frontend/prisma/schema.prisma` file was deleted (126 lines) rather than
+  editing just the one column, since the whole file was an unmaintained
+  duplicate of the SQLAlchemy schema. Tests 65/65, tsc and build clean.
 
 ---
 

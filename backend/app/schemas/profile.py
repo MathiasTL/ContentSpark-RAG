@@ -35,6 +35,10 @@ class ProfileUpdate(BaseModel):
     current_frequency: str | None = None
     desired_frequency: str | None = None
     preferred_formats: list[str] | None = None
+    # `None` (default, omitido) = no tocar las cuentas existentes.
+    # `[]` (enviado explicitamente) = limpiarlas. Distincion manejada por
+    # ProfileService.update_profile via `if social_accounts is not None`.
+    social_accounts: list[SocialAccountCreate] | None = None
 
 
 class ProfileResponse(ProfileCreate):

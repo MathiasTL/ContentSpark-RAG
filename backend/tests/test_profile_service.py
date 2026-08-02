@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.profile import ProfileCreate, ProfileStatusResponse
-from app.services.profile_service import _missing_fields
+from app.schemas.profile import ProfileCreate, ProfileStatusResponse, ProfileUpdate
+from app.services.profile_service import ProfileService, _missing_fields
 
 
 def test_profile_create_accepts_string_frequency():
@@ -90,3 +91,117 @@ def test_missing_fields_none_profile():
         "tone",
         "target_audience",
     ]
+
+
+# --- ProfileUpdate.social_accounts (remediacion CRITICAL de sdd-verify) --------
+
+
+def test_profile_update_social_accounts_defaults_to_none():
+    """Omitir `social_accounts` en el update deja el campo en `None` (no se toca nada)."""
+    update = ProfileUpdate(bio="Nueva bio")
+    assert update.social_accounts is None
+
+
+def test_profile_update_accepts_social_accounts_list():
+    """`ProfileUpdate` acepta cuentas sociales explicitas para reemplazarlas."""
+    update = ProfileUpdate(
+        social_accounts=[{"platform": "tiktok", "handle": "@maria"}]
+    )
+    assert update.social_accounts[0].handle == "@maria"
+
+
+def test_profile_update_accepts_empty_social_accounts_list():
+    """Una lista vacia es distinguible de omitir el campo (limpia las cuentas)."""
+    update = ProfileUpdate(social_accounts=[])
+    assert update.social_accounts == []
+
+
+# --- ProfileService.update_profile — social_accounts ---------------------------
+
+
+@pytest.mark.asyncio
+async def test_update_profile_with_social_accounts_replaces_them(monkeypatch):
+    """Enviar `social_accounts` en el update los persiste via `_replace_social_accounts`."""
+    service = ProfileService()
+    fake_profile = SimpleNamespace(id="profile-1", social_accounts=[])
+    monkeypatch.setattr(
+        service, "get_or_create_profile", AsyncMock(return_value=fake_profile)
+    )
+    replace_mock = AsyncMock()
+    monkeypatch.setattr(service, "_replace_social_accounts", replace_mock)
+    db = AsyncMock()
+
+    accounts = [{"platform": "tiktok", "handle": "@maria"}]
+    await service.update_profile(db, "user-1", social_accounts=accounts)
+
+    replace_mock.assert_awaited_once_with(db, fake_profile, accounts)
+
+
+@pytest.mark.asyncio
+async def test_update_profile_without_social_accounts_leaves_untouched(monkeypatch):
+    """Omitir `social_accounts` en el payload no toca las cuentas existentes."""
+    service = ProfileService()
+    fake_profile = SimpleNamespace(id="profile-1", social_accounts=["existing"])
+    monkeypatch.setattr(
+        service, "get_or_create_profile", AsyncMock(return_value=fake_profile)
+    )
+    replace_mock = AsyncMock()
+    monkeypatch.setattr(service, "_replace_social_accounts", replace_mock)
+    db = AsyncMock()
+
+    await service.update_profile(db, "user-1", bio="Nueva bio")
+
+    replace_mock.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_update_profile_empty_list_clears_social_accounts(monkeypatch):
+    """Enviar una lista vacia limpia las cuentas sociales existentes."""
+    service = ProfileService()
+    fake_profile = SimpleNamespace(id="profile-1", social_accounts=["existing"])
+    monkeypatch.setattr(
+        service, "get_or_create_profile", AsyncMock(return_value=fake_profile)
+    )
+    replace_mock = AsyncMock()
+    monkeypatch.setattr(service, "_replace_social_accounts", replace_mock)
+    db = AsyncMock()
+
+    await service.update_profile(db, "user-1", social_accounts=[])
+
+    replace_mock.assert_awaited_once_with(db, fake_profile, [])
+
+
+@pytest.mark.asyncio
+async def test_update_profile_scopes_get_or_create_by_user_id(monkeypatch):
+    """`update_profile` SIEMPRE resuelve el perfil via `user_id` (nunca otro usuario)."""
+    service = ProfileService()
+    fake_profile = SimpleNamespace(id="profile-1", social_accounts=[])
+    get_or_create_mock = AsyncMock(return_value=fake_profile)
+    monkeypatch.setattr(service, "get_or_create_profile", get_or_create_mock)
+    monkeypatch.setattr(service, "_replace_social_accounts", AsyncMock())
+    db = AsyncMock()
+
+    await service.update_profile(
+        db, "user-42", social_accounts=[{"platform": "x", "handle": "@m"}]
+    )
+
+    get_or_create_mock.assert_awaited_once_with(db, "user-42")
+
+
+@pytest.mark.asyncio
+async def test_replace_social_accounts_scopes_new_rows_to_profile():
+    """Las cuentas creadas quedan asociadas exclusivamente al `profile_id` del usuario autenticado."""
+    from app.schemas.profile import SocialAccountCreate
+
+    service = ProfileService()
+    fake_profile = SimpleNamespace(id="profile-99", social_accounts=[])
+    db = AsyncMock()
+    db.add = MagicMock()
+
+    await service._replace_social_accounts(
+        db, fake_profile, [SocialAccountCreate(platform="tiktok", handle="@maria")]
+    )
+
+    added = db.add.call_args.args[0]
+    assert added.profile_id == "profile-99"
+    assert added.handle == "@maria"
