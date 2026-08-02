@@ -19,6 +19,7 @@ class Chat(Base, TimestampMixin):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,  # ix_chats_user_id — toda query de chats filtra por user_id
     )
     title: Mapped[str | None] = mapped_column(
         String(255), nullable=True
@@ -42,6 +43,7 @@ class Message(Base):
     chat_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("chats.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,  # ix_messages_chat_id
     )
     role: Mapped[str] = mapped_column(
         String(10), nullable=False

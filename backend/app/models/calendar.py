@@ -46,8 +46,13 @@ class ContentEntry(Base, TimestampMixin):
     calendar_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("content_calendars.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,  # ix_content_entries_calendar_id
     )
-    date: Mapped[date] = mapped_column(Date, nullable=False)
+    date: Mapped[date] = mapped_column(
+        Date,
+        nullable=False,
+        index=True,  # ix_content_entries_date — el calendario ordena y filtra por fecha
+    )
     time_slot: Mapped[str | None] = mapped_column(
         String(20), nullable=True
     )  # morning, afternoon, evening
