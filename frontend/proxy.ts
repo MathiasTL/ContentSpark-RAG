@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { fetchProfileStatus } from "@/shared/lib/profile-status";
 
 // Proxy de Next.js para refrescar la sesion de Supabase en cada request
 // Esto garantiza que las cookies de auth se mantengan actualizadas
@@ -44,13 +45,21 @@ export async function proxy(request: NextRequest) {
   const isLandingRoute = pathname === "/";
   const isOnboardingRoute = pathname.startsWith("/onboarding");
 
-  const onboardingMetadata =
-    user?.user_metadata?.onboarding_completed ??
-    user?.user_metadata?.onboardingCompleted ??
-    user?.app_metadata?.onboarding_completed ??
-    user?.app_metadata?.onboardingCompleted;
-  const onboardingCompleted =
-    typeof onboardingMetadata === "boolean" ? onboardingMetadata : null;
+  // Regla de completitud del perfil: vive solo en el backend
+  // (GET /api/profile/status). Antes esto leia una clave de
+  // user_metadata que nunca se escribe en ningun lugar del repo (dead
+  // code) — ahora se re-consulta al backend (design D1/D2/D3). El fetch
+  // solo corre para navegaciones a rutas protegidas y con usuario
+  // autenticado, para acotar la latencia agregada (D3). Si falla, se
+  // degrada a null y NO se redirige por onboarding (fail-open, D2).
+  let onboardingCompleted: boolean | null = null;
+  if (user && isProtectedRoute) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (accessToken) {
+      onboardingCompleted = await fetchProfileStatus(accessToken);
+    }
+  }
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();

@@ -231,8 +231,8 @@ first-run routing. Between the end of Phase 2 and the start of Phase 3 the
 app is in today's behavior (no onboarding redirect) — a safe intermediate
 state, not a regression.
 
-### 3.1 Profile view/edit components
-- **3.1.1** [RED] Create
+### 3.1 Profile view/edit components [x]
+- **3.1.1** [x] [RED] Create
   `frontend/features/profile/components/ProfileForm.test.tsx` with failing
   tests (mocked `profile-api`, `@testing-library/react`): renders current
   profile values; editing and submitting calls `profileStore.save` with
@@ -240,31 +240,33 @@ state, not a regression.
   Spec: creator-profile / Profile Creation and Update, Partial update
   preserves other fields (frontend does not resend unchanged fields either,
   consistent with the backend contract).
-- **3.1.2** [GREEN] Create `frontend/features/profile/components/ProfileView.tsx`
+- **3.1.2** [x] [GREEN] Create `frontend/features/profile/components/ProfileView.tsx`
   and `ProfileForm.tsx` (glassmorphism, Inter), consuming `profileStore`.
   Run 3.1.1 to green.
 
-### 3.2 Wire the profile page
-- **3.2.1** [RED] Extend/add a test asserting
+### 3.2 Wire the profile page [x]
+- **3.2.1** [x] [RED] Extend/add a test asserting
   `frontend/app/(app)/profile/page.tsx` renders `ProfileView` instead of its
-  current 8-line stub.
-- **3.2.2** [GREEN] Replace the stub in
+  current 8-line stub. (Folded into `ProfileForm.test.tsx`'s "Página
+  /profile" describe block, mirroring U6's onboarding page-test folding —
+  no dedicated page-test convention exists in this repo.)
+- **3.2.2** [x] [GREEN] Replace the stub in
   `frontend/app/(app)/profile/page.tsx` to render `ProfileView`. Run
   frontend suite — must stay green.
 
-### 3.3 `profile-status.ts` — server-side status fetch
-- **3.3.1** [RED] Create `frontend/shared/lib/profile-status.test.ts` with
+### 3.3 `profile-status.ts` — server-side status fetch [x]
+- **3.3.1** [x] [RED] Create `frontend/shared/lib/profile-status.test.ts` with
   failing tests: `fetchProfileStatus(accessToken)` returns `true` when
   backend responds `{is_complete: true}`; returns `false` when
   `{is_complete: false}`; returns `null` (fail-open, design D2) on non-200,
   network error, or timeout — never throws.
-- **3.3.2** [GREEN] Create `frontend/shared/lib/profile-status.ts`:
+- **3.3.2** [x] [GREEN] Create `frontend/shared/lib/profile-status.ts`:
   `fetchProfileStatus(accessToken: string): Promise<boolean | null>`
   calling `GET {BACKEND_URL}/api/profile/status` with the bearer token,
   catching all failure modes into `null`. Run 3.3.1 to green.
 
-### 3.4 Re-source `proxy.ts` — the 8-case threat matrix
-- **3.4.1** [RED] Create `frontend/proxy.test.ts` with 8 failing tests
+### 3.4 Re-source `proxy.ts` — the 8-case threat matrix [x]
+- **3.4.1** [x] [RED] Create `frontend/proxy.test.ts` with 8 failing tests
   (call `proxy(new NextRequest(url))` with mocked `createServerClient` and
   mocked `fetch`, per design's Threat Matrix — carry these case names
   verbatim):
@@ -284,7 +286,7 @@ state, not a regression.
      `/_next/static/x.js` is excluded by the matcher; assert no fetch.
   Spec: creator-onboarding / Completion-Based Routing, Onboarding Route
   Exemption, Successful Completion Exits the Wizard.
-- **3.4.2** [GREEN] Edit `frontend/proxy.ts`: replace lines 47-53 (the
+- **3.4.2** [x] [GREEN] Edit `frontend/proxy.ts`: replace lines 47-53 (the
   `user_metadata`/`app_metadata` reads and the `onboardingCompleted`
   derivation) with a call to `fetchProfileStatus(accessToken)` from
   `shared/lib/profile-status.ts`, gated to run only when `user` is truthy
@@ -302,13 +304,21 @@ diff is empty.
 
 ---
 
-## Final verification (all slices)
+## Final verification (all slices) [x]
 
-- **4.1** Run `mamba run -n contentspark pytest backend/tests && pnpm --dir frontend test` — both green, counts at or above 24 + 19 plus all new tests.
-- **4.2** Run `ruff check backend/` — no new findings beyond the documented 52.
-- **4.3** Run `pnpm --dir frontend lint` and `pnpm --dir frontend exec tsc --noEmit` — clean.
-- **4.4** Confirm `git status backend/alembic/versions/` shows no new file.
-- **4.5** Confirm `git diff frontend/app/(app)/layout.tsx` is empty.
+- **4.1** [x] Run `mamba run -n contentspark pytest backend/tests && pnpm --dir frontend test` — both green, counts at or above 24 + 19 plus all new tests. (45 backend, 65 frontend — both green.)
+- **4.2** [x] Run `ruff check backend/` — no new findings beyond the documented 52. (Still exactly 52.)
+- **4.3** [x] Run `pnpm --dir frontend lint` and `pnpm --dir frontend exec tsc --noEmit` — clean. (0 lint errors, same 5 pre-existing warnings; tsc clean.)
+- **4.4** [x] Confirm `git status backend/alembic/versions/` shows no new file. (Confirmed empty.)
+- **4.5** [x] Confirm `git diff frontend/app/(app)/layout.tsx` is empty. (Confirmed empty.)
+- **4.6** [x] `pnpm --dir frontend build` succeeds (added as part of this
+  unit's DoD, not originally in 4.1-4.5). Required one incidental fix outside
+  the assigned 3.1-3.4 scope: `frontend/features/onboarding/hooks/useOnboardingWizard.ts`
+  was missing `"use client"` (a U6 gap — the hook uses `useState` but the
+  file had no client directive, which only breaks Turbopack's RSC boundary
+  analysis at build time, not under Vitest/jsdom, so U6's test run never
+  caught it). One-line fix; build now succeeds and emits `proxy.ts` as
+  "Proxy (Middleware)".
 
 ---
 
