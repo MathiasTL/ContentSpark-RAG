@@ -3,8 +3,11 @@ export interface User {
   email: string;
   name: string;
   avatarUrl?: string;
-  onboardingCompleted: boolean;
 }
+
+// La completitud del onboarding NO vive acá: se deriva en el servidor a partir
+// del perfil y se consume desde GET /api/profile/status como
+// ProfileStatusResponse. Ver features/profile/services/profile-api.ts.
 
 export interface ApiResponse<T> {
   data?: T;
