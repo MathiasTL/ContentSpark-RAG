@@ -1,0 +1,66 @@
+# openspec/config.yaml
+schema: spec-driven
+
+context: |
+  Project: ContentSpark (RAG + agents + content calendar SaaS for creators)
+  Stack: FastAPI + SQLAlchemy 2.0 async + Alembic + LangGraph (backend/);
+    Next.js 16 App Router + React 19 + Tailwind 4 + Supabase Auth (frontend/)
+  LLM: Groq (Llama 3.1 8B) via LangChain; Embeddings: Google Gemini (gemini-embedding-001)
+  Vector DB: Qdrant Cloud; Relational DB: PostgreSQL via Supabase
+  Architecture: features/ (frontend) + routers/services/agents/models (backend),
+    CRAG pipeline, LangGraph agents for onboarding/calendar
+  Testing: pytest (backend, `mamba run -n contentspark`), vitest (frontend)
+  Style: snake_case (Python), kebab-case files / PascalCase components (TS),
+    async/await everywhere in backend, glassmorphism UI
+
+strict_tdd: true
+
+testing:
+  backend:
+    runner: "mamba run -n contentspark pytest backend/tests"
+    framework: pytest (pytest-asyncio, pytest-mock, httpx)
+    coverage: false
+    coverage_command: ""
+    linter: "ruff check backend/"
+    type_checker: none
+    formatter: none
+  frontend:
+    runner: "pnpm --dir frontend test"
+    framework: vitest (jsdom, @testing-library/react)
+    coverage: true
+    coverage_command: "pnpm --dir frontend exec vitest run --coverage"
+    linter: "pnpm --dir frontend lint"
+    type_checker: "pnpm --dir frontend exec tsc --noEmit"
+    formatter: none
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes (DB migrations, auth, RAG pipeline)
+    - Note which module is affected: backend (FastAPI/agents) or frontend (Next.js features)
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows (CRAG, LangGraph agents, streaming)
+    - Document architecture decisions with rationale
+    - Reference CONTENTSPARK_SAAS_PROJECT.md and CONTENTSPARK_SAAS_ROADMAP.md when relevant
+  tasks:
+    - Group by phase (backend/frontend), use hierarchical numbering
+    - Keep tasks completable in one session
+    - Alembic migration step required after any SQLAlchemy model change
+  apply:
+    guidelines:
+      - Follow existing code patterns (CLAUDE.md conventions)
+      - Endpoints go in backend/app/routers/, never in main.py
+      - Auth middleware required on every protected endpoint
+      - Always filter DB queries by user_id
+      - Never expose SUPABASE_SERVICE_ROLE_KEY to frontend
+      - Run Python commands via `mamba run -n contentspark`
+    tdd: true
+    test_command: "mamba run -n contentspark pytest backend/tests && pnpm --dir frontend test"
+  verify:
+    test_command: "mamba run -n contentspark pytest backend/tests && pnpm --dir frontend test"
+    build_command: "pnpm --dir frontend build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
