@@ -1,9 +1,10 @@
 import os
+
 from dotenv import load_dotenv
-from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, VectorParams
 from langchain_qdrant import QdrantVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from qdrant_client import QdrantClient
+from qdrant_client.http.models import Distance, VectorParams
 
 #Import the embeddings service to use the same vector generation for indexing and querying
 from .embeddings_service import embeddings_service

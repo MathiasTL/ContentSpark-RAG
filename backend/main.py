@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 
-from app.routers import auth, chat, chats, ingest
 from app.database import engine
+from app.routers import auth, chat, chats, ingest
 
 load_dotenv()
 

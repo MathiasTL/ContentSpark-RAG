@@ -1,7 +1,7 @@
 """Router del chat RAG con streaming y persistencia."""
 from __future__ import annotations
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -11,7 +11,6 @@ from sqlalchemy.orm import selectinload
 
 from app.models.chat import Chat, Message
 from app.services.llm_services import llm_service
-
 
 MAX_TITLE_CHARS = 60
 TITLE_FALLBACK_CHARS = 50
@@ -26,7 +25,7 @@ def _to_uuid(value: str, label: str) -> uuid.UUID:
 
 class ChatService:
     async def create_chat(
-        self, db: AsyncSession, user_id: str, title: Optional[str] = None
+        self, db: AsyncSession, user_id: str, title: str | None = None
     ) -> Chat:
         chat = Chat(user_id=_to_uuid(user_id, "user_id"), title=title)
         db.add(chat)
@@ -78,8 +77,8 @@ class ChatService:
         db: AsyncSession,
         user_id: str,
         chat_id: str,
-        title: Optional[str] = None,
-        is_archived: Optional[bool] = None,
+        title: str | None = None,
+        is_archived: bool | None = None,
     ) -> Chat:
         if title is None and is_archived is None:
             raise HTTPException(
@@ -108,7 +107,7 @@ class ChatService:
         chat_id: str,
         role: str,
         content: str,
-        sources: Optional[list[dict[str, Any]]] = None,
+        sources: list[dict[str, Any]] | None = None,
     ) -> Message:
         if role not in {"user", "ai"}:
             raise HTTPException(status_code=400, detail="role debe ser 'user' o 'ai'")

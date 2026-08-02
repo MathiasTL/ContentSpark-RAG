@@ -1,11 +1,11 @@
-import os
-import json
-import time
-import re
 import hashlib
-from pathlib import Path
+import json
+import os
+import re
+import time
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
+
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -42,7 +42,7 @@ SEPARATORS = [
 def load_tracking() -> dict:
     """Carga el archivo de tracking con formato mejorado."""
     if os.path.exists(TRACKING_FILE):
-        with open(TRACKING_FILE, "r", encoding="utf-8") as f:
+        with open(TRACKING_FILE, encoding="utf-8") as f:
             data = json.load(f)
             # Migración: si es una lista (formato viejo), convertir a dict
             if isinstance(data, list):
@@ -127,7 +127,7 @@ def clean_web_text(text: str) -> str:
 # ==========================================
 # INGESTA DE PDFs (MEJORADA)
 # ==========================================
-def ingest_pdf(pdf_path: Path, category: Optional[str] = None) -> dict:
+def ingest_pdf(pdf_path: Path, category: str | None = None) -> dict:
     """
     Ingesta un PDF individual con metadata enriquecida.
     Ahora preserva el número de página en el metadata de cada chunk.
@@ -185,7 +185,7 @@ def ingest_pdf(pdf_path: Path, category: Optional[str] = None) -> dict:
 # ==========================================
 # INGESTA DE URLs WEB (NUEVO)
 # ==========================================
-def ingest_url(url: str, category: Optional[str] = None, custom_title: Optional[str] = None) -> dict:
+def ingest_url(url: str, category: str | None = None, custom_title: str | None = None) -> dict:
     """
     Descarga una página web, extrae el texto limpio y lo ingesta en Qdrant.
     Usa trafilatura para extracción de contenido principal (ignora menús, ads, footers).
@@ -276,7 +276,7 @@ def ingest_url(url: str, category: Optional[str] = None, custom_title: Optional[
 # ==========================================
 # INGESTA DE TEXTO DIRECTO (MEJORADA)
 # ==========================================
-def ingest_text(text: str, source: str, category: Optional[str] = None, language: Optional[str] = None) -> dict:
+def ingest_text(text: str, source: str, category: str | None = None, language: str | None = None) -> dict:
     """
     Ingesta texto directamente (para contenido propio del creador, notas, etc).
     """
@@ -391,7 +391,7 @@ def ingest_urls_from_file(filepath: str = "urls_to_ingest.json"):
         print("Crea el archivo con formato: [{\"url\": \"...\", \"category\": \"...\"}]")
         return
     
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         urls = json.load(f)
     
     tracking = load_tracking()

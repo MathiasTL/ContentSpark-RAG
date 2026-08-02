@@ -51,8 +51,7 @@ if "app.services.qdrant_services" not in sys.modules:
 import pytest
 from fastapi.testclient import TestClient
 
-from app.dependencies import get_current_user, get_db
-from app.middleware.auth import get_supabase_admin
+from app.dependencies import get_db
 from main import app
 
 

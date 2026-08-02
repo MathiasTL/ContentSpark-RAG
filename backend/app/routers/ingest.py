@@ -1,12 +1,12 @@
 # Router de ingesta de documentos y búsqueda semántica
-from fastapi import APIRouter, HTTPException
 from pathlib import Path
+
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
 
 from app.services.embeddings_service import embeddings_service
-from app.services.qdrant_services import qdrant_search_service
 from app.services.llm_services import llm_service
+from app.services.qdrant_services import qdrant_search_service
 
 router = APIRouter(prefix="/api", tags=["ingesta"])
 
@@ -22,18 +22,18 @@ class EmbeddingRequest(BaseModel):
 class IngestTextRequest(BaseModel):
     text: str
     source: str
-    category: Optional[str] = None
-    language: Optional[str] = None
+    category: str | None = None
+    language: str | None = None
 
 
 class IngestURLRequest(BaseModel):
     url: str
-    category: Optional[str] = None
-    title: Optional[str] = None
+    category: str | None = None
+    title: str | None = None
 
 
 class IngestURLsRequest(BaseModel):
-    urls: List[IngestURLRequest]
+    urls: list[IngestURLRequest]
 
 
 class SearchRequest(BaseModel):

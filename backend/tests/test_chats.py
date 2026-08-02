@@ -1,9 +1,8 @@
 """Tests del CRUD de chats."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
 from uuid import UUID
 
 
@@ -13,7 +12,7 @@ def _fake_chat(
     title: str | None = None,
     is_archived: bool = False,
 ):
-    now = datetime(2026, 5, 16, 12, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 5, 16, 12, 0, tzinfo=UTC)
     return SimpleNamespace(
         id=UUID(chat_id),
         user_id=UUID(user_id),
@@ -76,7 +75,7 @@ def test_get_chat_returns_messages(client, patch_chat_service):
         role="user",
         content="Hola",
         sources=None,
-        created_at=datetime(2026, 5, 16, 12, 0, tzinfo=timezone.utc),
+        created_at=datetime(2026, 5, 16, 12, 0, tzinfo=UTC),
     )
     chat = _fake_chat(title="Hola")
     chat.messages = [msg]

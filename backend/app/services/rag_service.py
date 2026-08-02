@@ -1,8 +1,10 @@
-from typing import AsyncGenerator, TypedDict, List
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from langchain_core.documents import Document
+from collections.abc import AsyncGenerator
+from typing import TypedDict
+
 from langchain_community.tools import DuckDuckGoSearchResults
-from langgraph.graph import StateGraph, END
+from langchain_core.documents import Document
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langgraph.graph import END, StateGraph
 
 from app.services.llm_services import llm_service
 from app.services.qdrant_services import qdrant_search_service
@@ -20,9 +22,9 @@ SCORE_THRESHOLD = 0.35
 class GraphState(TypedDict):
     question: str
     original_question: str
-    documents: List[Document]
+    documents: list[Document]
     web_search: bool
-    history: List
+    history: list
 
 # ==========================================
 # 3. UTILIDADES DE HISTORIAL
@@ -89,7 +91,7 @@ Responde ÚNICAMENTE con la pregunta reescrita, sin explicaciones ni texto adici
 # ==========================================
 # 4. UTILIDADES DE PROMPT
 # ==========================================
-def build_context_text(documents: List[Document]) -> str:
+def build_context_text(documents: list[Document]) -> str:
     if not documents:
         return "No se encontró información relevante en la base de conocimiento."
     
@@ -116,7 +118,7 @@ CONTEXTO RECUPERADO DE LA BASE DE CONOCIMIENTO:
 {context_text}
 """
 
-def build_messages(question: str, documents: List[Document], history: list) -> list:
+def build_messages(question: str, documents: list[Document], history: list) -> list:
     context_text = build_context_text(documents)
     system_prompt = build_system_prompt(context_text)
     messages = [SystemMessage(content=system_prompt)]
@@ -140,7 +142,7 @@ def retrieve(state: GraphState):
     Recupera documentos de Qdrant usando el query (ya reescrito si fue necesario).
     Usa similarity_search_with_score para poder filtrar por relevancia.
     """
-    print(f"   [GRAFO] Recuperando documentos de Qdrant...")
+    print("   [GRAFO] Recuperando documentos de Qdrant...")
     question = state['question']
     
     # Usamos similarity_search_with_score para filtrar por calidad

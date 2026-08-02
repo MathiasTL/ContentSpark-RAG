@@ -1,14 +1,14 @@
 """Tests del endpoint POST /api/chat (streaming + persistencia)."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 
 def _fake_chat(title=None):
-    now = datetime(2026, 5, 16, 12, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 5, 16, 12, 0, tzinfo=UTC)
     return SimpleNamespace(
         id=UUID("22222222-2222-2222-2222-222222222222"),
         user_id=UUID("11111111-1111-1111-1111-111111111111"),

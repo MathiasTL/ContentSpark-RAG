@@ -1,15 +1,15 @@
 # TypedDicts compartidos entre agentes LangGraph
-from typing import TypedDict, List, Optional, Any
+from typing import Any, TypedDict
 
 
 class RAGState(TypedDict):
     """Estado del agente CRAG."""
     question: str
-    history: List[dict]
+    history: list[dict]
     rewritten_query: str
-    documents: List[Any]
+    documents: list[Any]
     needs_web_search: bool
-    web_results: List[Any]
+    web_results: list[Any]
     response: str
 
 
@@ -17,7 +17,7 @@ class OnboardingState(TypedDict):
     """Estado del agente de onboarding."""
     user_id: str
     current_step: str
-    messages: List[dict]
+    messages: list[dict]
     profile_data: dict
     is_complete: bool
 
@@ -30,5 +30,5 @@ class CalendarState(TypedDict):
     period: str
     formats: dict
     rag_context: str
-    calendar_entries: List[dict]
+    calendar_entries: list[dict]
     is_optimized: bool

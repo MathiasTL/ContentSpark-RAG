@@ -1,5 +1,4 @@
 # Base declarativa compartida para todos los modelos SQLAlchemy
-import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, func
@@ -8,7 +7,6 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(DeclarativeBase):
     """Base compartida para todos los modelos del proyecto."""
-    pass
 
 
 class TimestampMixin:

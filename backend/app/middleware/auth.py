@@ -10,7 +10,7 @@ from supabase import Client, create_client
 from app.config import settings
 
 
-@lru_cache()
+@lru_cache
 def get_supabase_admin() -> Client:
     """Crea un cliente Supabase con service role key (sb_secret_...)."""
     if not settings.supabase_url or not settings.supabase_service_role_key:
