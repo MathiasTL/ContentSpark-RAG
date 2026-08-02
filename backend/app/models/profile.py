@@ -29,7 +29,7 @@ class CreatorProfile(Base, TimestampMixin):
     target_audience: Mapped[str | None] = mapped_column(Text, nullable=True)
     current_frequency: Mapped[str | None] = mapped_column(String(50), nullable=True)
     desired_frequency: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    preferred_formats: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    preferred_formats: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
     # Relaciones
     user: Mapped["User"] = relationship(back_populates="profile")

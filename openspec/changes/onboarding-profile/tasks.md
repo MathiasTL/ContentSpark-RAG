@@ -27,11 +27,11 @@ Delivers independently: a tested `GET/PUT /api/profile`,
 `POST /api/profile/onboarding`, `GET /api/profile/status` surface. No
 frontend dependency. No Alembic migration in this phase or any other.
 
-### 1.1 Model annotation fix (no migration)
-- **1.1.1** [RED] N/A — this is a type-hint-only change with no runtime
+### 1.1 Model annotation fix (no migration) [x]
+- **1.1.1** [x] [RED] N/A — this is a type-hint-only change with no runtime
   behavior to assert; covered indirectly by 1.4's round-trip test. Skip a
   dedicated RED test here.
-- **1.1.2** [GREEN] Edit `backend/app/models/profile.py:32`:
+- **1.1.2** [x] [GREEN] Edit `backend/app/models/profile.py:32`:
   `Mapped[dict | None]` → `Mapped[list[str] | None]` (JSONB column
   `preferred_formats` unchanged). Confirm no `alembic revision --autogenerate`
   is generated (column type identical) — run
@@ -39,8 +39,8 @@ frontend dependency. No Alembic migration in this phase or any other.
   locally and discard/verify it proposes no diff before committing.
   Spec: creator-profile / Input Validation (type correctness).
 
-### 1.2 Schema fixes and additions
-- **1.2.1** [RED] Add failing assertions to `backend/tests/test_profile_service.py`
+### 1.2 Schema fixes and additions [x]
+- **1.2.1** [x] [RED] Add failing assertions to `backend/tests/test_profile_service.py`
   (new file, created here) for: `ProfileCreate` accepts
   `current_frequency="3 por semana"` (str, not int) via direct Pydantic
   validation call; `ProfileCreate` rejects missing `niche`; a new
@@ -48,7 +48,7 @@ frontend dependency. No Alembic migration in this phase or any other.
   schema exists and serializes correctly. These will fail against current
   `backend/app/schemas/profile.py`.
   Spec: creator-profile / Input Validation, Completion Status Contract.
-- **1.2.2** [GREEN] Edit `backend/app/schemas/profile.py`:
+- **1.2.2** [x] [GREEN] Edit `backend/app/schemas/profile.py`:
   - Lines 21-22 (`ProfileCreate`) and 35-36 (`ProfileUpdate`):
     `current_frequency`/`desired_frequency` `int` → `str | None`.
   - Make `ProfileCreate` fields optional except the four required

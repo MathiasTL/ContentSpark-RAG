@@ -1,6 +1,6 @@
 # Fase 2: Esquemas Pydantic para perfil del creador
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class SocialAccountCreate(BaseModel):
@@ -11,15 +11,15 @@ class SocialAccountCreate(BaseModel):
 
 
 class ProfileCreate(BaseModel):
-    display_name: str
+    display_name: str | None = None
     bio: str | None = None
     niche: str
     sub_niche: str | None = None
     primary_goal: str
     tone: str
     target_audience: str
-    current_frequency: int
-    desired_frequency: int
+    current_frequency: str | None = None
+    desired_frequency: str | None = None
     preferred_formats: list[str] = []
     social_accounts: list[SocialAccountCreate] = []
 
@@ -32,11 +32,18 @@ class ProfileUpdate(BaseModel):
     primary_goal: str | None = None
     tone: str | None = None
     target_audience: str | None = None
-    current_frequency: int | None = None
-    desired_frequency: int | None = None
+    current_frequency: str | None = None
+    desired_frequency: str | None = None
     preferred_formats: list[str] | None = None
 
 
 class ProfileResponse(ProfileCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     user_id: str
+
+
+class ProfileStatusResponse(BaseModel):
+    is_complete: bool
+    missing_fields: list[str]
