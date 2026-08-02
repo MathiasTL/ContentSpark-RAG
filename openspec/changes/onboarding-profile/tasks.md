@@ -61,8 +61,8 @@ frontend dependency. No Alembic migration in this phase or any other.
     so it can serialize a SQLAlchemy `CreatorProfile` row directly.
   Run 1.2.1 to green.
 
-### 1.3 `profile_service.py` — completion rule and CRUD
-- **1.3.1** [RED] In `backend/tests/test_profile_service.py`, add unit tests
+### 1.3 `profile_service.py` — completion rule and CRUD [x]
+- **1.3.1** [x] [RED] In `backend/tests/test_profile_service.py`, add unit tests
   (SimpleNamespace fakes, no DB) for `_missing_fields`:
   - all-empty row → all 4 required fields listed
   - whitespace-only `tone` (`" "`) → `tone` counted as missing
@@ -70,7 +70,7 @@ frontend dependency. No Alembic migration in this phase or any other.
   - `None` profile → all 4 missing
   Spec: creator-profile / Completion Status Contract, scenarios "New user is
   incomplete", "Profile with only some required fields", "Complete profile".
-- **1.3.2** [GREEN] Create `backend/app/services/profile_service.py`
+- **1.3.2** [x] [GREEN] Create `backend/app/services/profile_service.py`
   following `backend/app/services/chat_service.py`'s shape:
   - `REQUIRED_PROFILE_FIELDS: tuple[str, ...] = ("niche", "primary_goal", "tone", "target_audience")`
   - `_missing_fields(profile) -> list[str]` (treats `None` and
