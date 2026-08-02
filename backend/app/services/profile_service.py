@@ -67,10 +67,13 @@ class ProfileService:
     async def update_profile(
         self, db: AsyncSession, user_id: str, **fields: Any
     ) -> CreatorProfile:
+        # `fields` ya viene filtrado por el router via `model_fields_set`:
+        # una clave AUSENTE significa "no tocar", una clave presente con
+        # valor `None` significa "limpiar explicitamente" (JD-1).
         social_accounts = fields.pop("social_accounts", None)
         profile = await self.get_or_create_profile(db, user_id)
         for key, value in fields.items():
-            if value is not None and hasattr(profile, key):
+            if hasattr(profile, key):
                 setattr(profile, key, value)
         if social_accounts is not None:
             await self._replace_social_accounts(db, profile, social_accounts)
@@ -81,7 +84,19 @@ class ProfileService:
     async def complete_onboarding(
         self, db: AsyncSession, user_id: str, payload: Any
     ) -> CreatorProfile:
-        data = payload.model_dump() if hasattr(payload, "model_dump") else dict(payload)
+        # Aplica el mismo contrato que `update_profile`: un campo opcional
+        # omitido en el reenvio del onboarding no debe sobreescribir el
+        # valor ya guardado (JD-2). Se usa `include=model_fields_set` (no
+        # `exclude_unset=True`) para no recortar tambien los campos
+        # no-enviados de modelos anidados como `social_accounts`.
+        # `dict(payload)` se mantiene como fallback para llamadas de test
+        # con dicts crudos, donde las claves presentes ya representan
+        # "explicitamente enviado".
+        data = (
+            payload.model_dump(include=payload.model_fields_set)
+            if hasattr(payload, "model_dump")
+            else dict(payload)
+        )
         social_accounts = data.pop("social_accounts", None)
         profile = await self.get_or_create_profile(db, user_id)
         for key, value in data.items():

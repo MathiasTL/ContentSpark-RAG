@@ -111,7 +111,11 @@ def test_put_profile_with_social_accounts_forwards_them(client, patch_profile_se
 def test_put_profile_omitting_social_accounts_leaves_them_untouched(
     client, patch_profile_service
 ):
-    """Omitir `social_accounts` en el body no debe tocar las cuentas existentes."""
+    """Omitir `social_accounts` en el body no debe tocar las cuentas existentes.
+
+    Con `exclude_unset=True`, un campo omitido ni siquiera llega como kwarg
+    al servicio (JD-1/JD-2: distinguir "omitido" de "null explicito").
+    """
     updated = _fake_profile(bio="Nueva bio")
     patch_profile_service.update_profile.return_value = updated
 
@@ -123,7 +127,41 @@ def test_put_profile_omitting_social_accounts_leaves_them_untouched(
 
     assert response.status_code == 200
     kwargs = patch_profile_service.update_profile.call_args.kwargs
-    assert kwargs["social_accounts"] is None
+    assert "social_accounts" not in kwargs
+
+
+def test_put_profile_explicit_null_clears_field(client, patch_profile_service):
+    """Un `null` explicito en el body SI debe llegar al servicio (limpiar el campo)."""
+    updated = _fake_profile(bio=None)
+    patch_profile_service.update_profile.return_value = updated
+
+    response = client.put(
+        "/api/profile",
+        headers={"Authorization": "Bearer valid"},
+        json={"bio": None},
+    )
+
+    assert response.status_code == 200
+    kwargs = patch_profile_service.update_profile.call_args.kwargs
+    assert "bio" in kwargs
+    assert kwargs["bio"] is None
+
+
+def test_put_profile_omitted_field_excluded_from_kwargs(client, patch_profile_service):
+    """Un campo no enviado en el body no debe aparecer como kwarg (no se toca)."""
+    updated = _fake_profile(niche="marketing")
+    patch_profile_service.update_profile.return_value = updated
+
+    response = client.put(
+        "/api/profile",
+        headers={"Authorization": "Bearer valid"},
+        json={"niche": "marketing"},
+    )
+
+    assert response.status_code == 200
+    kwargs = patch_profile_service.update_profile.call_args.kwargs
+    assert "bio" not in kwargs
+    assert kwargs["niche"] == "marketing"
 
 
 def test_put_profile_empty_social_accounts_clears_them(client, patch_profile_service):
@@ -213,6 +251,63 @@ def test_post_onboarding_resubmission_calls_complete_onboarding(
 
     assert response.status_code == 200
     patch_profile_service.complete_onboarding.assert_awaited_once()
+
+
+def test_post_onboarding_resubmission_preserves_omitted_optional_field(
+    client, patch_profile_service
+):
+    """Reenviar onboarding sin `bio` no debe llegar al servicio como campo explicito."""
+    updated = _fake_profile(
+        niche="marketing",
+        primary_goal="crecer",
+        tone="cercano",
+        target_audience="emprendedores",
+        bio="bio existente",
+    )
+    patch_profile_service.complete_onboarding.return_value = updated
+
+    response = client.post(
+        "/api/profile/onboarding",
+        headers={"Authorization": "Bearer valid"},
+        json={
+            "niche": "marketing",
+            "primary_goal": "crecer",
+            "tone": "cercano",
+            "target_audience": "emprendedores",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = patch_profile_service.complete_onboarding.call_args.args[2]
+    assert "bio" not in payload.model_fields_set
+
+
+def test_post_onboarding_resubmission_without_social_accounts_key(
+    client, patch_profile_service
+):
+    """Reenviar onboarding sin `social_accounts` no debe llegar como campo explicito."""
+    updated = _fake_profile(
+        niche="marketing",
+        primary_goal="crecer",
+        tone="cercano",
+        target_audience="emprendedores",
+    )
+    patch_profile_service.complete_onboarding.return_value = updated
+
+    response = client.post(
+        "/api/profile/onboarding",
+        headers={"Authorization": "Bearer valid"},
+        json={
+            "niche": "marketing",
+            "primary_goal": "crecer",
+            "tone": "cercano",
+            "target_audience": "emprendedores",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = patch_profile_service.complete_onboarding.call_args.args[2]
+    assert "social_accounts" not in payload.model_fields_set
 
 
 def test_post_onboarding_without_token_returns_401(client):
