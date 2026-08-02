@@ -109,8 +109,24 @@ that already exists.
 | `frontend/features/onboarding/` | New | Wizard |
 | `frontend/features/profile/` | New | View/edit |
 | `frontend/app/(app)/onboarding/page.tsx`, `.../profile/page.tsx` | Modified | Replace 8-line stubs |
-| `frontend/app/(app)/layout.tsx` | Modified | Completion guard only |
+| `frontend/app/(app)/layout.tsx` | Unchanged | Superseded — see below |
+| `frontend/proxy.ts` | Modified | Re-source the existing completion check |
 | `frontend/shared/constants/index.ts` | Unchanged | Reuse `NICHES`, `FORMATS`, `PLATFORMS` |
+
+> **Correction (post-design).** This proposal originally stated that no route
+> guard existed and that one would be added to `frontend/app/(app)/layout.tsx`.
+> That was wrong: the guard already exists in `frontend/proxy.ts` (Next.js 16
+> renamed `middleware.ts` to `proxy.ts`, which is why a search for the old name
+> found nothing). It already protects `/chat`, `/onboarding`, `/calendar` and
+> `/profile`, already exempts `/onboarding` itself, and already implements the
+> reverse complete-to-`/chat` redirect.
+>
+> Its onboarding branch is dead code today: `proxy.ts:47-53` reads
+> `user_metadata.onboarding_completed`, and nothing in the repository ever
+> writes that key, so the value is always `null` and neither branch fires.
+>
+> This change therefore **re-sources an existing guard** rather than authoring a
+> new one. `layout.tsx` is not touched. See `design.md` for the mechanism.
 
 ## Risks
 
