@@ -191,14 +191,14 @@ URL; the routing guard that sends users there is Phase 3).
   calling `profile-api.ts`'s `submitOnboarding`. Run 2.3.1 to green.
 
 ### 2.4 Wizard components
-- **2.4.1** [RED] Create
+- **2.4.1** [x] [RED] Create
   `frontend/features/onboarding/components/OnboardingWizard.test.tsx` with
   failing tests using `@testing-library/react` + mocked `profile-api`
   module: renders step 1 first; "Next" disabled/blocked when required field
   empty; renders all 4-5 steps in sequence; final submit triggers
   `submitOnboarding` once and (via router mock) navigates to `/chat`.
   Spec: creator-onboarding / Multi-Step Wizard Form scenarios.
-- **2.4.2** [GREEN] Create wizard components (glassmorphism:
+- **2.4.2** [x] [GREEN] Create wizard components (glassmorphism:
   `bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl`, Inter):
   `frontend/features/onboarding/components/OnboardingWizard.tsx`,
   `Step1Niche.tsx` (niche + sub_niche), `Step2Goals.tsx` (primary_goal,
@@ -207,12 +207,12 @@ URL; the routing guard that sends users there is Phase 3).
   optional social accounts), `WizardProgress.tsx`. Run 2.4.1 to green.
 
 ### 2.5 Wire the onboarding page
-- **2.5.1** [RED] Add/extend a test (e.g.
+- **2.5.1** [x] [RED] Add/extend a test (e.g.
   `frontend/app/(app)/onboarding/page.test.tsx` if a page-test convention
   exists in this repo, otherwise fold into 2.4.1's component test by
   importing the page directly) asserting the page renders
   `OnboardingWizard` rather than the current 8-line stub content.
-- **2.5.2** [GREEN] Replace the stub in
+- **2.5.2** [x] [GREEN] Replace the stub in
   `frontend/app/(app)/onboarding/page.tsx` to render `OnboardingWizard`.
   Run full frontend suite (`pnpm --dir frontend test`) — must stay green.
 
