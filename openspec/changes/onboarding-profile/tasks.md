@@ -87,8 +87,8 @@ frontend dependency. No Alembic migration in this phase or any other.
   - Module-level singleton: `profile_service = ProfileService()`.
   Run 1.3.1 to green.
 
-### 1.4 Router + registration
-- **1.4.1** [RED] Create `backend/tests/test_profile.py` (router tests via
+### 1.4 Router + registration [x]
+- **1.4.1** [x] [RED] Create `backend/tests/test_profile.py` (router tests via
   `client` fixture) with failing tests, mirroring
   `backend/tests/test_chats.py`'s structure and a new `patch_profile_service`
   fixture (added in 1.4.2 alongside):
@@ -108,7 +108,7 @@ frontend dependency. No Alembic migration in this phase or any other.
   One "no token → 401" test per endpoint (4 total), per skill pattern.
   Spec: creator-profile / all requirements; creator-onboarding / n/a (backend
   has no wizard-specific requirement, only the contract it depends on).
-- **1.4.2** [GREEN]
+- **1.4.2** [x] [GREEN]
   - Add `patch_profile_service` fixture to `backend/tests/conftest.py`,
     mirroring `patch_chat_service` (lines 115-133): `AsyncMock` for
     `get_or_create_profile`, `get_status`, `update_profile`,
@@ -124,7 +124,7 @@ frontend dependency. No Alembic migration in this phase or any other.
   Run 1.4.1 to green. Run full backend suite
   (`mamba run -n contentspark pytest backend/tests`) — must stay at
   24 + new tests, all green.
-- **1.4.3** [VERIFY] `ruff check backend/` reports no new findings on the
+- **1.4.3** [x] [VERIFY] `ruff check backend/` reports no new findings on the
   four touched/created files (`profile_service.py`, `routers/profile.py`,
   `schemas/profile.py`, `models/profile.py`, `main.py`, `conftest.py`,
   `test_profile.py`, `test_profile_service.py`). Pre-existing 52 findings are

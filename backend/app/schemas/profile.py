@@ -42,6 +42,13 @@ class ProfileResponse(ProfileCreate):
 
     id: str
     user_id: str
+    # Un perfil recien creado (sin onboarding) no tiene estos campos aun;
+    # a diferencia de ProfileCreate, la respuesta debe poder representarlos
+    # vacios (spec creator-profile / Profile Read, escenario "No profile yet").
+    niche: str | None = None
+    primary_goal: str | None = None
+    tone: str | None = None
+    target_audience: str | None = None
 
 
 class ProfileStatusResponse(BaseModel):

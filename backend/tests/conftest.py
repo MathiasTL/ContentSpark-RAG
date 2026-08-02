@@ -131,3 +131,19 @@ def patch_chat_service(monkeypatch):
     for name in fakes.__dict__:
         monkeypatch.setattr(cs_module.chat_service, name, getattr(fakes, name))
     return fakes
+
+
+@pytest.fixture
+def patch_profile_service(monkeypatch):
+    """Reemplaza los metodos de profile_service por AsyncMocks para tests de router."""
+    from app.services import profile_service as ps_module
+
+    fakes = SimpleNamespace(
+        get_or_create_profile=AsyncMock(),
+        get_status=AsyncMock(return_value=(False, [])),
+        update_profile=AsyncMock(),
+        complete_onboarding=AsyncMock(),
+    )
+    for name in fakes.__dict__:
+        monkeypatch.setattr(ps_module.profile_service, name, getattr(fakes, name))
+    return fakes
