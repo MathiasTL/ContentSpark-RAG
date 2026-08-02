@@ -1,2 +1,3 @@
 // Fase 2: Onboarding inteligente con agente LangGraph
-export { };
+export { useOnboardingWizard, TOTAL_ONBOARDING_STEPS } from "./hooks/useOnboardingWizard";
+export type { OnboardingDraft } from "./hooks/useOnboardingWizard";

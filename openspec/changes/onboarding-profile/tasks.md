@@ -173,8 +173,8 @@ URL; the routing guard that sends users there is Phase 3).
   Zustand store with `profile: Profile | null`, `isLoading: boolean`,
   `error: string | null`, `load()`, `save(partial)`. Run 2.2.1 to green.
 
-### 2.3 Onboarding wizard hook (draft state)
-- **2.3.1** [RED] Create
+### 2.3 Onboarding wizard hook (draft state) [x]
+- **2.3.1** [x] [RED] Create
   `frontend/features/onboarding/hooks/useOnboardingWizard.test.tsx` with
   failing tests: step navigation blocks advancing past a step whose
   required field (per design D7, four required fields are distributed
@@ -184,7 +184,7 @@ URL; the routing guard that sends users there is Phase 3).
   fields.
   Spec: creator-onboarding / Multi-Step Wizard Form, Frequency Recommendation
   Fallback.
-- **2.3.2** [GREEN] Create
+- **2.3.2** [x] [GREEN] Create
   `frontend/features/onboarding/hooks/useOnboardingWizard.ts`: local
   `useState` draft object (design D7 — not global/Zustand), step index,
   `next()`/`back()` with per-step required-field validation, `submit()`
