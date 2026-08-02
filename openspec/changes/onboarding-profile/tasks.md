@@ -145,8 +145,8 @@ string frequencies, `REQUIRED_PROFILE_FIELDS`). Delivers independently: a
 user can create a profile end to end via `/onboarding` (reachable by direct
 URL; the routing guard that sends users there is Phase 3).
 
-### 2.1 `profile-api.ts` data layer
-- **2.1.1** [RED] Create `frontend/features/profile/services/profile-api.test.ts`
+### 2.1 `profile-api.ts` data layer [x]
+- **2.1.1** [x] [RED] Create `frontend/features/profile/services/profile-api.test.ts`
   with failing tests (mirror `chats-api.ts` consumers' `vi.spyOn` pattern
   used in `chatSessionsStore.test.ts`) asserting: `getProfile()` calls
   `apiFetch("/api/profile", {method: "GET"})` and returns parsed JSON;
@@ -155,21 +155,21 @@ URL; the routing guard that sends users there is Phase 3).
   `getProfileStatus()` calls `GET /api/profile/status`; each throws
   `ApiError` on non-ok response (mirror `ensureOk` behavior).
   Spec: creator-profile / all requirements (client contract only).
-- **2.1.2** [GREEN] Create `frontend/features/profile/services/profile-api.ts`
+- **2.1.2** [x] [GREEN] Create `frontend/features/profile/services/profile-api.ts`
   mirroring `frontend/features/chat/services/chats-api.ts`: `apiFetch` +
   local `ensureOk`, plus TS interfaces `ProfileStatus`, `Profile`,
   `SocialAccount`, `ProfileOnboardingInput`, `ProfileUpdateInput` matching
   design's frozen contract (`current_frequency`/`desired_frequency` typed
   `string | null`). Run 2.1.1 to green.
 
-### 2.2 `profileStore.ts` (Zustand)
-- **2.2.1** [RED] Create `frontend/features/profile/store/profileStore.test.ts`
+### 2.2 `profileStore.ts` (Zustand) [x]
+- **2.2.1** [x] [RED] Create `frontend/features/profile/store/profileStore.test.ts`
   with failing tests (mirror `chatSessionsStore.test.ts`'s
   `vi.spyOn(profileApi, 'getProfile')` + `useProfileStore.getState()`
   pattern): `load()` sets `isLoading` true then false and populates
   `profile`; `load()` failure sets `error` and leaves `isLoading` false;
   `save(partial)` calls `updateProfile` and refreshes `profile` on success.
-- **2.2.2** [GREEN] Create `frontend/features/profile/store/profileStore.ts`:
+- **2.2.2** [x] [GREEN] Create `frontend/features/profile/store/profileStore.ts`:
   Zustand store with `profile: Profile | null`, `isLoading: boolean`,
   `error: string | null`, `load()`, `save(partial)`. Run 2.2.1 to green.
 
