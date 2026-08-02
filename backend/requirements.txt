@@ -34,3 +34,7 @@ pytest
 pytest-asyncio
 pytest-mock
 httpx
+
+# Linting
+# Pinned: Ruff's default ruleset changes between releases. See ruff.toml.
+ruff==0.16.1

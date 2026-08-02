@@ -1,0 +1,38 @@
+# Ruff configuration for the ContentSpark backend.
+#
+# This file exists so the lint gate is deterministic. Without an explicit
+# `select`, Ruff falls back to whatever its installed version considers the
+# default ruleset, which changes between releases — meaning the gate could
+# break without a single line of code being touched. Keep `ruff` pinned in
+# requirements.txt alongside this config.
+
+target-version = "py311"
+line-length = 100
+
+# Generated migration files are Alembic's output, not hand-written source.
+extend-exclude = ["alembic/versions"]
+
+[lint]
+select = [
+    "E4",   # pycodestyle — imports
+    "E7",   # pycodestyle — statements
+    "E9",   # pycodestyle — runtime errors
+    "F",    # pyflakes
+    "I",    # isort — import ordering
+    "UP",   # pyupgrade — modern syntax
+    "B",    # flake8-bugbear — likely bugs
+    "BLE",  # flake8-blind-except
+    "DTZ",  # flake8-datetimez — timezone-aware datetimes
+    "PERF", # perflint
+    "PIE",  # flake8-pie
+    "RUF",  # Ruff-specific rules
+]
+
+[lint.per-file-ignores]
+# SQLAlchemy declarative models use string forward references
+# (`Mapped["User"]`) that are resolved at runtime against the registry.
+# Ruff cannot see through them and reports false undefined names.
+"app/models/*.py" = ["F821"]
+
+[lint.isort]
+known-first-party = ["app"]
