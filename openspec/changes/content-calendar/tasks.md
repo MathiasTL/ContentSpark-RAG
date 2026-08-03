@@ -41,7 +41,7 @@ is built. This is deliberately **not** RED/GREEN — it is a throwaway
 investigation, run and discarded, not a unit of shipped behavior.
 
 ### 0.1 Structured-output feasibility spike
-- **0.1.1** [ ] [SPIKE] In a scratch script (not committed — e.g.
+- [ ] **0.1.1** [SPIKE] In a scratch script (not committed — e.g.
   `/private/tmp/.../spike_structured_output.py`, run via
   `mamba run -n contentspark python`), call
   `llm_service.llm.with_structured_output(GeneratedIdeasList)` (using the
@@ -55,7 +55,7 @@ investigation, run and discarded, not a unit of shipped behavior.
   error text + restated count/format instructions) recover on a forced
   failure case (e.g. a deliberately malformed follow-up prompt).
   Spec: content-calendar-generation / Structured Idea Generation.
-- **0.1.2** [ ] [SPIKE] Save the finding to Engram (`mem_save`, type
+- [ ] **0.1.2** [SPIKE] Save the finding to Engram (`mem_save`, type
   `discovery`) recording the exact exception type(s) observed and whether the
   4-tier fallback ladder (happy path → repair retry → template pad → truncate
   overcount, `design.md:363-388`) is sufficient as designed, or whether Unit
@@ -72,7 +72,7 @@ Delivers independently: tightened Pydantic schemas and the finalized
 service, no agent wired to them). ~110 lines. Low budget risk.
 
 ### 1.1 `CalendarState` contract
-- **1.1.1** [ ] [RED] Add failing tests to a new
+- [ ] **1.1.1** [RED] Add failing tests to a new
   `backend/tests/test_calendar_agent.py` asserting `CalendarState` (imported
   from `backend/app/agents/shared_state.py`) accepts a dict literal with
   every field from `design.md:72-88` (`user_id`, `profile`, `calendar_id`,
@@ -81,13 +81,13 @@ service, no agent wired to them). ~110 lines. Low budget risk.
   `typing.get_type_hints(CalendarState)` assertion covering the full field
   set, since `TypedDict` has no runtime validation to exercise directly.
   Spec: content-calendar-generation (contract underlying every requirement).
-- **1.1.2** [ ] [GREEN] Edit `backend/app/agents/shared_state.py`: add
+- [ ] **1.1.2** [GREEN] Edit `backend/app/agents/shared_state.py`: add
   `from typing import Literal` to the existing `Any, TypedDict` import;
   replace lines 25-34 with the full `CalendarState` TypedDict per
   `design.md:70-88`. Run 1.1.1 to green.
 
 ### 1.2 Schema tightening
-- **1.2.1** [ ] [RED] Add failing tests to a new
+- [ ] **1.2.1** [RED] Add failing tests to a new
   `backend/tests/test_calendar_schemas.py` for: `CalendarGenerateRequest`
   accepts `period` alone (frequency/formats optional), rejects an invalid
   `period` literal, rejects a `formats` key outside the closed
@@ -98,7 +98,7 @@ service, no agent wired to them). ~110 lines. Low budget risk.
   serializes `{detail, missing_fields}`.
   Spec: content-calendar-api / Calendar Generation Endpoint (422 case),
   Entry Editing Independent of Calendar Status (422 case).
-- **1.2.2** [ ] [GREEN] Replace `backend/app/schemas/calendar.py` with the
+- [ ] **1.2.2** [GREEN] Replace `backend/app/schemas/calendar.py` with the
   full schema set from `design.md:391-446`
   (`FormatLiteral`, `PlatformLiteral`, `PeriodLiteral`, `EntryStatusLiteral`,
   `CalendarGenerateRequest`, `EntryUpdate`, `EntryResponse`,
@@ -119,7 +119,7 @@ isolation via direct service tests (no router yet). Split into 2a
 orchestration) per the design's HIGH-risk flag.
 
 ### 2a — CRUD skeleton, `_narrow_profile`, soft gate
-- **2a.1** [ ] [RED] Create `backend/tests/test_calendar_service.py` with
+- [ ] **2a.1** [RED] Create `backend/tests/test_calendar_service.py` with
   failing tests (direct service calls, `mock_db_session`-style fakes,
   mirroring `test_profile_service.py`'s SimpleNamespace approach) for:
   `_narrow_profile(profile)` returns exactly the 7-key dict from
@@ -133,7 +133,7 @@ orchestration) per the design's HIGH-risk flag.
   Spec: content-calendar-generation / Profile Completion Soft Gate;
   content-calendar-api / Authentication and Ownership Scoping (list/detail
   scoping), Calendar List and Detail Retrieval.
-- **2a.2** [ ] [GREEN] Create `backend/app/services/calendar_service.py`:
+- [ ] **2a.2** [GREEN] Create `backend/app/services/calendar_service.py`:
   `_narrow_profile(profile) -> dict` (`design.md:127-138`); `class
   CalendarService` with `list_calendars`, `get_calendar` (`404` when not
   found/not owned, `selectinload(ContentCalendar.entries)` for detail);
@@ -143,7 +143,7 @@ orchestration) per the design's HIGH-risk flag.
   singleton `calendar_service = CalendarService()`. Run 2a.1 to green.
 
 ### 2b — Status-transition guards + full `generate_calendar`/`confirm`/`delete`
-- **2b.1** [ ] [RED] Extend `backend/tests/test_calendar_service.py` with
+- [ ] **2b.1** [RED] Extend `backend/tests/test_calendar_service.py` with
   failing tests for: `generate_calendar` with no `calendar_id` creates a new
   `ContentCalendar(status="draft")` and invokes `calendar_app.ainvoke` with a
   `CalendarState` built from `_narrow_profile`; `generate_calendar` with a
@@ -158,7 +158,7 @@ orchestration) per the design's HIGH-risk flag.
   Spec: content-calendar-api / Calendar Generation Endpoint (all
   `calendar_id` scenarios), Calendar Status Lifecycle, Entry Editing
   Independent of Calendar Status, Calendar Deletion Rules.
-- **2b.2** [ ] [GREEN] Complete `calendar_service.py`: finish
+- [ ] **2b.2** [GREEN] Complete `calendar_service.py`: finish
   `generate_calendar`'s steps 2-5 exactly per `design.md:483-496` (load-or-
   create target calendar, narrow profile, `ainvoke` the graph, delete-then-
   insert `ContentEntry` rows, update `start_date`/`end_date`/`frequency`,
@@ -183,7 +183,7 @@ never queries the DB directly). Split into 3a (`receive_params`/
 design's HIGH-risk flag.
 
 ### 3a — `receive_params`, `analyze_profile`, period/frequency/format helpers
-- **3a.1** [ ] [RED] Extend `backend/tests/test_calendar_agent.py` with
+- [ ] **3a.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
   failing tests for: `_resolve_period` for all 3 `PeriodLiteral` values,
   including month-boundary correctness, using a `monkeypatch`d
   `date.today()`; `_entry_count(frequency, start, end)` for
@@ -199,7 +199,7 @@ design's HIGH-risk flag.
   Spec: content-calendar-generation / Frequency Resolution with Niche
   Fallback (including the "never parsed" scenario), Format Resolution with
   Profile and Default Fallback.
-- **3a.2** [ ] [GREEN] Rewrite `backend/app/agents/calendar_agent.py`'s
+- [ ] **3a.2** [GREEN] Rewrite `backend/app/agents/calendar_agent.py`'s
   header/module scaffolding: `FREQUENCY_RECOMMENDATIONS`,
   `DEFAULT_FORMAT_MIX`, `DEFAULT_FREQUENCY = 4` module constants;
   `_resolve_period` (`design.md:218-231`), `_entry_count`
@@ -211,7 +211,7 @@ design's HIGH-risk flag.
   (deferred to 4b, once all 6 nodes exist). Run 3a.1 to green.
 
 ### 3b — `optimize_distribution`, `format_calendar`
-- **3b.1** [ ] [RED] Extend `backend/tests/test_calendar_agent.py` with
+- [ ] **3b.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
   failing tests for: `optimize_distribution` produces no two adjacent
   entries with the same `format` on a balanced input; degrades to the
   minimum number of forced adjacent repeats (not a raise) when one format's
@@ -224,7 +224,7 @@ design's HIGH-risk flag.
   period.
   Spec: content-calendar-generation / Deterministic Distribution Constraints
   (both scenarios), Entries Scheduled Within the Requested Period.
-- **3b.2** [ ] [GREEN] Add `optimize_distribution(raw_ideas) -> list[dict]`
+- [ ] **3b.2** [GREEN] Add `optimize_distribution(raw_ideas) -> list[dict]`
   (`design.md:276-296`, the `Counter`/`deque` max-count-first greedy) and
   `format_calendar(ordered_ideas, start_date, end_date) -> list[dict]`
   (`design.md:308-327`, `TIME_SLOTS = ["morning", "afternoon", "evening"]`)
@@ -249,7 +249,7 @@ per the design's HIGH-risk flag — the fallback ladder is explicitly called
 out as "the single largest node" (`design.md:621`).
 
 ### 4a — `query_rag` + happy-path `generate_ideas`
-- **4a.1** [ ] [RED] Extend `backend/tests/test_calendar_agent.py` with
+- [ ] **4a.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
   failing tests for: `query_rag` calls
   `qdrant_search_service.search_similar(query, top_k=4)` grounded on
   `f"{profile['niche']} {profile['sub_niche'] or ''}"` exactly once;
@@ -262,7 +262,7 @@ out as "the single largest node" (`design.md:621`).
   unmodified.
   Spec: content-calendar-generation / RAG Context Degrades Gracefully (all 3
   scenarios), Structured Idea Generation.
-- **4a.2** [ ] [GREEN] Add to `calendar_agent.py`: `GeneratedIdea`,
+- [ ] **4a.2** [GREEN] Add to `calendar_agent.py`: `GeneratedIdea`,
   `GeneratedIdeasList` Pydantic models and `FormatLiteral`/`PlatformLiteral`
   (`design.md:342-354`); `query_rag(state) -> dict` (try/except around the
   single `search_similar` call, `design.md`'s `query_rag` behavior); the
@@ -271,7 +271,7 @@ out as "the single largest node" (`design.md:621`).
   ladder only). Run 4a.1 to green.
 
 ### 4b — Repair/template fallback ladder + `StateGraph` assembly
-- **4b.1** [ ] [RED] Extend `backend/tests/test_calendar_agent.py` with
+- [ ] **4b.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
   failing tests, each `monkeypatch`ing `.ainvoke` with a scripted
   `AsyncMock` `side_effect` list, for `generate_ideas`'s remaining 3 fallback
   tiers: schema/tool-call failure on the first call followed by a
@@ -286,7 +286,7 @@ out as "the single largest node" (`design.md:621`).
   Spec: content-calendar-generation / Structured Idea Generation (schema
   conformance under fallback), Deterministic Distribution Constraints (entry
   count still matches after fallback).
-- **4b.2** [ ] [GREEN] Complete `generate_ideas`'s tiers 2-4 exactly per
+- [ ] **4b.2** [GREEN] Complete `generate_ideas`'s tiers 2-4 exactly per
   `design.md:363-388`, applying Phase 0's spike finding for the exact
   exception type(s) to catch on the repair-retry path (do not guess a
   broader/narrower except-clause than the spike recorded);
@@ -311,7 +311,7 @@ surface, closing out the backend half of this change. ~220 lines, Med risk
 — not split further.
 
 ### 5.1 Router tests
-- **5.1.1** [ ] [RED] Extend `backend/tests/test_calendar.py` (currently a
+- [ ] **5.1.1** [RED] Extend `backend/tests/test_calendar.py` (currently a
   2-line stub) with failing tests via the `client` fixture and a new
   `patch_calendar_service` fixture (added in 5.2 alongside, mirroring
   `patch_profile_service`): one 401-without-token test per of the 6
@@ -327,7 +327,7 @@ surface, closing out the backend half of this change. ~220 lines, Med risk
   Ownership Scoping, Calendar Generation Endpoint, Calendar List and Detail
   Retrieval, Calendar Status Lifecycle, Entry Editing Independent of
   Calendar Status, Calendar Deletion Rules).
-- **5.1.2** [ ] [GREEN]
+- [ ] **5.1.2** [GREEN]
   - Add `patch_calendar_service` fixture to `backend/tests/conftest.py`,
     mirroring `patch_profile_service`: `AsyncMock` for `generate_calendar`,
     `list_calendars`, `get_calendar`, `update_entry`, `confirm_calendar`,
@@ -340,7 +340,7 @@ surface, closing out the backend half of this change. ~220 lines, Med risk
     `app.include_router(calendar.router)` after `profile.router`
     (`design.md:501-504`).
   Run 5.1.1 to green. Run full backend suite — must stay green.
-- **5.1.3** [ ] [VERIFY] `ruff check backend/` reports no new findings on
+- [ ] **5.1.3** [VERIFY] `ruff check backend/` reports no new findings on
   touched/created files (`routers/calendar.py`, `main.py`, `conftest.py`,
   `test_calendar.py`, and every file touched in Phases 0-4). Pre-existing
   findings are untouched debt — do not fix them here.
@@ -358,7 +358,7 @@ Depends on Phase 5 (contract frozen). Delivers independently: a tested API
 client with no store/UI wired to it yet. ~150 lines, Low risk.
 
 ### 6.1 `calendar-api.ts`
-- **6.1.1** [ ] [RED] Create
+- [ ] **6.1.1** [RED] Create
   `frontend/features/calendar/services/calendar-api.test.ts` with failing
   tests (mirror `profile-api.test.ts`'s `vi.spyOn`/mocked-`fetch` pattern):
   `getCalendars()` calls `GET /api/calendars`; `getCalendar(id)` calls `GET
@@ -372,7 +372,7 @@ client with no store/UI wired to it yet. ~150 lines, Low risk.
   generic error.
   Spec: content-calendar-ui / Generation Configuration Control (client
   contract), Empty State with Onboarding CTA (409-surfacing scenario).
-- **6.1.2** [ ] [GREEN] Create
+- [ ] **6.1.2** [GREEN] Create
   `frontend/features/calendar/services/calendar-api.ts` mirroring
   `profile-api.ts`: `apiFetch` + local `ensureOk`, the 6 functions and 5 TS
   interfaces from `design.md:508-530`
@@ -390,7 +390,7 @@ Depends on Phase 6. Delivers independently: application state, still with
 no components wired to it. ~160 lines, Med risk.
 
 ### 7.1 `calendarStore.ts`
-- **7.1.1** [ ] [RED] Create
+- [ ] **7.1.1** [RED] Create
   `frontend/features/calendar/store/calendarStore.test.ts` with failing
   tests (mirror `profileStore.test.ts`'s `vi.spyOn` + `getState()` pattern):
   `loadCalendars()` sets `isLoading` true→false, populates `calendars`;
@@ -401,14 +401,14 @@ no components wired to it. ~160 lines, Med risk.
   success; `setViewMode` toggles `viewMode` between `"month"`/`"week"`.
   Spec: content-calendar-ui / Empty State with Onboarding CTA (409 → error
   state, not crash), Real-Data Rendering Replaces Mocks (state backing).
-- **7.1.2** [ ] [GREEN] Create
+- [ ] **7.1.2** [GREEN] Create
   `frontend/features/calendar/store/calendarStore.ts`: Zustand store with
   the shape from `design.md:538-553` (`calendars`, `currentCalendar`,
   `viewMode`, `isLoading`, `isGenerating`, `error`, and the 7 actions). Run
   7.1.1 to green.
 
 ### 7.2 `useCalendarGeneration.ts`
-- **7.2.1** [ ] [RED] Create
+- [ ] **7.2.1** [RED] Create
   `frontend/features/calendar/hooks/useCalendarGeneration.test.tsx` with
   failing tests: local draft state for `period`/`frequency`/`formats` before
   submit; submit calls `calendarStore.generate` with the assembled
@@ -418,7 +418,7 @@ no components wired to it. ~160 lines, Med risk.
   scenario).
   Spec: content-calendar-ui / Generation Configuration Control (both
   scenarios).
-- **7.2.2** [ ] [GREEN] Create
+- [ ] **7.2.2** [GREEN] Create
   `frontend/features/calendar/hooks/useCalendarGeneration.ts`: local
   `useState` draft object (mirrors `useOnboardingWizard.ts`'s draft-state
   pattern, `design.md:556-560`), wrapping `calendarStore.generate`. Run
@@ -436,7 +436,7 @@ Depends on Phase 7. Split into 8a (`TimelineCards`) and 8b (`CalendarGrid`,
 HIGH-risk flag.
 
 ### 8a — `TimelineCards.tsx`
-- **8a.1** [ ] [RED] Create/extend
+- [ ] **8a.1** [RED] Create/extend
   `frontend/features/calendar/components/TimelineCards.test.tsx` with
   failing tests (`@testing-library/react`, mocked `calendarStore` state):
   renders exactly `currentCalendar.entries` filtered to the next 48h, no
@@ -447,7 +447,7 @@ HIGH-risk flag.
   modal in 10.2).
   Spec: content-calendar-ui / Real-Data Rendering Replaces Mocks (timeline
   scenario).
-- **8a.2** [ ] [GREEN] Edit
+- [ ] **8a.2** [GREEN] Edit
   `frontend/features/calendar/components/TimelineCards.tsx`: remove
   `sampleCards`, render `currentCalendar.entries` filtered to the next 48h
   via `calendarStore`, wire the `⋮` button to an `onEditEntry(entryId)` prop
@@ -455,7 +455,7 @@ HIGH-risk flag.
   8a.1 to green.
 
 ### 8b — `CalendarGrid.tsx`
-- **8b.1** [ ] [RED] Create/extend
+- [ ] **8b.1** [RED] Create/extend
   `frontend/features/calendar/components/CalendarGrid.test.tsx` with
   failing tests: no hardcoded `events`/`"Octubre 2024"`/`FIRST_DAY_OFFSET`
   remain; grid derives its displayed dates from
@@ -466,7 +466,7 @@ HIGH-risk flag.
   stubbed-callback pattern as 8a).
   Spec: content-calendar-ui / Real-Data Rendering Replaces Mocks (grid
   scenario, "never a fixed hardcoded month").
-- **8b.2** [ ] [GREEN] Edit
+- [ ] **8b.2** [GREEN] Edit
   `frontend/features/calendar/components/CalendarGrid.tsx`: remove
   `events`/hardcoded month/`FIRST_DAY_OFFSET`, derive the grid from
   `currentCalendar.start_date`/`end_date` and `calendarStore.viewMode`, wire
@@ -484,7 +484,7 @@ Depends on Phase 7 (`useCalendarGeneration`). Net-new UI, ~180 lines, Med
 risk — not split further.
 
 ### 9.1 `GenerateControl.tsx`
-- **9.1.1** [ ] [RED] Create
+- [ ] **9.1.1** [RED] Create
   `frontend/features/calendar/components/GenerateControl.test.tsx` with
   failing tests: renders a period select (3 options), frequency input,
   per-format count inputs (or a "use recommended" toggle); submitting with
@@ -494,7 +494,7 @@ risk — not split further.
   `isGenerating` is true.
   Spec: content-calendar-ui / Generation Configuration Control (both
   scenarios).
-- **9.1.2** [ ] [GREEN] Create
+- [ ] **9.1.2** [GREEN] Create
   `frontend/features/calendar/components/GenerateControl.tsx`
   (glassmorphism, Inter): period select, frequency input, per-format count
   inputs, submit button calling `useCalendarGeneration`'s submit. Run 9.1.1
@@ -512,7 +512,7 @@ exist as stubbed callbacks). Net-new UI, ~190 lines, Med risk — not split
 further.
 
 ### 10.1 `EntryEditModal.tsx`
-- **10.1.1** [ ] [RED] Create
+- [ ] **10.1.1** [RED] Create
   `frontend/features/calendar/components/EntryEditModal.test.tsx` with
   failing tests: renders a form for `title`/`hook`/`description`/`format`/
   `platform`/`status`/`time_slot` pre-filled from the target entry; submit
@@ -522,16 +522,16 @@ further.
   Spec: content-calendar-api / Entry Editing Independent of Calendar Status
   (client-side mirror); content-calendar-ui / Entry Edit Affordance (both
   scenarios).
-- **10.1.2** [ ] [GREEN] Create
+- [ ] **10.1.2** [GREEN] Create
   `frontend/features/calendar/components/EntryEditModal.tsx`
   (glassmorphism, Inter). Run 10.1.1 to green.
 
 ### 10.2 Wire the modal into both trigger sites
-- **10.2.1** [ ] [RED] Extend `TimelineCards.test.tsx` and
+- [ ] **10.2.1** [RED] Extend `TimelineCards.test.tsx` and
   `CalendarGrid.test.tsx` (from Phase 8) to assert the real
   `EntryEditModal` opens (not just the stubbed callback firing) when
   `onEditEntry` fires from each component.
-- **10.2.2** [ ] [GREEN] Replace the stubbed `onEditEntry` callback wiring
+- [ ] **10.2.2** [GREEN] Replace the stubbed `onEditEntry` callback wiring
   in `TimelineCards.tsx` and `CalendarGrid.tsx` with the real
   `EntryEditModal` (rendered by the parent `CalendarView.tsx`, opened via
   lifted modal-open state — modal itself is a portal/overlay per
@@ -551,7 +551,7 @@ eventually assembled here). Split into 11a (`ConfirmBar`) and 11b
 composition), per the design's HIGH-risk flag.
 
 ### 11a — `ConfirmBar.tsx`
-- **11a.1** [ ] [RED] Create
+- [ ] **11a.1** [RED] Create
   `frontend/features/calendar/components/ConfirmBar.test.tsx` with failing
   tests: renders a status badge (`draft`/`confirmed`/`synced`); "Confirmar
   calendario" button calls `calendarStore.confirm`, disabled when status is
@@ -560,12 +560,12 @@ composition), per the design's HIGH-risk flag.
   Spec: content-calendar-api / Calendar Status Lifecycle (confirm client
   mirror), Calendar Deletion Rules (delete-disabled-on-synced client
   mirror).
-- **11a.2** [ ] [GREEN] Create
+- [ ] **11a.2** [GREEN] Create
   `frontend/features/calendar/components/ConfirmBar.tsx` (glassmorphism,
   Inter). Run 11a.1 to green.
 
 ### 11b — `CalendarEmptyState.tsx` + `proxy.ts` comment + `CalendarView.tsx` composition
-- **11b.1** [ ] [RED] Create
+- [ ] **11b.1** [RED] Create
   `frontend/features/calendar/components/CalendarEmptyState.test.tsx` with
   failing tests: renders when `calendars.length === 0`; renders when the
   last `generate()` call resolved a `409`; CTA button links to
@@ -580,7 +580,7 @@ composition), per the design's HIGH-risk flag.
   `/onboarding`.
   Spec: content-calendar-ui / Calendar Page Accessible Without a Complete
   Profile, Empty State with Onboarding CTA (all 3 scenarios).
-- **11b.2** [ ] [GREEN] Create
+- [ ] **11b.2** [GREEN] Create
   `frontend/features/calendar/components/CalendarEmptyState.tsx`
   (glassmorphism, Inter, CTA linking to `/onboarding`). Edit
   `frontend/features/calendar/CalendarView.tsx`: load calendars on mount,
@@ -602,14 +602,14 @@ all reachable from one page; `frontend/app/(app)/layout.tsx` untouched;
 
 ## Final verification (all phases)
 
-- **F.1** [ ] Run `mamba run -n contentspark pytest backend/tests && pnpm --dir frontend test` — both green, including every new calendar suite from Phases 1-11.
-- **F.2** [ ] Run `ruff check backend/` — no new findings beyond the pre-existing documented debt.
-- **F.3** [ ] Run `pnpm --dir frontend lint` and `pnpm --dir frontend exec tsc --noEmit` — clean (or no new findings beyond documented pre-existing warnings).
-- **F.4** [ ] Run `pnpm --dir frontend build` — succeeds, `/calendar` route builds without error.
-- **F.5** [ ] Confirm `git status backend/alembic/versions/` shows no new file.
-- **F.6** [ ] Confirm `git diff frontend/app/(app)/layout.tsx` is empty.
-- **F.7** [ ] Confirm `git diff frontend/proxy.ts` is comment-only (no logic change at line 70 or elsewhere).
-- **F.8** [ ] Manually verify each proposal Success Criteria item
+- [ ] **F.1** Run `mamba run -n contentspark pytest backend/tests && pnpm --dir frontend test` — both green, including every new calendar suite from Phases 1-11.
+- [ ] **F.2** Run `ruff check backend/` — no new findings beyond the pre-existing documented debt.
+- [ ] **F.3** Run `pnpm --dir frontend lint` and `pnpm --dir frontend exec tsc --noEmit` — clean (or no new findings beyond documented pre-existing warnings).
+- [ ] **F.4** Run `pnpm --dir frontend build` — succeeds, `/calendar` route builds without error.
+- [ ] **F.5** Confirm `git status backend/alembic/versions/` shows no new file.
+- [ ] **F.6** Confirm `git diff frontend/app/(app)/layout.tsx` is empty.
+- [ ] **F.7** Confirm `git diff frontend/proxy.ts` is comment-only (no logic change at line 70 or elsewhere).
+- [ ] **F.8** Manually verify each proposal Success Criteria item
   (`proposal.md:319-343`) is covered by at least one automated test above —
   cross-check against the traceability table below; do not add new tests
   here, only confirm coverage.
