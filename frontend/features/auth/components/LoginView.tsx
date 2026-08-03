@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import AuthBackground from "./AuthBackground";
 import { createClient } from "@/shared/lib/supabase";
+
+const MotionImage = motion.create(Image);
 
 export default function LoginView() {
   const [email, setEmail] = useState("");
@@ -78,21 +82,23 @@ export default function LoginView() {
           className="w-full max-w-[420px] sm:max-w-[458px]"
         >
           {/* Card glassmorphism */}
-          <div className="rounded-2xl border border-white/20 bg-white/40 px-6 py-7 shadow-[0_32px_64px_-16px_rgba(110,44,224,0.1)] backdrop-blur-xl sm:rounded-3xl sm:px-10 sm:py-8">
+          <div className="rounded-2xl border border-white/20 bg-surface-container-lowest/40 px-6 py-7 shadow-[0_32px_64px_-16px_rgba(110,44,224,0.1)] backdrop-blur-xl sm:rounded-3xl sm:px-10 sm:py-8">
             {/* Header */}
             <div className="mb-5 flex flex-col items-center sm:mb-6">
-              <motion.img
+              <MotionImage
                 initial={{ rotate: 10, scale: 0.8 }}
                 animate={{ rotate: 0, scale: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                 src="/only_logo.png"
                 alt="ContentSpark Logo"
-                className="mb-3 h-12 w-12 sm:h-14 sm:w-14"
+                width={56}
+                height={56}
+                className="mb-3 h-12 w-12 object-contain sm:h-14 sm:w-14"
               />
-              <h1 className="text-xl font-semibold tracking-tight text-[#2c2f33] sm:text-2xl">
+              <h1 className="text-xl font-semibold tracking-tight text-on-surface sm:text-2xl">
                 ContentSpark
               </h1>
-              <p className="mt-1 text-center text-sm font-light text-[#595c60]">
+              <p className="mt-1 text-center text-sm font-light text-on-surface-variant">
                 Entra a tu espacio de trabajo
               </p>
             </div>
@@ -107,7 +113,7 @@ export default function LoginView() {
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               {/* Email */}
               <div className="space-y-1.5">
-                <label className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]">
+                <label className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant">
                   Correo electrónico
                 </label>
                 <div className="relative">
@@ -131,7 +137,7 @@ export default function LoginView() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nombre@empresa.com"
                     required
-                    className="w-full rounded-xl border border-white/40 bg-white/30 py-3 pl-11 pr-4 text-sm font-light text-[#2c2f33] outline-none transition-all placeholder:text-[#75777b]/50 focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20 sm:rounded-2xl sm:py-3.5 sm:pl-12 sm:text-base"
+                    className="w-full rounded-xl border border-white/40 bg-surface-container-lowest/30 py-3 pl-11 pr-4 text-sm font-light text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20 sm:rounded-2xl sm:py-3.5 sm:pl-12 sm:text-base"
                   />
                 </div>
               </div>
@@ -139,15 +145,15 @@ export default function LoginView() {
               {/* Password */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between px-1">
-                  <label className="text-xs font-medium uppercase tracking-widest text-[#595c60]">
+                  <label className="text-xs font-medium uppercase tracking-widest text-on-surface-variant">
                     Contraseña
                   </label>
-                  <a
-                    href="#"
-                    className="text-xs font-medium text-[#6e2ce0] transition-colors hover:text-[#6216d4]"
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs font-medium text-primary transition-colors hover:text-[#6216d4]"
                   >
                     ¿Olvidaste tu contraseña?
-                  </a>
+                  </Link>
                 </div>
                 <div className="relative">
                   <svg
@@ -170,12 +176,12 @@ export default function LoginView() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full rounded-xl border border-white/40 bg-white/30 py-3 pl-11 pr-11 text-sm font-light text-[#2c2f33] outline-none transition-all placeholder:text-[#75777b]/50 focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20 sm:rounded-2xl sm:py-3.5 sm:pl-12 sm:pr-12 sm:text-base"
+                    className="w-full rounded-xl border border-white/40 bg-surface-container-lowest/30 py-3 pl-11 pr-11 text-sm font-light text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20 sm:rounded-2xl sm:py-3.5 sm:pl-12 sm:pr-12 sm:text-base"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#75777b] transition-colors hover:text-[#2c2f33]"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#75777b] transition-colors hover:text-on-surface"
                   >
                     {showPassword ? (
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -197,7 +203,7 @@ export default function LoginView() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-full bg-gradient-to-r from-[#6e2ce0] to-[#b08cff] py-3 font-semibold text-white shadow-lg shadow-[#6e2ce0]/20 transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100 sm:py-3.5"
+                className="w-full rounded-full bg-gradient-to-r from-primary to-primary-container py-3 font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100 sm:py-3.5"
               >
                 {isLoading ? "Ingresando..." : "Iniciar sesión"}
               </button>
@@ -215,7 +221,7 @@ export default function LoginView() {
             {/* Google OAuth */}
             <button
               onClick={handleGoogleLogin}
-              className="flex w-full items-center justify-center gap-3 rounded-full border border-white/40 bg-white/20 py-3 text-sm font-medium text-[#2c2f33] backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:bg-white/40 active:scale-95 sm:py-3.5 sm:text-base"
+              className="flex w-full items-center justify-center gap-3 rounded-full border border-white/40 bg-surface-container-lowest/20 py-3 text-sm font-medium text-on-surface backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:bg-surface-container-lowest/40 active:scale-95 sm:py-3.5 sm:text-base"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -227,11 +233,11 @@ export default function LoginView() {
             </button>
 
             {/* Link a signup */}
-            <p className="mt-5 text-center text-sm font-light text-[#595c60] sm:mt-6">
+            <p className="mt-5 text-center text-sm font-light text-on-surface-variant sm:mt-6">
               ¿No tienes cuenta?{" "}
               <a
                 href="/signup"
-                className="ml-1 font-medium text-[#6e2ce0] hover:underline"
+                className="ml-1 font-medium text-primary hover:underline"
               >
                 Crea una cuenta
               </a>

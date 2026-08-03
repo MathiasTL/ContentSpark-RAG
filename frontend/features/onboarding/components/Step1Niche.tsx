@@ -26,7 +26,7 @@ export default function Step1Niche({ draft, updateDraft, showErrors }: Step1Nich
       <div className="space-y-1.5">
         <label
           htmlFor="niche"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
         >
           Nicho
         </label>
@@ -37,7 +37,7 @@ export default function Step1Niche({ draft, updateDraft, showErrors }: Step1Nich
           aria-required="true"
           aria-invalid={nicheMissing}
           aria-describedby={nicheMissing ? "niche-error" : undefined}
-          className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
         >
           <option value="">Selecciona un nicho</option>
           {NICHES.map((n) => (
@@ -56,7 +56,7 @@ export default function Step1Niche({ draft, updateDraft, showErrors }: Step1Nich
       <div className="space-y-1.5">
         <label
           htmlFor="sub_niche"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
         >
           Sub-nicho (opcional)
         </label>
@@ -66,7 +66,7 @@ export default function Step1Niche({ draft, updateDraft, showErrors }: Step1Nich
           value={draft.sub_niche ?? ""}
           onChange={(e) => updateDraft({ sub_niche: e.target.value || null })}
           placeholder="Ej. desarrollo web, nutrición deportiva..."
-          className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all placeholder:text-[#75777b]/50 focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
     </div>

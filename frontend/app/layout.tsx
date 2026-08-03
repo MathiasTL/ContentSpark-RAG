@@ -29,7 +29,7 @@ export default function RootLayout({
         También añadimos 'antialiased' (una clase de Tailwind) que hace que 
         las fuentes se vean mucho más suaves y definidas, al estilo macOS.
       */}
-      <body className={`${inter.className} antialiased bg-slate-50 text-slate-900`}>
+      <body className={`${inter.className} antialiased bg-surface-container-lowest text-on-surface`}>
         {children}
       </body>
     </html>

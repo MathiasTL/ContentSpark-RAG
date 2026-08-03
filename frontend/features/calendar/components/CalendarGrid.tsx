@@ -11,14 +11,14 @@ interface CalendarEvent {
 }
 
 const events: CalendarEvent[] = [
-  { day: 1, label: "IG: Morning Reel", color: "border-[#6e2ce0] bg-[#6e2ce0]/10", textColor: "text-[#b08cff]" },
+  { day: 1, label: "IG: Morning Reel", color: "border-primary bg-primary/10", textColor: "text-primary-container" },
   { day: 3, label: "TT: Vlog Recap", color: "border-pink-500 bg-pink-500/10", textColor: "text-pink-400" },
-  { day: 7, label: "Live Event", color: "border-[#6e2ce0] bg-[#6e2ce0]", textColor: "text-white", isHighlight: true },
+  { day: 7, label: "Live Event", color: "border-primary bg-primary", textColor: "text-white", isHighlight: true },
   { day: 10, label: "YT: Tutorial", color: "border-red-500 bg-red-500/10", textColor: "text-red-400" },
-  { day: 14, label: "IG: Carrusel", color: "border-[#6e2ce0] bg-[#6e2ce0]/10", textColor: "text-[#b08cff]" },
+  { day: 14, label: "IG: Carrusel", color: "border-primary bg-primary/10", textColor: "text-primary-container" },
   { day: 18, label: "TT: Trend", color: "border-pink-500 bg-pink-500/10", textColor: "text-pink-400" },
   { day: 22, label: "Thread X", color: "border-blue-400 bg-blue-400/10", textColor: "text-blue-400" },
-  { day: 25, label: "IG: Story Q&A", color: "border-[#6e2ce0] bg-[#6e2ce0]/10", textColor: "text-[#b08cff]" },
+  { day: 25, label: "IG: Story Q&A", color: "border-primary bg-primary/10", textColor: "text-primary-container" },
   { day: 28, label: "TT: Collab", color: "border-pink-500 bg-pink-500/10", textColor: "text-pink-400" },
 ];
 
@@ -53,14 +53,14 @@ export default function CalendarGrid() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.5 }}
-      className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-md sm:rounded-[3rem] sm:p-8 lg:p-10"
+      className="rounded-[2rem] border border-white/10 bg-surface-container-lowest/5 p-6 shadow-2xl backdrop-blur-md sm:rounded-[3rem] sm:p-8 lg:p-10"
     >
       {/* Header */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+        <h2 className="text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">
           Calendario completo
         </h2>
-        <span className="text-base font-light text-white/50 sm:text-lg">Octubre 2024</span>
+        <span className="text-base font-light text-on-surface-variant sm:text-lg">Octubre 2024</span>
       </div>
 
       {/* Grid del calendario */}
@@ -70,7 +70,7 @@ export default function CalendarGrid() {
           {DAYS_OF_WEEK.map((day) => (
             <div
               key={day}
-              className="bg-white/5 p-2 text-center text-[9px] font-bold uppercase tracking-[0.15em] text-white/30 sm:p-3 sm:text-[10px] sm:tracking-[0.2em]"
+              className="bg-surface-container-lowest/5 p-2 text-center text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/70 sm:p-3 sm:text-[10px] sm:tracking-[0.2em]"
             >
               {day}
             </div>
@@ -78,7 +78,7 @@ export default function CalendarGrid() {
         </div>
 
         {/* Celdas del calendario */}
-        <div className="grid grid-cols-7 gap-px bg-white/5">
+        <div className="grid grid-cols-7 gap-px bg-surface-container-lowest/5">
           {cells.map((cell, idx) => {
             const event = cell.isCurrentMonth
               ? events.find((e) => e.day === cell.day)
@@ -89,13 +89,13 @@ export default function CalendarGrid() {
                 key={idx}
                 className={`min-h-[80px] p-2 transition-colors sm:min-h-[120px] sm:p-3 lg:min-h-[130px] lg:p-4 ${
                   cell.isCurrentMonth
-                    ? "bg-white/[0.02] hover:bg-white/[0.06]"
-                    : "bg-white/[0.01] opacity-30"
+                    ? "bg-surface-container-lowest/[0.02] hover:bg-surface-container-lowest/[0.06]"
+                    : "bg-surface-container-lowest/[0.01] opacity-30"
                 } ${event?.isHighlight ? "relative" : ""}`}
               >
                 <span
                   className={`text-xs font-bold sm:text-sm ${
-                    cell.isCurrentMonth ? "text-white/70" : "text-white/30"
+                    cell.isCurrentMonth ? "text-on-surface-variant" : "text-on-surface-variant/60"
                   }`}
                 >
                   {cell.day}

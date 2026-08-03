@@ -79,7 +79,7 @@ export default function CallbackPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
-      <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-5 text-center">
+      <div className="rounded-2xl border border-white/10 bg-surface-container-lowest/5 px-6 py-5 text-center">
         <p className="text-sm font-medium">
           {errorMessage ?? "Finalizando inicio de sesión..."}
         </p>

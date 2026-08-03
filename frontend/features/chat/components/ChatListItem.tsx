@@ -12,6 +12,8 @@ interface ChatListItemProps {
   collapsed: boolean;
   isStreaming: boolean;
   onDelete: (id: string) => Promise<void>;
+  /** Se invoca al navegar a este chat (usado por el drawer mobile para autocerrarse). */
+  onNavigate?: () => void;
 }
 
 function formatRelative(iso: string): string {
@@ -47,6 +49,7 @@ export default function ChatListItem({
   collapsed,
   isStreaming,
   onDelete,
+  onNavigate,
 }: ChatListItemProps) {
   const [confirming, setConfirming] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -68,10 +71,11 @@ export default function ChatListItem({
       <Link
         href={`/chat/${id}`}
         title={displayTitle}
+        onClick={onNavigate}
         className={`relative flex h-10 w-10 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
           isActive
             ? "bg-primary/15 text-primary"
-            : "bg-white/10 text-on-surface-variant hover:bg-white/30 hover:text-primary"
+            : "bg-surface-container-lowest/10 text-on-surface-variant hover:bg-surface-container-lowest/30 hover:text-primary"
         }`}
       >
         {displayTitle.charAt(0).toUpperCase()}
@@ -87,10 +91,10 @@ export default function ChatListItem({
       className={`group relative flex items-center gap-2 rounded-2xl px-3 py-2 transition-colors ${
         isActive
           ? "bg-primary/10"
-          : "hover:bg-white/30"
+          : "hover:bg-surface-container-lowest/30"
       }`}
     >
-      <Link href={`/chat/${id}`} className="flex-1 min-w-0">
+      <Link href={`/chat/${id}`} className="flex-1 min-w-0" onClick={onNavigate}>
         <div className="flex items-start justify-between gap-2">
           <span
             className={`block truncate text-sm ${
@@ -125,7 +129,7 @@ export default function ChatListItem({
             type="button"
             onClick={() => setConfirming(false)}
             disabled={isDeleting}
-            className="rounded-full bg-white/30 px-2 py-0.5 text-on-surface-variant hover:bg-white/50"
+            className="rounded-full bg-surface-container-lowest/30 px-2 py-0.5 text-on-surface-variant hover:bg-surface-container-lowest/50"
           >
             No
           </button>
@@ -135,7 +139,7 @@ export default function ChatListItem({
           type="button"
           aria-label="Borrar chat"
           onClick={() => setConfirming(true)}
-          className="opacity-0 transition-opacity group-hover:opacity-100"
+          className="flex h-11 w-11 shrink-0 items-center justify-center opacity-0 transition-opacity group-hover:opacity-100"
         >
           <Trash2
             size={14}

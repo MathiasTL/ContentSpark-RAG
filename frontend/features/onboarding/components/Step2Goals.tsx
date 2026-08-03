@@ -48,7 +48,7 @@ export default function Step2Goals({ draft, updateDraft, showErrors }: Step2Goal
           <div key={field.id} className="space-y-1.5">
             <label
               htmlFor={field.id}
-              className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+              className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
             >
               {field.label}
             </label>
@@ -61,7 +61,7 @@ export default function Step2Goals({ draft, updateDraft, showErrors }: Step2Goal
               aria-required="true"
               aria-invalid={isMissing}
               aria-describedby={isMissing ? errorId : undefined}
-              className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all placeholder:text-[#75777b]/50 focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+              className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {isMissing ? (
               <p id={errorId} role="alert" className="ml-1 text-xs text-red-600">

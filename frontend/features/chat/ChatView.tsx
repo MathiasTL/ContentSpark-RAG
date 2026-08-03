@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AnimatePresence, motion } from "framer-motion";
 import { Paperclip, Send, UserCircle2 } from "lucide-react";
@@ -29,10 +29,32 @@ const SUGGESTED_PROMPTS = [
   "Ideas de contenido trending",
 ];
 
+// Referencia estable: si se define inline en cada render, ReactMarkdown
+// re-diffea todos los mensajes ya renderizados en cada token de streaming.
+const MARKDOWN_COMPONENTS: Components = {
+  p: ({ children }) => (
+    <p className="mb-2 font-light leading-relaxed last:mb-0">{children}</p>
+  ),
+  strong: ({ children }) => (
+    <strong className="font-semibold text-on-surface">{children}</strong>
+  ),
+  ul: ({ children }) => (
+    <ul className="mt-3 list-disc space-y-2 pl-5 font-light text-on-surface-variant">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="mt-3 list-decimal space-y-2 pl-5 font-light text-on-surface-variant">
+      {children}
+    </ol>
+  ),
+  li: ({ children }) => <li>{children}</li>,
+};
+
 function WelcomeMessage() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-6 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/20 bg-white/30 p-3 shadow-lg backdrop-blur-2xl">
+      <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/20 bg-surface-container-lowest/30 p-3 shadow-lg backdrop-blur-2xl">
         <Image src="/only_logo.png" alt="ContentSpark" width={52} height={52} priority />
       </div>
       <div className="space-y-2">
@@ -51,10 +73,10 @@ function WelcomeMessage() {
 function TypingIndicator() {
   return (
     <div className="flex max-w-3xl gap-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/20 p-1.5 shadow-lg backdrop-blur-2xl">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-surface-container-lowest/20 p-1.5 shadow-lg backdrop-blur-2xl">
         <Image src="/only_logo.png" alt="AI" width={28} height={28} />
       </div>
-      <div className="rounded-3xl rounded-tl-none border border-white/10 bg-white/40 px-6 py-4 backdrop-blur-2xl">
+      <div className="rounded-3xl rounded-tl-none border border-white/10 bg-surface-container-lowest/40 px-6 py-4 backdrop-blur-2xl">
         <span className="flex h-5 items-center gap-1">
           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.3s]" />
           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.15s]" />
@@ -177,7 +199,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
             {isLoading && (
               <div className="space-y-6">
                 {[0, 1].map((i) => (
-                  <div key={i} className="h-20 animate-pulse rounded-3xl bg-white/10" />
+                  <div key={i} className="h-20 animate-pulse rounded-3xl bg-surface-container-lowest/10" />
                 ))}
               </div>
             )}
@@ -222,32 +244,11 @@ export default function ChatView({ chatId }: ChatViewProps) {
                     transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
                     className="flex max-w-3xl gap-4"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/20 p-1.5 shadow-lg backdrop-blur-2xl">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-surface-container-lowest/20 p-1.5 shadow-lg backdrop-blur-2xl">
                       <Image src="/only_logo.png" alt="AI" width={28} height={28} />
                     </div>
-                    <div className="rounded-3xl rounded-tl-none border border-white/10 bg-white/40 p-6 leading-relaxed text-on-surface shadow-sm backdrop-blur-2xl">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          p: ({ children }) => (
-                            <p className="mb-2 font-light leading-relaxed last:mb-0">{children}</p>
-                          ),
-                          strong: ({ children }) => (
-                            <strong className="font-semibold text-on-surface">{children}</strong>
-                          ),
-                          ul: ({ children }) => (
-                            <ul className="mt-3 list-disc space-y-2 pl-5 font-light text-on-surface-variant">
-                              {children}
-                            </ul>
-                          ),
-                          ol: ({ children }) => (
-                            <ol className="mt-3 list-decimal space-y-2 pl-5 font-light text-on-surface-variant">
-                              {children}
-                            </ol>
-                          ),
-                          li: ({ children }) => <li>{children}</li>,
-                        }}
-                      >
+                    <div className="rounded-3xl rounded-tl-none border border-white/10 bg-surface-container-lowest/40 p-6 leading-relaxed text-on-surface shadow-sm backdrop-blur-2xl">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
                         {msg.content}
                       </ReactMarkdown>
                     </div>
@@ -274,7 +275,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
           </div>
         </ScrollArea>
 
-        <div className="relative z-10 mx-auto w-full max-w-4xl shrink-0 space-y-6 px-12 pb-8">
+        <div className="relative z-10 mx-auto w-full max-w-4xl shrink-0 space-y-6 px-12 pb-24 lg:pb-8">
           {error && (
             <div className="rounded-2xl border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
               {error}
@@ -297,7 +298,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
                     type="button"
                     onClick={() => handleSend(prompt)}
                     disabled={isStreaming || pendingNewChat}
-                    className="rounded-full border border-white/10 bg-white/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-all hover:scale-105 hover:bg-white/40 disabled:opacity-40"
+                    className="rounded-full border border-white/10 bg-surface-container-lowest/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-all hover:scale-105 hover:bg-surface-container-lowest/40 disabled:opacity-40"
                   >
                     {prompt}
                   </button>
@@ -308,7 +309,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
           <div className="group relative">
             <div className="absolute inset-0 rounded-full bg-primary/5 opacity-0 blur-2xl transition-opacity group-focus-within:opacity-100" />
-            <div className="relative flex items-end gap-2 rounded-full border border-white/10 bg-white/30 p-2 pl-8 shadow-2xl backdrop-blur-2xl">
+            <div className="relative flex items-end gap-2 rounded-full border border-white/10 bg-surface-container-lowest/30 p-2 pl-8 shadow-2xl backdrop-blur-2xl">
               <textarea
                 ref={textareaRef}
                 rows={1}
@@ -321,8 +322,10 @@ export default function ChatView({ chatId }: ChatViewProps) {
               />
               <button
                 type="button"
+                disabled
+                title="Próximamente"
                 aria-label="Adjuntar archivo"
-                className="flex h-10 w-10 shrink-0 items-center justify-center text-on-surface-variant transition-colors hover:text-primary"
+                className="flex h-10 w-10 shrink-0 items-center justify-center text-on-surface-variant transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-on-surface-variant"
               >
                 <Paperclip size={20} strokeWidth={1.5} />
               </button>

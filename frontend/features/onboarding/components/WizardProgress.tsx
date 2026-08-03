@@ -28,7 +28,7 @@ export default function WizardProgress({ step, totalSteps, titles }: WizardProgr
             key={title}
             aria-hidden="true"
             className={`h-1.5 flex-1 rounded-full transition-colors ${
-              index <= step ? "bg-[#6e2ce0]" : "bg-white/30"
+              index <= step ? "bg-primary" : "bg-surface-container-lowest/30"
             }`}
           />
         ))}

@@ -149,7 +149,7 @@ export default function ProfileForm() {
       <div className="space-y-1.5">
         <label
           htmlFor="display_name"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
         >
           Nombre
         </label>
@@ -158,14 +158,14 @@ export default function ProfileForm() {
           type="text"
           value={edited.display_name}
           onChange={(e) => updateField("display_name", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       <div className="space-y-1.5">
         <label
           htmlFor="bio"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
         >
           Biografía
         </label>
@@ -174,14 +174,14 @@ export default function ProfileForm() {
           value={edited.bio}
           onChange={(e) => updateField("bio", e.target.value)}
           rows={3}
-          className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       <div className="space-y-1.5">
         <label
           htmlFor="niche"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
         >
           Nicho
         </label>
@@ -189,7 +189,7 @@ export default function ProfileForm() {
           id="niche"
           value={edited.niche}
           onChange={(e) => updateField("niche", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
         >
           <option value="">Selecciona un nicho</option>
           {NICHES.map((n) => (
@@ -203,7 +203,7 @@ export default function ProfileForm() {
       <div className="space-y-1.5">
         <label
           htmlFor="sub_niche"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
         >
           Sub-nicho
         </label>
@@ -212,14 +212,14 @@ export default function ProfileForm() {
           type="text"
           value={edited.sub_niche}
           onChange={(e) => updateField("sub_niche", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       <div className="space-y-1.5">
         <label
           htmlFor="primary_goal"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
         >
           Objetivo principal
         </label>
@@ -228,14 +228,14 @@ export default function ProfileForm() {
           type="text"
           value={edited.primary_goal}
           onChange={(e) => updateField("primary_goal", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       <div className="space-y-1.5">
         <label
           htmlFor="tone"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
         >
           Tono
         </label>
@@ -244,14 +244,14 @@ export default function ProfileForm() {
           type="text"
           value={edited.tone}
           onChange={(e) => updateField("tone", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       <div className="space-y-1.5">
         <label
           htmlFor="target_audience"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
         >
           Audiencia objetivo
         </label>
@@ -260,7 +260,7 @@ export default function ProfileForm() {
           type="text"
           value={edited.target_audience}
           onChange={(e) => updateField("target_audience", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
@@ -268,7 +268,7 @@ export default function ProfileForm() {
         <div className="space-y-1.5">
           <label
             htmlFor="current_frequency"
-            className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+            className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
           >
             Frecuencia actual
           </label>
@@ -278,13 +278,13 @@ export default function ProfileForm() {
             value={edited.current_frequency}
             onChange={(e) => updateField("current_frequency", e.target.value)}
             placeholder="Ej. 3 por semana"
-            className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all placeholder:text-[#75777b]/50 focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+            className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <div className="space-y-1.5">
           <label
             htmlFor="desired_frequency"
-            className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]"
+            className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
           >
             Frecuencia deseada
           </label>
@@ -294,36 +294,41 @@ export default function ProfileForm() {
             value={edited.desired_frequency}
             onChange={(e) => updateField("desired_frequency", e.target.value)}
             placeholder="Ej. 5 por semana"
-            className="w-full rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-[#2c2f33] outline-none transition-all placeholder:text-[#75777b]/50 focus:border-[#6e2ce0] focus:ring-2 focus:ring-[#6e2ce0]/20"
+            className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
       </div>
 
       <fieldset className="space-y-2">
-        <legend className="ml-1 text-xs font-medium uppercase tracking-widest text-[#595c60]">
+        <legend className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant">
           Formatos preferidos
         </legend>
         <div className="flex flex-wrap gap-2">
-          {FORMATS.map((format) => (
-            <label
-              key={format}
-              className="flex items-center gap-2 rounded-full border border-white/40 bg-white/20 px-3 py-1.5 text-sm text-[#2c2f33]"
-            >
-              <input
-                type="checkbox"
-                checked={edited.preferred_formats.includes(format)}
-                onChange={() => toggleFormat(format)}
-              />
-              {FORMAT_LABELS[format] ?? format}
-            </label>
-          ))}
+          {FORMATS.map((format) => {
+            const id = `preferred-format-${format}`;
+            return (
+              <label
+                key={format}
+                htmlFor={id}
+                className="flex items-center gap-2 rounded-full border border-white/40 bg-surface-container-lowest/20 px-3 py-1.5 text-sm text-on-surface"
+              >
+                <input
+                  id={id}
+                  type="checkbox"
+                  checked={edited.preferred_formats.includes(format)}
+                  onChange={() => toggleFormat(format)}
+                />
+                {FORMAT_LABELS[format] ?? format}
+              </label>
+            );
+          })}
         </div>
       </fieldset>
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full rounded-full bg-gradient-to-r from-[#6e2ce0] to-[#b08cff] py-3 font-semibold text-white shadow-lg shadow-[#6e2ce0]/20 transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100"
+        className="w-full rounded-full bg-gradient-to-r from-primary to-primary-container py-3 font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100"
       >
         {isLoading ? "Guardando..." : "Guardar cambios"}
       </button>

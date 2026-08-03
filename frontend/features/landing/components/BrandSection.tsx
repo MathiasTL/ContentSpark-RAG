@@ -18,7 +18,7 @@ export default function BrandSection() {
           <h2 className="mb-6 text-3xl font-semibold leading-tight text-white sm:mb-8 sm:text-4xl md:text-5xl">
             Tu creatividad,
             <br />
-            <span className="text-[#b08cff]">potenciada por datos.</span>
+            <span className="text-primary-container">potenciada por datos.</span>
           </h2>
           <p className="mb-10 text-base font-light leading-relaxed text-white/50 sm:mb-12 sm:text-lg">
             ContentSpark no es solo una herramienta; es un socio estratégico.
@@ -27,11 +27,11 @@ export default function BrandSection() {
           </p>
           <div className="space-y-5 sm:space-y-6">
             {[
-              { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "Algoritmos IA alineados a tu voz" },
-              { icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6", text: "Predicción de engagement en tiempo real" },
+              { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "Respuestas personalizadas a tu nicho y objetivos" },
+              { icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6", text: "Calendario de contenido sincronizado con Google Calendar" },
             ].map(({ icon, text }) => (
               <div key={text} className="flex items-center gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#6e2ce0]/15 text-[#b08cff]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary-container">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d={icon} />
                   </svg>
@@ -50,27 +50,13 @@ export default function BrandSection() {
           transition={{ duration: 0.6, delay: 0.15 }}
           className="relative md:w-1/2"
         >
-          <div className="aspect-[4/3] overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#6e2ce0]/20 via-[#b4005d]/15 to-[#005da6]/20 shadow-2xl sm:rounded-[2.5rem]">
+          <div className="aspect-[4/3] overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-primary/20 via-secondary/15 to-[#005da6]/20 shadow-2xl sm:rounded-[2.5rem]">
             <div className="flex h-full flex-col items-center justify-center p-8">
               <svg className="mb-4 text-white/20" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
               </svg>
               <p className="text-sm font-light text-white/30">Vista previa del dashboard</p>
             </div>
-          </div>
-
-          {/* Stat card */}
-          <div className="absolute -right-4 -top-6 rounded-2xl border border-white/20 bg-white/10 p-5 shadow-xl backdrop-blur-xl sm:-right-10 sm:-top-10 sm:rounded-3xl sm:p-6">
-            <div className="mb-2 flex items-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
-              <span className="text-xs font-bold uppercase tracking-wider text-white/70">
-                Eficiencia
-              </span>
-            </div>
-            <div className="text-3xl font-bold text-white">+142%</div>
-            <p className="text-[10px] text-white/30">Output desde la activación</p>
           </div>
         </motion.div>
       </div>

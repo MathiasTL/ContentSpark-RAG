@@ -1,6 +1,5 @@
 "use client";
 
-import MobileNav from "./components/MobileNav";
 import TopBar from "./components/TopBar";
 import TimelineCards from "./components/TimelineCards";
 import CalendarGrid from "./components/CalendarGrid";
@@ -12,12 +11,10 @@ import CreatorTip from "./components/CreatorTip";
 export default function CalendarView() {
   return (
     <div className="min-h-screen">
-      <MobileNav />
-
       <div>
         <TopBar />
 
-        <div className="grid grid-cols-12 gap-6 p-5 sm:gap-8 sm:p-8 lg:p-10">
+        <div className="grid grid-cols-12 gap-6 p-5 pb-24 sm:gap-8 sm:p-8 sm:pb-24 lg:p-10 lg:pb-10">
           {/* Columna central */}
           <div className="col-span-12 space-y-8 sm:space-y-10 lg:col-span-9">
             <TimelineCards />

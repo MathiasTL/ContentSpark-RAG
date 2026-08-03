@@ -6,7 +6,7 @@ const activities = [
   {
     title: "Content Batching",
     description: "Grabando 3 reels hoy para mayor eficiencia.",
-    iconBg: "bg-[#6e2ce0]/10 border-[#6e2ce0]/20",
+    iconBg: "bg-primary/10 border-primary/20",
     iconColor: "#b08cff",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -47,9 +47,9 @@ export default function ActivityPanel() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.6, duration: 0.5 }}
-      className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-md sm:p-8"
+      className="rounded-[2rem] border border-white/10 bg-surface-container-lowest/5 p-6 shadow-2xl backdrop-blur-md sm:p-8"
     >
-      <h3 className="mb-6 text-[11px] font-bold uppercase tracking-widest text-white/80 sm:mb-8">
+      <h3 className="mb-6 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant sm:mb-8">
         Actividad del día
       </h3>
 
@@ -63,14 +63,18 @@ export default function ActivityPanel() {
               {item.icon}
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white">{item.title}</h4>
-              <p className="mt-0.5 text-xs font-light text-white/50">{item.description}</p>
+              <h4 className="text-sm font-bold text-on-surface">{item.title}</h4>
+              <p className="mt-0.5 text-xs font-light text-on-surface-variant">{item.description}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <button className="mt-8 w-full rounded-2xl border border-[#6e2ce0]/10 bg-[#6e2ce0]/10 py-3.5 text-xs font-bold uppercase tracking-widest text-[#b08cff] transition-all hover:bg-[#6e2ce0]/20 sm:mt-10">
+      <button
+        disabled
+        title="Próximamente"
+        className="mt-8 w-full rounded-2xl border border-primary/10 bg-primary/10 py-3.5 text-xs font-bold uppercase tracking-widest text-primary-container transition-all hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-primary/10 sm:mt-10"
+      >
         Ver log detallado
       </button>
     </motion.section>

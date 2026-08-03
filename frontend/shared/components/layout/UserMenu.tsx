@@ -36,11 +36,11 @@ export default function UserMenu({ name, email, avatar, collapsed }: Props) {
     <Popover>
       <PopoverTrigger
         aria-label="Menu de usuario"
-        className={`flex w-full items-center gap-3 rounded-2xl text-left transition-colors hover:bg-white/20 ${
+        className={`flex w-full items-center gap-3 rounded-2xl text-left transition-colors hover:bg-surface-container-lowest/20 ${
           collapsed ? "justify-center px-0" : "px-2 py-2"
         }`}
       >
-        <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/20 bg-white/10">
+        <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/20 bg-surface-container-lowest/10">
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -70,7 +70,7 @@ export default function UserMenu({ name, email, avatar, collapsed }: Props) {
       <PopoverContent
         align="start"
         sideOffset={12}
-        className="w-56 rounded-2xl border border-white/20 bg-white/30 p-2 shadow-[0_24px_48px_-16px_rgba(110,44,224,0.18)] backdrop-blur-xl"
+        className="w-56 rounded-2xl border border-white/20 bg-surface-container-lowest/30 p-2 shadow-[0_24px_48px_-16px_rgba(110,44,224,0.18)] backdrop-blur-xl"
       >
         <div className="px-3 py-2">
           <p className="truncate text-sm font-semibold text-on-surface">
@@ -82,12 +82,12 @@ export default function UserMenu({ name, email, avatar, collapsed }: Props) {
             </p>
           )}
         </div>
-        <div className="my-1 h-px bg-white/20" />
+        <div className="my-1 h-px bg-surface-container-lowest/20" />
         <button
           type="button"
           onClick={handleLogout}
           disabled={isSigningOut}
-          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-on-surface transition-colors hover:bg-white/30 disabled:opacity-60"
+          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-lowest/30 disabled:opacity-60"
         >
           <LogOut size={16} strokeWidth={1.75} />
           {isSigningOut ? "Cerrando sesion..." : "Cerrar sesion"}

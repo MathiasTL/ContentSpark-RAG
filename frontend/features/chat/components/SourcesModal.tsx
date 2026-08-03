@@ -22,8 +22,8 @@ export default function SourcesModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 backdrop-blur-sm p-4">
-      <div className="w-full max-w-2xl rounded-3xl border border-white/30 bg-white/35 shadow-2xl backdrop-blur-xl overflow-hidden">
-        <div className="flex items-center justify-between border-b border-white/30 bg-white/20 px-6 py-4">
+      <div className="w-full max-w-2xl rounded-3xl border border-white/30 bg-surface-container-lowest/35 shadow-2xl backdrop-blur-xl overflow-hidden">
+        <div className="flex items-center justify-between border-b border-white/30 bg-surface-container-lowest/20 px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">Fuentes Ingestadas</h2>
             <p className="text-xs text-gray-600">PDFs usados para alimentar el RAG</p>
@@ -31,7 +31,7 @@ export default function SourcesModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-white/40 bg-white/45 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-white/65 cursor-pointer"
+            className="rounded-xl border border-white/40 bg-surface-container-lowest/45 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-surface-container-lowest/65 cursor-pointer"
           >
             Cerrar
           </button>
@@ -40,7 +40,7 @@ export default function SourcesModal({
         <ScrollArea className="h-[380px]">
           <div className="p-5 space-y-3">
             {isLoading && (
-              <div className="rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-gray-700">
+              <div className="rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-gray-700">
                 Cargando fuentes...
               </div>
             )}
@@ -52,7 +52,7 @@ export default function SourcesModal({
             )}
 
             {!isLoading && !error && sources.length === 0 && (
-              <div className="rounded-2xl border border-white/40 bg-white/30 px-4 py-3 text-sm text-gray-700">
+              <div className="rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-gray-700">
                 No hay PDFs ingestados por ahora.
               </div>
             )}
@@ -61,7 +61,7 @@ export default function SourcesModal({
               sources.map((source) => (
                 <div
                   key={source.id}
-                  className="rounded-2xl border border-white/40 bg-white/35 px-4 py-3 flex items-center justify-between"
+                  className="rounded-2xl border border-white/40 bg-surface-container-lowest/35 px-4 py-3 flex items-center justify-between"
                 >
                   <p className="text-sm font-semibold text-gray-800">{source.title}</p>
                   <span className="rounded-full bg-rose-100/80 px-2.5 py-0.5 text-xs font-semibold text-rose-700">

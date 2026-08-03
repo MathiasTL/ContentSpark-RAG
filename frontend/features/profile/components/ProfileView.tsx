@@ -21,19 +21,19 @@ export default function ProfileView() {
   }, []);
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col justify-center px-4 py-10 sm:px-6">
-      <div className="rounded-3xl border border-white/20 bg-white/40 p-6 shadow-[0_32px_64px_-16px_rgba(110,44,224,0.12)] backdrop-blur-xl sm:p-10">
-        <h1 className="text-xl font-semibold tracking-tight text-[#2c2f33] sm:text-2xl">
+    <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col justify-center overflow-y-auto px-4 py-10 pb-24 sm:px-6 lg:pb-10">
+      <div className="rounded-3xl border border-white/20 bg-surface-container-lowest/40 p-6 shadow-[0_32px_64px_-16px_rgba(110,44,224,0.12)] backdrop-blur-xl sm:p-10">
+        <h1 className="text-xl font-semibold tracking-tight text-on-surface sm:text-2xl">
           Tu perfil
         </h1>
-        <p className="mt-1 text-sm font-light text-[#595c60]">
+        <p className="mt-1 text-sm font-light text-on-surface-variant">
           Actualiza tu información para personalizar tus respuestas y
           recomendaciones.
         </p>
 
         <div className="mt-6">
           {isLoading && !profile ? (
-            <p className="text-sm text-[#595c60]">Cargando perfil...</p>
+            <p className="text-sm text-on-surface-variant">Cargando perfil...</p>
           ) : (
             <ProfileForm />
           )}

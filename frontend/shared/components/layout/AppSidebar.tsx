@@ -4,26 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  LayoutDashboard,
-  CalendarDays,
-  Users,
-  BarChart3,
-  Settings,
-  HelpCircle,
-  MessageSquare,
-} from "lucide-react";
+import { CalendarDays, MessageSquare, User } from "lucide-react";
 import { createClient } from "@/shared/lib/supabase";
 import { useSidebar } from "./SidebarProvider";
 import UserMenu from "./UserMenu";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Calendar", href: "/calendar", icon: CalendarDays },
+export const NAV_ITEMS = [
   { label: "Habla con Spark", href: "/chat", icon: MessageSquare },
-  { label: "Creators", href: "/creators", icon: Users },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Calendar", href: "/calendar", icon: CalendarDays },
+  { label: "Perfil", href: "/profile", icon: User },
 ];
 
 export default function AppSidebar() {
@@ -54,7 +43,7 @@ export default function AppSidebar() {
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-50 hidden h-screen flex-col justify-between border-r border-white/10 bg-white/5 shadow-[0_40px_60px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-[width] duration-300 ease-out lg:flex ${
+      className={`fixed left-0 top-0 z-50 hidden h-screen flex-col justify-between border-r border-white/10 bg-surface-container-lowest/5 shadow-[0_40px_60px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-[width] duration-300 ease-out lg:flex ${
         collapsed ? "w-20 p-3" : "w-64 p-6"
       }`}
     >
@@ -63,7 +52,7 @@ export default function AppSidebar() {
           type="button"
           onClick={toggle}
           aria-label={collapsed ? "Expandir menu" : "Colapsar menu"}
-          className={`mb-10 flex w-full items-center gap-3 rounded-2xl px-2 py-1 transition-colors hover:bg-white/5 ${
+          className={`mb-10 flex w-full items-center gap-3 rounded-2xl px-2 py-1 transition-colors hover:bg-surface-container-lowest/5 ${
             collapsed ? "justify-center" : ""
           }`}
         >
@@ -79,7 +68,7 @@ export default function AppSidebar() {
           </span>
           {!collapsed && (
             <span className="min-w-0 text-left">
-              <span className="block bg-gradient-to-r from-[#6e2ce0] to-[#b08cff] bg-clip-text text-xl font-semibold tracking-tight text-transparent">
+              <span className="block bg-gradient-to-r from-primary to-primary-container bg-clip-text text-xl font-semibold tracking-tight text-transparent">
                 ContentSpark
               </span>
               <span className="mt-0.5 block text-[10px] font-light uppercase tracking-wide text-on-surface-variant">
@@ -89,7 +78,7 @@ export default function AppSidebar() {
           )}
         </button>
 
-        <nav className="space-y-2">
+        <nav className="space-y-2" aria-label="Navegación principal">
           {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
             const isActive = pathname === href || pathname.startsWith(`${href}/`);
             return (
@@ -102,7 +91,7 @@ export default function AppSidebar() {
                 } ${
                   isActive
                     ? "bg-primary/15 font-semibold text-primary"
-                    : "font-light text-on-surface-variant hover:bg-white/30 hover:text-primary"
+                    : "font-light text-on-surface-variant hover:bg-surface-container-lowest/30 hover:text-primary"
                 }`}
               >
                 <Icon size={20} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
@@ -114,17 +103,6 @@ export default function AppSidebar() {
       </div>
 
       <div className="space-y-4">
-        <Link
-          href="#"
-          title={collapsed ? "Soporte" : undefined}
-          className={`flex items-center gap-3 rounded-2xl text-on-surface-variant transition-colors hover:bg-white/30 hover:text-primary ${
-            collapsed ? "h-12 justify-center" : "px-4 py-3"
-          }`}
-        >
-          <HelpCircle size={18} strokeWidth={1.5} className="shrink-0" />
-          {!collapsed && <span className="text-sm font-light">Support</span>}
-        </Link>
-
         <div className="border-t border-white/5 pt-4">
           {user && (
             <UserMenu
