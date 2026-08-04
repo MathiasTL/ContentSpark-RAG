@@ -41,7 +41,7 @@ is built. This is deliberately **not** RED/GREEN — it is a throwaway
 investigation, run and discarded, not a unit of shipped behavior.
 
 ### 0.1 Structured-output feasibility spike
-- [ ] **0.1.1** [SPIKE] In a scratch script (not committed — e.g.
+- [x] **0.1.1** [SPIKE] In a scratch script (not committed — e.g.
   `/private/tmp/.../spike_structured_output.py`, run via
   `mamba run -n contentspark python`), call
   `llm_service.llm.with_structured_output(GeneratedIdeasList)` (using the
@@ -55,7 +55,7 @@ investigation, run and discarded, not a unit of shipped behavior.
   error text + restated count/format instructions) recover on a forced
   failure case (e.g. a deliberately malformed follow-up prompt).
   Spec: content-calendar-generation / Structured Idea Generation.
-- [ ] **0.1.2** [SPIKE] Save the finding to Engram (`mem_save`, type
+- [x] **0.1.2** [SPIKE] Save the finding to Engram (`mem_save`, type
   `discovery`) recording the exact exception type(s) observed and whether the
   4-tier fallback ladder (happy path → repair retry → template pad → truncate
   overcount, `design.md:363-388`) is sufficient as designed, or whether Unit
@@ -72,7 +72,7 @@ Delivers independently: tightened Pydantic schemas and the finalized
 service, no agent wired to them). ~110 lines. Low budget risk.
 
 ### 1.1 `CalendarState` contract
-- [ ] **1.1.1** [RED] Add failing tests to a new
+- [x] **1.1.1** [RED] Add failing tests to a new
   `backend/tests/test_calendar_agent.py` asserting `CalendarState` (imported
   from `backend/app/agents/shared_state.py`) accepts a dict literal with
   every field from `design.md:72-88` (`user_id`, `profile`, `calendar_id`,
@@ -81,13 +81,13 @@ service, no agent wired to them). ~110 lines. Low budget risk.
   `typing.get_type_hints(CalendarState)` assertion covering the full field
   set, since `TypedDict` has no runtime validation to exercise directly.
   Spec: content-calendar-generation (contract underlying every requirement).
-- [ ] **1.1.2** [GREEN] Edit `backend/app/agents/shared_state.py`: add
+- [x] **1.1.2** [GREEN] Edit `backend/app/agents/shared_state.py`: add
   `from typing import Literal` to the existing `Any, TypedDict` import;
   replace lines 25-34 with the full `CalendarState` TypedDict per
   `design.md:70-88`. Run 1.1.1 to green.
 
 ### 1.2 Schema tightening
-- [ ] **1.2.1** [RED] Add failing tests to a new
+- [x] **1.2.1** [RED] Add failing tests to a new
   `backend/tests/test_calendar_schemas.py` for: `CalendarGenerateRequest`
   accepts `period` alone (frequency/formats optional), rejects an invalid
   `period` literal, rejects a `formats` key outside the closed
@@ -98,7 +98,7 @@ service, no agent wired to them). ~110 lines. Low budget risk.
   serializes `{detail, missing_fields}`.
   Spec: content-calendar-api / Calendar Generation Endpoint (422 case),
   Entry Editing Independent of Calendar Status (422 case).
-- [ ] **1.2.2** [GREEN] Replace `backend/app/schemas/calendar.py` with the
+- [x] **1.2.2** [GREEN] Replace `backend/app/schemas/calendar.py` with the
   full schema set from `design.md:391-446`
   (`FormatLiteral`, `PlatformLiteral`, `PeriodLiteral`, `EntryStatusLiteral`,
   `CalendarGenerateRequest`, `EntryUpdate`, `EntryResponse`,
