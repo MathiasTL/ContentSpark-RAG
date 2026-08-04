@@ -143,7 +143,7 @@ orchestration) per the design's HIGH-risk flag.
   singleton `calendar_service = CalendarService()`. Run 2a.1 to green.
 
 ### 2b — Status-transition guards + full `generate_calendar`/`confirm`/`delete`
-- [ ] **2b.1** [RED] Extend `backend/tests/test_calendar_service.py` with
+- [x] **2b.1** [RED] Extend `backend/tests/test_calendar_service.py` with
   failing tests for: `generate_calendar` with no `calendar_id` creates a new
   `ContentCalendar(status="draft")` and invokes `calendar_app.ainvoke` with a
   `CalendarState` built from `_narrow_profile`; `generate_calendar` with a
@@ -158,7 +158,7 @@ orchestration) per the design's HIGH-risk flag.
   Spec: content-calendar-api / Calendar Generation Endpoint (all
   `calendar_id` scenarios), Calendar Status Lifecycle, Entry Editing
   Independent of Calendar Status, Calendar Deletion Rules.
-- [ ] **2b.2** [GREEN] Complete `calendar_service.py`: finish
+- [x] **2b.2** [GREEN] Complete `calendar_service.py`: finish
   `generate_calendar`'s steps 2-5 exactly per `design.md:483-496` (load-or-
   create target calendar, narrow profile, `ainvoke` the graph, delete-then-
   insert `ContentEntry` rows, update `start_date`/`end_date`/`frequency`,
