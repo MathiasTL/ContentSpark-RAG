@@ -1,26 +1,38 @@
-"""Tests for the CalendarState TypedDict contract and the deterministic
-calendar_agent nodes/helpers (receive_params, analyze_profile,
-optimize_distribution, format_calendar). All of these are pure Python:
-no LLM, no DB, no Qdrant, no network."""
+"""Tests for the CalendarState TypedDict contract and the calendar_agent
+nodes/helpers: the 4 deterministic nodes (receive_params, analyze_profile,
+optimize_distribution, format_calendar), `query_rag`, and `generate_ideas`
+(LLM/Qdrant fully mocked — zero network calls anywhere in this file)."""
 import calendar as calendar_module
 import math
 from datetime import date, timedelta
 from typing import get_type_hints
+from unittest.mock import AsyncMock
 
+import groq
+import httpx
 import pytest
+from langchain_core.exceptions import OutputParserException
+from pydantic import ValidationError
 
 from app.agents import calendar_agent
 from app.agents.calendar_agent import (
     DEFAULT_FORMAT_MIX,
     DEFAULT_FREQUENCY,
-    FREQUENCY_RECOMMENDATIONS,
+    DEFAULT_PLATFORM_BY_FORMAT,
     TIME_SLOTS,
+    FREQUENCY_RECOMMENDATIONS,
+    GeneratedIdea,
+    GeneratedIdeasList,
     _distribute,
     _entry_count,
     _resolve_period,
+    _template_idea,
     analyze_profile,
+    calendar_app,
     format_calendar,
+    generate_ideas,
     optimize_distribution,
+    query_rag,
     receive_params,
 )
 from app.agents.shared_state import CalendarState
@@ -517,3 +529,385 @@ def test_format_calendar_preserves_idea_fields():
     assert entry["platform"] == "tiktok"
     assert entry["hook"] == "h"
     assert entry["description"] == "d"
+
+
+# --- 4a.1: query_rag ---------------------------------------------------
+
+
+class _FakeDoc:
+    def __init__(self, content: str):
+        self.page_content = content
+
+
+def _profile(**overrides) -> dict:
+    base = {
+        "niche": "fitness",
+        "sub_niche": "crossfit",
+        "primary_goal": "crecer audiencia",
+        "tone": "motivacional",
+        "target_audience": "adultos 25-40",
+        "desired_frequency": None,
+        "preferred_formats": [],
+    }
+    base.update(overrides)
+    return base
+
+
+def test_query_rag_calls_search_similar_once_with_grounded_query(monkeypatch):
+    captured = {}
+
+    def fake_search_similar(query, top_k=2):
+        captured["query"] = query
+        captured["top_k"] = top_k
+        captured["calls"] = captured.get("calls", 0) + 1
+        return [_FakeDoc("contenido relevante sobre fitness")]
+
+    monkeypatch.setattr(
+        calendar_agent.qdrant_search_service, "search_similar", fake_search_similar
+    )
+    state = {"profile": _profile()}
+    result = query_rag(state)
+
+    assert captured["query"] == "fitness crossfit"
+    assert captured["top_k"] == 4
+    assert captured["calls"] == 1
+    assert result["rag_context"] != ""
+
+
+def test_query_rag_grounds_query_with_empty_sub_niche(monkeypatch):
+    captured = {}
+
+    def fake_search_similar(query, top_k=2):
+        captured["query"] = query
+        return []
+
+    monkeypatch.setattr(
+        calendar_agent.qdrant_search_service, "search_similar", fake_search_similar
+    )
+    state = {"profile": _profile(sub_niche=None)}
+    query_rag(state)
+    assert captured["query"] == "fitness "
+
+
+def test_query_rag_degrades_to_empty_context_on_search_failure(monkeypatch):
+    def raising_search_similar(query, top_k=2):
+        raise ConnectionError("Qdrant unreachable")
+
+    monkeypatch.setattr(
+        calendar_agent.qdrant_search_service, "search_similar", raising_search_similar
+    )
+    state = {"profile": _profile()}
+    result = query_rag(state)  # must not raise
+    assert result["rag_context"] == ""
+
+
+def test_query_rag_empty_results_yields_empty_context(monkeypatch):
+    monkeypatch.setattr(
+        calendar_agent.qdrant_search_service,
+        "search_similar",
+        lambda query, top_k=2: [],
+    )
+    state = {"profile": _profile()}
+    result = query_rag(state)
+    assert result["rag_context"] == ""
+
+
+# --- 4a.1: generate_ideas — happy path -----------------------------------
+
+
+class _FakeStructuredLLM:
+    def __init__(self, ainvoke_mock: AsyncMock):
+        self.ainvoke = ainvoke_mock
+
+
+def _generate_ideas_state(formats: dict[str, int] | None = None) -> dict:
+    return {
+        "profile": _profile(),
+        "frequency": 4,
+        "formats": formats or {"short_video": 2, "post": 1, "carousel": 1},
+        "rag_context": "contexto relevante",
+    }
+
+
+def _conformant_idea(fmt: str, i: int) -> GeneratedIdea:
+    return GeneratedIdea(
+        title=f"Idea {fmt} {i}",
+        format=fmt,
+        platform="tiktok",
+        hook=f"hook {i}",
+        description=f"desc {i}",
+    )
+
+
+@pytest.mark.asyncio
+async def test_generate_ideas_happy_path_returns_llm_ideas_unmodified(monkeypatch):
+    state = _generate_ideas_state()
+    target_count = sum(state["formats"].values())
+    fmt_cycle = list(state["formats"].keys())
+    conformant_ideas = [
+        _conformant_idea(fmt_cycle[i % len(fmt_cycle)], i) for i in range(target_count)
+    ]
+    fake_result = GeneratedIdeasList(ideas=conformant_ideas)
+    ainvoke_mock = AsyncMock(return_value=fake_result)
+
+    def fake_with_structured_output(schema, method=None):
+        return _FakeStructuredLLM(ainvoke_mock)
+
+    monkeypatch.setattr(
+        calendar_agent.llm_service.llm,
+        "with_structured_output",
+        fake_with_structured_output,
+    )
+
+    result = await generate_ideas(state)
+
+    assert result["raw_ideas"] == [idea.model_dump() for idea in conformant_ideas]
+    ainvoke_mock.assert_awaited_once()
+
+
+# --- 4b.1: generate_ideas — repair/template fallback ladder --------------
+
+
+def _schema_error() -> ValidationError:
+    try:
+        GeneratedIdea(title="", format="not_a_format", platform="x", hook="h", description="d")
+    except ValidationError as e:
+        return e
+    raise AssertionError("expected ValidationError")
+
+
+@pytest.mark.asyncio
+async def test_generate_ideas_schema_failure_then_repair_success(monkeypatch):
+    state = _generate_ideas_state()
+    target_count = sum(state["formats"].values())
+    fmt_cycle = list(state["formats"].keys())
+    repaired_ideas = [
+        _conformant_idea(fmt_cycle[i % len(fmt_cycle)], i) for i in range(target_count)
+    ]
+    ainvoke_mock = AsyncMock(
+        side_effect=[_schema_error(), GeneratedIdeasList(ideas=repaired_ideas)]
+    )
+
+    def fake_with_structured_output(schema, method=None):
+        return _FakeStructuredLLM(ainvoke_mock)
+
+    monkeypatch.setattr(
+        calendar_agent.llm_service.llm,
+        "with_structured_output",
+        fake_with_structured_output,
+    )
+
+    result = await generate_ideas(state)
+
+    assert len(result["raw_ideas"]) == target_count
+    assert result["raw_ideas"] == [idea.model_dump() for idea in repaired_ideas]
+    assert ainvoke_mock.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_generate_ideas_repair_also_fails_pads_with_templates(monkeypatch):
+    state = _generate_ideas_state()
+    target_count = sum(state["formats"].values())
+    ainvoke_mock = AsyncMock(side_effect=[_schema_error(), _schema_error()])
+
+    def fake_with_structured_output(schema, method=None):
+        return _FakeStructuredLLM(ainvoke_mock)
+
+    monkeypatch.setattr(
+        calendar_agent.llm_service.llm,
+        "with_structured_output",
+        fake_with_structured_output,
+    )
+
+    result = await generate_ideas(state)  # must not raise
+
+    assert len(result["raw_ideas"]) == target_count
+    for idea in result["raw_ideas"]:
+        assert idea["format"] in state["formats"]
+        assert idea["platform"] == DEFAULT_PLATFORM_BY_FORMAT[idea["format"]]
+
+
+@pytest.mark.asyncio
+async def test_generate_ideas_repair_returns_fewer_than_target_pads_shortfall(monkeypatch):
+    state = _generate_ideas_state()
+    target_count = sum(state["formats"].values())
+    partial_ideas = [_conformant_idea("short_video", 0)]  # 1 idea, target is 4
+    ainvoke_mock = AsyncMock(
+        side_effect=[_schema_error(), GeneratedIdeasList(ideas=partial_ideas)]
+    )
+
+    def fake_with_structured_output(schema, method=None):
+        return _FakeStructuredLLM(ainvoke_mock)
+
+    monkeypatch.setattr(
+        calendar_agent.llm_service.llm,
+        "with_structured_output",
+        fake_with_structured_output,
+    )
+
+    result = await generate_ideas(state)
+
+    assert len(result["raw_ideas"]) == target_count
+
+
+@pytest.mark.asyncio
+async def test_generate_ideas_groq_api_status_error_triggers_repair_tier(monkeypatch):
+    """Per the Phase 0 spike: LangChain does not wrap Groq's provider error —
+    groq.APIStatusError (base of groq.BadRequestError, tool_use_failed)
+    propagates raw and must be caught, not just OutputParserException/
+    ValidationError."""
+    state = _generate_ideas_state()
+    target_count = sum(state["formats"].values())
+    fmt_cycle = list(state["formats"].keys())
+    repaired_ideas = [
+        _conformant_idea(fmt_cycle[i % len(fmt_cycle)], i) for i in range(target_count)
+    ]
+    fake_response = httpx.Response(
+        status_code=400,
+        request=httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions"),
+        json={"error": {"code": "tool_use_failed"}},
+    )
+    groq_error = groq.APIStatusError(
+        "tool_use_failed",
+        response=fake_response,
+        body={"error": {"code": "tool_use_failed"}},
+    )
+    ainvoke_mock = AsyncMock(
+        side_effect=[groq_error, GeneratedIdeasList(ideas=repaired_ideas)]
+    )
+
+    def fake_with_structured_output(schema, method=None):
+        return _FakeStructuredLLM(ainvoke_mock)
+
+    monkeypatch.setattr(
+        calendar_agent.llm_service.llm,
+        "with_structured_output",
+        fake_with_structured_output,
+    )
+
+    result = await generate_ideas(state)  # must not raise
+
+    assert len(result["raw_ideas"]) == target_count
+    assert ainvoke_mock.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_generate_ideas_groq_connection_error_degrades_to_templates(monkeypatch):
+    """A transport failure is not an APIStatusError — it is an
+    APIConnectionError. It must still degrade to tier-3 template padding
+    rather than escalating to a 500, per generate_ideas' never-raises
+    exit criterion."""
+    state = _generate_ideas_state()
+    target_count = sum(state["formats"].values())
+    connection_error = groq.APIConnectionError(
+        request=httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions")
+    )
+    ainvoke_mock = AsyncMock(side_effect=connection_error)
+
+    def fake_with_structured_output(schema, method=None):
+        return _FakeStructuredLLM(ainvoke_mock)
+
+    monkeypatch.setattr(
+        calendar_agent.llm_service.llm,
+        "with_structured_output",
+        fake_with_structured_output,
+    )
+
+    result = await generate_ideas(state)  # must not raise
+
+    assert len(result["raw_ideas"]) == target_count
+    assert all(idea["hook"] for idea in result["raw_ideas"])
+
+
+@pytest.mark.asyncio
+async def test_generate_ideas_over_count_truncates_preserving_order(monkeypatch):
+    state = _generate_ideas_state()
+    target_count = sum(state["formats"].values())
+    fmt_cycle = list(state["formats"].keys())
+    excess_ideas = [
+        _conformant_idea(fmt_cycle[i % len(fmt_cycle)], i) for i in range(target_count + 3)
+    ]
+    fake_result = GeneratedIdeasList(ideas=excess_ideas)
+    ainvoke_mock = AsyncMock(return_value=fake_result)
+
+    def fake_with_structured_output(schema, method=None):
+        return _FakeStructuredLLM(ainvoke_mock)
+
+    monkeypatch.setattr(
+        calendar_agent.llm_service.llm,
+        "with_structured_output",
+        fake_with_structured_output,
+    )
+
+    result = await generate_ideas(state)
+
+    assert len(result["raw_ideas"]) == target_count
+    assert result["raw_ideas"] == [idea.model_dump() for idea in excess_ideas[:target_count]]
+
+
+def test_template_idea_uses_default_platform_and_profile_fields():
+    profile = _profile()
+    idea = _template_idea("short_video", profile, 1)
+    assert idea["format"] == "short_video"
+    assert idea["platform"] == DEFAULT_PLATFORM_BY_FORMAT["short_video"]
+    assert profile["niche"] in idea["title"]
+    assert profile["primary_goal"] in idea["description"]
+
+
+def test_template_idea_never_raises_on_missing_profile_fields():
+    profile = {"niche": None, "primary_goal": None}
+    idea = _template_idea("post", profile, 1)
+    assert idea["format"] == "post"
+    assert "tu nicho" in idea["title"]
+    assert "tu objetivo" in idea["description"]
+
+
+# --- 4b.1: StateGraph assembly -------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_calendar_app_runs_all_six_nodes_end_to_end(monkeypatch):
+    """Fully mocked LLM/Qdrant — asserts calendar_app produces a complete,
+    optimized CalendarState in one ainvoke call."""
+    monkeypatch.setattr(
+        calendar_agent.qdrant_search_service,
+        "search_similar",
+        lambda query, top_k=2: [_FakeDoc("contexto de conocimiento")],
+    )
+
+    formats = {"short_video": 2, "post": 2}
+    target_count = sum(formats.values())
+    fmt_cycle = list(formats.keys())
+    conformant_ideas = [
+        _conformant_idea(fmt_cycle[i % len(fmt_cycle)], i) for i in range(target_count)
+    ]
+    ainvoke_mock = AsyncMock(return_value=GeneratedIdeasList(ideas=conformant_ideas))
+
+    def fake_with_structured_output(schema, method=None):
+        return _FakeStructuredLLM(ainvoke_mock)
+
+    monkeypatch.setattr(
+        calendar_agent.llm_service.llm,
+        "with_structured_output",
+        fake_with_structured_output,
+    )
+
+    initial_state = {
+        "user_id": "u1",
+        "profile": _profile(),
+        "calendar_id": None,
+        "period": "current_week",
+        "start_date": None,
+        "end_date": None,
+        "frequency": 4,
+        "formats": formats,
+        "rag_context": "",
+        "raw_ideas": [],
+        "calendar_entries": [],
+        "is_optimized": False,
+    }
+
+    final_state = await calendar_app.ainvoke(initial_state)
+
+    assert final_state["is_optimized"] is True
+    assert len(final_state["calendar_entries"]) == target_count

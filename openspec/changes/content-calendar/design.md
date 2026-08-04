@@ -392,8 +392,12 @@ result: GeneratedIdeasList = await structured_llm.ainvoke(messages)
    `json_mode` guarantees syntactically valid JSON but **not** schema
    conformance, and the failing exception family is not fully characterized, so
    the `except` clause must catch all of `OutputParserException`, pydantic
-   `ValidationError`, and `groq.APIStatusError` (the base class of
-   `groq.BadRequestError`) rather than assuming a single family.
+   `ValidationError`, and `groq.APIError` rather than assuming a single family.
+   `groq.APIError` — not `groq.APIStatusError` — is the correct breadth: it is
+   the base of both `APIStatusError` (the measured `tool_use_failed`) and
+   `APIConnectionError`/`APITimeoutError`. A transport failure must degrade to
+   template padding like any other failure; anything narrower breaks this
+   node's "never raises" exit criterion on a plain network blip.
 3. **Repair also fails, or `len(result.ideas) < sum(formats.values())`**:
    deterministically pad the shortfall using a template built from `profile`
    alone (no LLM call):

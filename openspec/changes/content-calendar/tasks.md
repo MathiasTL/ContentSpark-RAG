@@ -249,7 +249,7 @@ per the design's HIGH-risk flag — the fallback ladder is explicitly called
 out as "the single largest node" (`design.md:621`).
 
 ### 4a — `query_rag` + happy-path `generate_ideas`
-- [ ] **4a.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
+- [x] **4a.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
   failing tests for: `query_rag` calls
   `qdrant_search_service.search_similar(query, top_k=4)` grounded on
   `f"{profile['niche']} {profile['sub_niche'] or ''}"` exactly once;
@@ -262,7 +262,7 @@ out as "the single largest node" (`design.md:621`).
   unmodified.
   Spec: content-calendar-generation / RAG Context Degrades Gracefully (all 3
   scenarios), Structured Idea Generation.
-- [ ] **4a.2** [GREEN] Add to `calendar_agent.py`: `GeneratedIdea`,
+- [x] **4a.2** [GREEN] Add to `calendar_agent.py`: `GeneratedIdea`,
   `GeneratedIdeasList` Pydantic models and `FormatLiteral`/`PlatformLiteral`
   (`design.md:342-354`); `query_rag(state) -> dict` (try/except around the
   single `search_similar` call, `design.md`'s `query_rag` behavior); the
@@ -271,7 +271,7 @@ out as "the single largest node" (`design.md:621`).
   ladder only). Run 4a.1 to green.
 
 ### 4b — Repair/template fallback ladder + `StateGraph` assembly
-- [ ] **4b.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
+- [x] **4b.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
   failing tests, each `monkeypatch`ing `.ainvoke` with a scripted
   `AsyncMock` `side_effect` list, for `generate_ideas`'s remaining 3 fallback
   tiers: schema/tool-call failure on the first call followed by a
@@ -286,7 +286,7 @@ out as "the single largest node" (`design.md:621`).
   Spec: content-calendar-generation / Structured Idea Generation (schema
   conformance under fallback), Deterministic Distribution Constraints (entry
   count still matches after fallback).
-- [ ] **4b.2** [GREEN] Complete `generate_ideas`'s tiers 2-4 exactly per
+- [x] **4b.2** [GREEN] Complete `generate_ideas`'s tiers 2-4 exactly per
   `design.md:363-388`, applying Phase 0's spike finding for the exact
   exception type(s) to catch on the repair-retry path (do not guess a
   broader/narrower except-clause than the spike recorded);
