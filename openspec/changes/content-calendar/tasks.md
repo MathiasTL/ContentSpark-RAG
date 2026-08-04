@@ -602,14 +602,14 @@ all reachable from one page; `frontend/app/(app)/layout.tsx` untouched;
 
 ## Final verification (all phases)
 
-- [ ] **F.1** Run `mamba run -n contentspark pytest backend/tests && pnpm --dir frontend test` — both green, including every new calendar suite from Phases 1-11.
-- [ ] **F.2** Run `ruff check backend/` — no new findings beyond the pre-existing documented debt.
-- [ ] **F.3** Run `pnpm --dir frontend lint` and `pnpm --dir frontend exec tsc --noEmit` — clean (or no new findings beyond documented pre-existing warnings).
-- [ ] **F.4** Run `pnpm --dir frontend build` — succeeds, `/calendar` route builds without error.
-- [ ] **F.5** Confirm `git status backend/alembic/versions/` shows no new file.
-- [ ] **F.6** Confirm `git diff frontend/app/(app)/layout.tsx` is empty.
-- [ ] **F.7** Confirm `git diff frontend/proxy.ts` is comment-only (no logic change at line 70 or elsewhere).
-- [ ] **F.8** Manually verify each proposal Success Criteria item
+- [x] **F.1** Run `mamba run -n contentspark pytest backend/tests && pnpm --dir frontend test` — both green, including every new calendar suite from Phases 1-11.
+- [x] **F.2** Run `ruff check backend/` — no new findings beyond the pre-existing documented debt.
+- [x] **F.3** Run `pnpm --dir frontend lint` and `pnpm --dir frontend exec tsc --noEmit` — clean (or no new findings beyond documented pre-existing warnings).
+- [x] **F.4** Run `pnpm --dir frontend build` — succeeds, `/calendar` route builds without error.
+- [x] **F.5** Confirm `git status backend/alembic/versions/` shows no new file.
+- [x] **F.6** Confirm `git diff frontend/app/(app)/layout.tsx` is empty.
+- [x] **F.7** Confirm `git diff frontend/proxy.ts` is comment-only (no logic change at line 70 or elsewhere).
+- [x] **F.8** Manually verify each proposal Success Criteria item
   (`proposal.md:319-343`) is covered by at least one automated test above —
   cross-check against the traceability table below; do not add new tests
   here, only confirm coverage.

@@ -2,16 +2,14 @@
 nodes/helpers: the 4 deterministic nodes (receive_params, analyze_profile,
 optimize_distribution, format_calendar), `query_rag`, and `generate_ideas`
 (LLM/Qdrant fully mocked — zero network calls anywhere in this file)."""
-import calendar as calendar_module
-import math
-from datetime import date, timedelta
+from datetime import date
+from itertools import pairwise
 from typing import get_type_hints
 from unittest.mock import AsyncMock
 
 import groq
 import httpx
 import pytest
-from langchain_core.exceptions import OutputParserException
 from pydantic import ValidationError
 
 from app.agents import calendar_agent
@@ -19,8 +17,8 @@ from app.agents.calendar_agent import (
     DEFAULT_FORMAT_MIX,
     DEFAULT_FREQUENCY,
     DEFAULT_PLATFORM_BY_FORMAT,
-    TIME_SLOTS,
     FREQUENCY_RECOMMENDATIONS,
+    TIME_SLOTS,
     GeneratedIdea,
     GeneratedIdeasList,
     _distribute,
@@ -422,7 +420,7 @@ def test_optimize_distribution_no_adjacent_same_format_on_balanced_input():
     )
     ordered = optimize_distribution(raw)
     assert len(ordered) == len(raw)
-    for a, b in zip(ordered, ordered[1:]):
+    for a, b in pairwise(ordered):
         assert a["format"] != b["format"]
 
 
@@ -435,7 +433,7 @@ def test_optimize_distribution_degrades_to_minimum_forced_repeats_never_raises()
     ordered = optimize_distribution(raw)  # must not raise
     assert len(ordered) == n
 
-    adjacent_repeats = sum(1 for a, b in zip(ordered, ordered[1:]) if a["format"] == b["format"])
+    adjacent_repeats = sum(1 for a, b in pairwise(ordered) if a["format"] == b["format"])
     minimum_forced_repeats = max(0, max_count - (n - max_count) - 1)
     assert adjacent_repeats == minimum_forced_repeats
 

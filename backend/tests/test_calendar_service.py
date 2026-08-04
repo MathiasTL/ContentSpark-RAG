@@ -16,7 +16,6 @@ from fastapi import HTTPException
 
 from app.services.calendar_service import CalendarService, _narrow_profile
 
-
 # --- _narrow_profile ------------------------------------------------------
 
 
