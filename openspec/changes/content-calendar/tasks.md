@@ -119,7 +119,7 @@ isolation via direct service tests (no router yet). Split into 2a
 orchestration) per the design's HIGH-risk flag.
 
 ### 2a — CRUD skeleton, `_narrow_profile`, soft gate
-- [ ] **2a.1** [RED] Create `backend/tests/test_calendar_service.py` with
+- [x] **2a.1** [RED] Create `backend/tests/test_calendar_service.py` with
   failing tests (direct service calls, `mock_db_session`-style fakes,
   mirroring `test_profile_service.py`'s SimpleNamespace approach) for:
   `_narrow_profile(profile)` returns exactly the 7-key dict from
@@ -133,7 +133,7 @@ orchestration) per the design's HIGH-risk flag.
   Spec: content-calendar-generation / Profile Completion Soft Gate;
   content-calendar-api / Authentication and Ownership Scoping (list/detail
   scoping), Calendar List and Detail Retrieval.
-- [ ] **2a.2** [GREEN] Create `backend/app/services/calendar_service.py`:
+- [x] **2a.2** [GREEN] Create `backend/app/services/calendar_service.py`:
   `_narrow_profile(profile) -> dict` (`design.md:127-138`); `class
   CalendarService` with `list_calendars`, `get_calendar` (`404` when not
   found/not owned, `selectinload(ContentCalendar.entries)` for detail);
