@@ -358,7 +358,7 @@ Depends on Phase 5 (contract frozen). Delivers independently: a tested API
 client with no store/UI wired to it yet. ~150 lines, Low risk.
 
 ### 6.1 `calendar-api.ts`
-- [ ] **6.1.1** [RED] Create
+- [x] **6.1.1** [RED] Create
   `frontend/features/calendar/services/calendar-api.test.ts` with failing
   tests (mirror `profile-api.test.ts`'s `vi.spyOn`/mocked-`fetch` pattern):
   `getCalendars()` calls `GET /api/calendars`; `getCalendar(id)` calls `GET
@@ -372,7 +372,7 @@ client with no store/UI wired to it yet. ~150 lines, Low risk.
   generic error.
   Spec: content-calendar-ui / Generation Configuration Control (client
   contract), Empty State with Onboarding CTA (409-surfacing scenario).
-- [ ] **6.1.2** [GREEN] Create
+- [x] **6.1.2** [GREEN] Create
   `frontend/features/calendar/services/calendar-api.ts` mirroring
   `profile-api.ts`: `apiFetch` + local `ensureOk`, the 6 functions and 5 TS
   interfaces from `design.md:508-530`
@@ -390,7 +390,7 @@ Depends on Phase 6. Delivers independently: application state, still with
 no components wired to it. ~160 lines, Med risk.
 
 ### 7.1 `calendarStore.ts`
-- [ ] **7.1.1** [RED] Create
+- [x] **7.1.1** [RED] Create
   `frontend/features/calendar/store/calendarStore.test.ts` with failing
   tests (mirror `profileStore.test.ts`'s `vi.spyOn` + `getState()` pattern):
   `loadCalendars()` sets `isLoading` true→false, populates `calendars`;
@@ -401,14 +401,14 @@ no components wired to it. ~160 lines, Med risk.
   success; `setViewMode` toggles `viewMode` between `"month"`/`"week"`.
   Spec: content-calendar-ui / Empty State with Onboarding CTA (409 → error
   state, not crash), Real-Data Rendering Replaces Mocks (state backing).
-- [ ] **7.1.2** [GREEN] Create
+- [x] **7.1.2** [GREEN] Create
   `frontend/features/calendar/store/calendarStore.ts`: Zustand store with
   the shape from `design.md:538-553` (`calendars`, `currentCalendar`,
   `viewMode`, `isLoading`, `isGenerating`, `error`, and the 7 actions). Run
   7.1.1 to green.
 
 ### 7.2 `useCalendarGeneration.ts`
-- [ ] **7.2.1** [RED] Create
+- [x] **7.2.1** [RED] Create
   `frontend/features/calendar/hooks/useCalendarGeneration.test.tsx` with
   failing tests: local draft state for `period`/`frequency`/`formats` before
   submit; submit calls `calendarStore.generate` with the assembled
@@ -418,7 +418,7 @@ no components wired to it. ~160 lines, Med risk.
   scenario).
   Spec: content-calendar-ui / Generation Configuration Control (both
   scenarios).
-- [ ] **7.2.2** [GREEN] Create
+- [x] **7.2.2** [GREEN] Create
   `frontend/features/calendar/hooks/useCalendarGeneration.ts`: local
   `useState` draft object (mirrors `useOnboardingWizard.ts`'s draft-state
   pattern, `design.md:556-560`), wrapping `calendarStore.generate`. Run
