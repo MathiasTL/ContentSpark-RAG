@@ -183,7 +183,7 @@ never queries the DB directly). Split into 3a (`receive_params`/
 design's HIGH-risk flag.
 
 ### 3a — `receive_params`, `analyze_profile`, period/frequency/format helpers
-- [ ] **3a.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
+- [x] **3a.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
   failing tests for: `_resolve_period` for all 3 `PeriodLiteral` values,
   including month-boundary correctness, using a `monkeypatch`d
   `date.today()`; `_entry_count(frequency, start, end)` for
@@ -199,7 +199,7 @@ design's HIGH-risk flag.
   Spec: content-calendar-generation / Frequency Resolution with Niche
   Fallback (including the "never parsed" scenario), Format Resolution with
   Profile and Default Fallback.
-- [ ] **3a.2** [GREEN] Rewrite `backend/app/agents/calendar_agent.py`'s
+- [x] **3a.2** [GREEN] Rewrite `backend/app/agents/calendar_agent.py`'s
   header/module scaffolding: `FREQUENCY_RECOMMENDATIONS`,
   `DEFAULT_FORMAT_MIX`, `DEFAULT_FREQUENCY = 4` module constants;
   `_resolve_period` (`design.md:218-231`), `_entry_count`
@@ -211,7 +211,7 @@ design's HIGH-risk flag.
   (deferred to 4b, once all 6 nodes exist). Run 3a.1 to green.
 
 ### 3b — `optimize_distribution`, `format_calendar`
-- [ ] **3b.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
+- [x] **3b.1** [RED] Extend `backend/tests/test_calendar_agent.py` with
   failing tests for: `optimize_distribution` produces no two adjacent
   entries with the same `format` on a balanced input; degrades to the
   minimum number of forced adjacent repeats (not a raise) when one format's
@@ -224,7 +224,7 @@ design's HIGH-risk flag.
   period.
   Spec: content-calendar-generation / Deterministic Distribution Constraints
   (both scenarios), Entries Scheduled Within the Requested Period.
-- [ ] **3b.2** [GREEN] Add `optimize_distribution(raw_ideas) -> list[dict]`
+- [x] **3b.2** [GREEN] Add `optimize_distribution(raw_ideas) -> list[dict]`
   (`design.md:276-296`, the `Counter`/`deque` max-count-first greedy) and
   `format_calendar(ordered_ideas, start_date, end_date) -> list[dict]`
   (`design.md:308-327`, `TIME_SLOTS = ["morning", "afternoon", "evening"]`)

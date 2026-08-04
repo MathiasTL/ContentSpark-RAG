@@ -32,7 +32,9 @@ class CalendarState(TypedDict):
     start_date: date                   # resolved from period
     end_date: date                     # resolved from period, inclusive
     frequency: int                     # RESOLVED (Decision 7 fallback already applied)
-    formats: dict[str, int]            # RESOLVED format -> count map, sums to frequency
+    formats: dict[str, int]            # RESOLVED format -> count map, sums to the
+                                        # period-scaled entry count (== frequency
+                                        # only for the weekly periods, see _entry_count)
     rag_context: str                   # "" on Qdrant failure/empty result, never None
     raw_ideas: list[dict]              # generate_ideas output, pre-optimization
     calendar_entries: list[dict]       # optimize_distribution/format_calendar output
