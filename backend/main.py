@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine
-from app.routers import auth, chat, chats, ingest, profile
+from app.routers import auth, calendar, chat, chats, ingest, profile
 
 load_dotenv()
 
@@ -38,6 +38,7 @@ app.include_router(chat.router)
 app.include_router(chats.router)
 app.include_router(ingest.router)
 app.include_router(profile.router)
+app.include_router(calendar.router)
 
 
 @app.get("/")

@@ -311,7 +311,7 @@ surface, closing out the backend half of this change. ~220 lines, Med risk
 — not split further.
 
 ### 5.1 Router tests
-- [ ] **5.1.1** [RED] Extend `backend/tests/test_calendar.py` (currently a
+- [x] **5.1.1** [RED] Extend `backend/tests/test_calendar.py` (currently a
   2-line stub) with failing tests via the `client` fixture and a new
   `patch_calendar_service` fixture (added in 5.2 alongside, mirroring
   `patch_profile_service`): one 401-without-token test per of the 6
@@ -327,7 +327,7 @@ surface, closing out the backend half of this change. ~220 lines, Med risk
   Ownership Scoping, Calendar Generation Endpoint, Calendar List and Detail
   Retrieval, Calendar Status Lifecycle, Entry Editing Independent of
   Calendar Status, Calendar Deletion Rules).
-- [ ] **5.1.2** [GREEN]
+- [x] **5.1.2** [GREEN]
   - Add `patch_calendar_service` fixture to `backend/tests/conftest.py`,
     mirroring `patch_profile_service`: `AsyncMock` for `generate_calendar`,
     `list_calendars`, `get_calendar`, `update_entry`, `confirm_calendar`,
@@ -340,7 +340,7 @@ surface, closing out the backend half of this change. ~220 lines, Med risk
     `app.include_router(calendar.router)` after `profile.router`
     (`design.md:501-504`).
   Run 5.1.1 to green. Run full backend suite — must stay green.
-- [ ] **5.1.3** [VERIFY] `ruff check backend/` reports no new findings on
+- [x] **5.1.3** [VERIFY] `ruff check backend/` reports no new findings on
   touched/created files (`routers/calendar.py`, `main.py`, `conftest.py`,
   `test_calendar.py`, and every file touched in Phases 0-4). Pre-existing
   findings are untouched debt — do not fix them here.

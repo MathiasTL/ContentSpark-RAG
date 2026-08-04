@@ -147,3 +147,21 @@ def patch_profile_service(monkeypatch):
     for name in fakes.__dict__:
         monkeypatch.setattr(ps_module.profile_service, name, getattr(fakes, name))
     return fakes
+
+
+@pytest.fixture
+def patch_calendar_service(monkeypatch):
+    """Reemplaza los metodos de calendar_service por AsyncMocks para tests de router."""
+    from app.services import calendar_service as cal_module
+
+    fakes = SimpleNamespace(
+        generate_calendar=AsyncMock(),
+        list_calendars=AsyncMock(return_value=[]),
+        get_calendar=AsyncMock(),
+        update_entry=AsyncMock(),
+        confirm_calendar=AsyncMock(),
+        delete_calendar=AsyncMock(),
+    )
+    for name in fakes.__dict__:
+        monkeypatch.setattr(cal_module.calendar_service, name, getattr(fakes, name))
+    return fakes
