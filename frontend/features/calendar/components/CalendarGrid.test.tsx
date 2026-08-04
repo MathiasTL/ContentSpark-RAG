@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import CalendarView from "../CalendarView";
 import { useCalendarStore } from "../store/calendarStore";
 import CalendarGrid from "./CalendarGrid";
 
@@ -140,5 +141,29 @@ describe("CalendarGrid — edición", () => {
     fireEvent.click(screen.getByRole("button", { name: /editar ig: reel matutino/i }));
 
     expect(onEditEntry).toHaveBeenCalledWith("e1");
+  });
+
+  it("clic en un chip de entry abre el EntryEditModal real cuando se compone en CalendarView", () => {
+    resetStore({
+      currentCalendar: {
+        id: "c1",
+        name: null,
+        start_date: "2026-08-01",
+        end_date: "2026-08-31",
+        frequency: 3,
+        status: "draft",
+        entries: [fakeEntry as never],
+      },
+    });
+
+    render(<CalendarView />);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /editar ig: reel matutino/i }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByLabelText(/título/i)).toHaveValue(fakeEntry.title);
   });
 });

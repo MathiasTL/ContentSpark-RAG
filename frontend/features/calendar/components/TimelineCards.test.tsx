@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import CalendarView from "../CalendarView";
 import { useCalendarStore } from "../store/calendarStore";
 import TimelineCards from "./TimelineCards";
 
@@ -110,5 +111,19 @@ describe("TimelineCards — edición", () => {
     fireEvent.click(screen.getByRole("button", { name: /más opciones/i }));
 
     expect(onEditEntry).toHaveBeenCalledWith("e1");
+  });
+
+  it('el botón "más opciones" abre el EntryEditModal real cuando se compone en CalendarView', () => {
+    resetStore([withinWindowEntry]);
+
+    render(<CalendarView />);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /más opciones/i }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByLabelText(/título/i)).toHaveValue(withinWindowEntry.title);
   });
 });

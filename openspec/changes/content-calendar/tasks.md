@@ -484,7 +484,7 @@ Depends on Phase 7 (`useCalendarGeneration`). Net-new UI, ~180 lines, Med
 risk — not split further.
 
 ### 9.1 `GenerateControl.tsx`
-- [ ] **9.1.1** [RED] Create
+- [x] **9.1.1** [RED] Create
   `frontend/features/calendar/components/GenerateControl.test.tsx` with
   failing tests: renders a period select (3 options), frequency input,
   per-format count inputs (or a "use recommended" toggle); submitting with
@@ -494,7 +494,7 @@ risk — not split further.
   `isGenerating` is true.
   Spec: content-calendar-ui / Generation Configuration Control (both
   scenarios).
-- [ ] **9.1.2** [GREEN] Create
+- [x] **9.1.2** [GREEN] Create
   `frontend/features/calendar/components/GenerateControl.tsx`
   (glassmorphism, Inter): period select, frequency input, per-format count
   inputs, submit button calling `useCalendarGeneration`'s submit. Run 9.1.1
@@ -512,7 +512,7 @@ exist as stubbed callbacks). Net-new UI, ~190 lines, Med risk — not split
 further.
 
 ### 10.1 `EntryEditModal.tsx`
-- [ ] **10.1.1** [RED] Create
+- [x] **10.1.1** [RED] Create
   `frontend/features/calendar/components/EntryEditModal.test.tsx` with
   failing tests: renders a form for `title`/`hook`/`description`/`format`/
   `platform`/`status`/`time_slot` pre-filled from the target entry; submit
@@ -522,16 +522,16 @@ further.
   Spec: content-calendar-api / Entry Editing Independent of Calendar Status
   (client-side mirror); content-calendar-ui / Entry Edit Affordance (both
   scenarios).
-- [ ] **10.1.2** [GREEN] Create
+- [x] **10.1.2** [GREEN] Create
   `frontend/features/calendar/components/EntryEditModal.tsx`
   (glassmorphism, Inter). Run 10.1.1 to green.
 
 ### 10.2 Wire the modal into both trigger sites
-- [ ] **10.2.1** [RED] Extend `TimelineCards.test.tsx` and
+- [x] **10.2.1** [RED] Extend `TimelineCards.test.tsx` and
   `CalendarGrid.test.tsx` (from Phase 8) to assert the real
   `EntryEditModal` opens (not just the stubbed callback firing) when
   `onEditEntry` fires from each component.
-- [ ] **10.2.2** [GREEN] Replace the stubbed `onEditEntry` callback wiring
+- [x] **10.2.2** [GREEN] Replace the stubbed `onEditEntry` callback wiring
   in `TimelineCards.tsx` and `CalendarGrid.tsx` with the real
   `EntryEditModal` (rendered by the parent `CalendarView.tsx`, opened via
   lifted modal-open state — modal itself is a portal/overlay per
