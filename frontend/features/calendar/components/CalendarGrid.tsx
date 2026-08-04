@@ -133,6 +133,7 @@ export default function CalendarGrid({ onEditEntry }: CalendarGridProps) {
             const isoDate = toISODate(cell.date);
             const dayEntries = cell.isCurrentMonth ? entriesByDate.get(isoDate) : undefined;
             const entry = dayEntries?.[0];
+            const additionalCount = (dayEntries?.length ?? 0) - 1;
             const chipStyle = entry
               ? PLATFORM_CHIP_STYLES[entry.platform] ?? DEFAULT_CHIP_STYLE
               : undefined;
@@ -168,6 +169,18 @@ export default function CalendarGrid({ onEditEntry }: CalendarGridProps) {
                       {entry.title}
                     </p>
                   </button>
+                )}
+                {/* Ningun entry se descarta silenciosamente: cuando hay mas
+                    de una entry en el dia, la primera se renderiza como
+                    chip completo arriba y el resto queda reflejado aqui —
+                    nunca se pierden sin indicador. */}
+                {additionalCount > 0 && (
+                  <span
+                    aria-label={`${additionalCount} entradas adicionales este día`}
+                    className="mt-1 block text-[8px] font-bold text-on-surface-variant/70 sm:text-[10px]"
+                  >
+                    +{additionalCount}
+                  </span>
                 )}
               </div>
             );

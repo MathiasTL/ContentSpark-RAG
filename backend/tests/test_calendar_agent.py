@@ -220,6 +220,28 @@ def test_distribute_remainder_goes_to_first_n_weights_in_order():
     assert result == {"a": 2, "b": 1, "c": 1, "d": 1}
 
 
+def test_distribute_dedupes_duplicate_weights_sum_stays_exact():
+    """Regression: duplicate entries in `weights` (reachable via
+    profile.preferred_formats — no uniqueness constraint anywhere in the
+    stack) used to collapse in the `{f: base for f in weights}` dict
+    comprehension while `n = len(weights)` still counted the duplicate,
+    breaking the sum(result.values()) == entry_count invariant
+    (10 in, 7 out). Deduping `weights` up front keeps the invariant true
+    for ANY input, per the docstring's promise."""
+    result = _distribute(10, ["post", "post", "carousel"])
+    assert sum(result.values()) == 10
+    assert set(result.keys()) == {"post", "carousel"}
+
+
+def test_distribute_dedupe_preserves_first_seen_order_for_remainder():
+    """Dedup must preserve first-seen order so the largest-remainder split
+    stays deterministic/stable, same as the non-duplicate case."""
+    result = _distribute(7, ["post", "carousel", "post"])
+    assert sum(result.values()) == 7
+    # base=3, remainder=1 -> only "post" (first-seen) gets the extra
+    assert result == {"post": 4, "carousel": 3}
+
+
 # --- 3a.1: receive_params -----------------------------------------------
 
 
@@ -495,6 +517,27 @@ def test_format_calendar_advances_to_next_free_day_on_collision():
         assert start <= entry["date"] <= end
     # end_date must absorb the overflow (capped, not exceeded)
     assert entries[-1]["date"] == end
+
+
+def test_format_calendar_14_in_7_days_spreads_evenly_no_single_day_overload():
+    """Regression: the old round(i*step) + used_dates collision loop
+    stopped advancing at end_date, dumping the entire remainder there
+    (1 entry/day for 6 days, then 8 entries on the last day). The
+    index-proportional placement (floor(i * total_days / n)) must instead
+    stack EVENLY: with n=14 over total_days=7, every day gets exactly
+    ceil(14/7) == 2 entries, none more."""
+    from collections import Counter
+
+    start = date(2026, 8, 3)
+    end = date(2026, 8, 9)  # 7-day period
+    ordered = [_idea("post", i) for i in range(14)]
+    entries = format_calendar(ordered, start, end)
+
+    per_day = Counter(entry["date"] for entry in entries)
+    max_per_day = max(per_day.values())
+    assert max_per_day <= 2  # ceil(14 / 7)
+    assert len(per_day) == 7  # every day in the range gets entries
+    assert all(count == 2 for count in per_day.values())
 
 
 def test_format_calendar_degenerate_one_day_period_single_entry():

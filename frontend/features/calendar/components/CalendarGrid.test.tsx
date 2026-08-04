@@ -22,7 +22,7 @@ const fakeEntry = {
   id: "e1",
   calendar_id: "c1",
   date: "2026-08-05",
-  time_slot: "09:00",
+  time_slot: "morning",
   title: "IG: Reel matutino",
   format: "short_video",
   platform: "instagram",
@@ -118,6 +118,31 @@ describe("CalendarGrid — vista semana vs mes", () => {
     expect(
       container.querySelectorAll('[data-testid^="calendar-cell-"]').length,
     ).toBeGreaterThan(7);
+  });
+});
+
+describe("CalendarGrid — multiples entries por dia", () => {
+  it("nunca descarta silenciosamente una entry: muestra la primera y un indicador +N para el resto", () => {
+    const secondEntry = { ...fakeEntry, id: "e2", title: "TikTok: reto viral" };
+    const thirdEntry = { ...fakeEntry, id: "e3", title: "YouTube: resumen semanal" };
+    resetStore({
+      currentCalendar: {
+        id: "c1",
+        name: null,
+        start_date: "2026-08-01",
+        end_date: "2026-08-31",
+        frequency: 3,
+        status: "draft",
+        entries: [fakeEntry, secondEntry, thirdEntry] as never,
+      },
+    });
+
+    render(<CalendarGrid />);
+
+    // La primera entry del día sigue siendo un chip editable normal.
+    expect(screen.getByRole("button", { name: /editar ig: reel matutino/i })).toBeInTheDocument();
+    // Las otras 2 no se pierden: quedan reflejadas en el indicador "+N".
+    expect(screen.getByText("+2")).toBeInTheDocument();
   });
 });
 

@@ -88,40 +88,64 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   updateEntry: async (entryId, partial) => {
     const calendarId = get().currentCalendar?.id;
     if (!calendarId) return;
-    const entry = await calendarApi.updateEntry(calendarId, entryId, partial);
-    set((state) =>
-      state.currentCalendar
-        ? {
-            currentCalendar: {
-              ...state.currentCalendar,
-              entries: state.currentCalendar.entries.map((e) =>
-                e.id === entry.id ? entry : e,
-              ),
-            },
-          }
-        : state,
-    );
+    set({ error: null, errorStatus: null });
+    try {
+      const entry = await calendarApi.updateEntry(calendarId, entryId, partial);
+      set((state) =>
+        state.currentCalendar
+          ? {
+              currentCalendar: {
+                ...state.currentCalendar,
+                entries: state.currentCalendar.entries.map((e) =>
+                  e.id === entry.id ? entry : e,
+                ),
+              },
+            }
+          : state,
+      );
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : "No se pudo actualizar la entrada",
+        errorStatus: err instanceof ApiError ? err.status : null,
+      });
+    }
   },
 
   confirm: async () => {
     const calendarId = get().currentCalendar?.id;
     if (!calendarId) return;
-    const updated = await calendarApi.confirmCalendar(calendarId);
-    set((state) =>
-      state.currentCalendar
-        ? {
-            currentCalendar: { ...state.currentCalendar, status: updated.status },
-            calendars: state.calendars.map((c) => (c.id === updated.id ? updated : c)),
-          }
-        : state,
-    );
+    set({ error: null, errorStatus: null });
+    try {
+      const updated = await calendarApi.confirmCalendar(calendarId);
+      set((state) =>
+        state.currentCalendar
+          ? {
+              currentCalendar: { ...state.currentCalendar, status: updated.status },
+              calendars: state.calendars.map((c) => (c.id === updated.id ? updated : c)),
+            }
+          : state,
+      );
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : "No se pudo confirmar el calendario",
+        errorStatus: err instanceof ApiError ? err.status : null,
+      });
+    }
   },
 
   remove: async (id) => {
-    await calendarApi.deleteCalendar(id);
-    set((state) => ({
-      calendars: state.calendars.filter((c) => c.id !== id),
-      currentCalendar: state.currentCalendar?.id === id ? null : state.currentCalendar,
-    }));
+    set({ error: null, errorStatus: null });
+    try {
+      await calendarApi.deleteCalendar(id);
+      set((state) => ({
+        calendars: state.calendars.filter((c) => c.id !== id),
+        currentCalendar: state.currentCalendar?.id === id ? null : state.currentCalendar,
+      }));
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : "No se pudo eliminar el calendario",
+        errorStatus: err instanceof ApiError ? err.status : null,
+      });
+    }
   },
 }));

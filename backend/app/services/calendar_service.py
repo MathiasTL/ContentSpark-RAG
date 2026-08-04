@@ -102,9 +102,19 @@ class CalendarService:
         # columna) para que este disponible antes del flush final, cuando se
         # insertan las entries via calendar_id explicito.
         if calendar_id:
-            stmt = select(ContentCalendar).where(
-                ContentCalendar.id == _to_uuid(calendar_id, "calendar_id"),
-                ContentCalendar.user_id == uid,
+            # `.with_for_update()` locks the row for the transaction: two
+            # concurrent POST /api/calendar/generate for the same
+            # calendar_id would otherwise both read status == "draft",
+            # both pass the guard below, and both delete-then-insert in
+            # independent sessions (TOCTOU race), leaving entries from two
+            # runs mixed together.
+            stmt = (
+                select(ContentCalendar)
+                .where(
+                    ContentCalendar.id == _to_uuid(calendar_id, "calendar_id"),
+                    ContentCalendar.user_id == uid,
+                )
+                .with_for_update()
             )
             result = await db.execute(stmt)
             calendar = result.scalar_one_or_none()

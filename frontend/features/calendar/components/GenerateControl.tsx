@@ -20,7 +20,7 @@ const PERIOD_LABELS: Record<string, string> = {
 const PERIOD_OPTIONS = ["current_week", "next_week", "month"] as const;
 
 export default function GenerateControl() {
-  const { draft, updateDraft, submit, isGenerating } = useCalendarGeneration();
+  const { draft, updateDraft, submit, isGenerating, error } = useCalendarGeneration();
 
   function handleFormatCountChange(format: string, rawValue: string): void {
     const count = rawValue === "" ? null : Number(rawValue);
@@ -73,7 +73,8 @@ export default function GenerateControl() {
           <input
             id="generate-frequency"
             type="number"
-            min={0}
+            min={1}
+            max={14}
             value={draft.frequency ?? ""}
             onChange={(e) =>
               updateDraft({
@@ -110,6 +111,15 @@ export default function GenerateControl() {
             })}
           </div>
         </fieldset>
+
+        {error && (
+          <p
+            role="alert"
+            className="rounded-2xl border border-red-400/40 bg-red-500/10 px-4 py-2.5 text-sm text-red-200"
+          >
+            {error}
+          </p>
+        )}
 
         <button
           type="button"

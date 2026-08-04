@@ -12,6 +12,7 @@ export default function ConfirmBar() {
   const currentCalendar = useCalendarStore((s) => s.currentCalendar);
   const confirm = useCalendarStore((s) => s.confirm);
   const remove = useCalendarStore((s) => s.remove);
+  const error = useCalendarStore((s) => s.error);
 
   if (!currentCalendar) return null;
 
@@ -24,6 +25,12 @@ export default function ConfirmBar() {
       <span className="rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary-container">
         {STATUS_LABELS[status] ?? status}
       </span>
+
+      {error && (
+        <p role="alert" className="w-full text-sm text-red-300">
+          {error}
+        </p>
+      )}
 
       <div className="flex gap-3">
         <button

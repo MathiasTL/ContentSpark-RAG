@@ -37,6 +37,22 @@ class TestCalendarGenerateRequest:
         )
         assert request.calendar_id == "33333333-3333-3333-3333-333333333333"
 
+    def test_rejects_negative_format_count(self):
+        """A negative count would otherwise reach
+        target_count = sum(formats.values()) downstream and slice weirdly."""
+        with pytest.raises(ValidationError):
+            CalendarGenerateRequest(period="month", formats={"post": -1})
+
+    def test_rejects_formats_sum_over_frequency_cap(self):
+        with pytest.raises(ValidationError):
+            CalendarGenerateRequest(period="month", formats={"post": 8, "carousel": 8})
+
+    def test_accepts_formats_sum_at_frequency_cap(self):
+        request = CalendarGenerateRequest(
+            period="month", formats={"post": 7, "carousel": 7}
+        )
+        assert sum(request.formats.values()) == 14
+
 
 class TestEntryUpdate:
     def test_accepts_partial_subset_of_fields(self):
@@ -48,6 +64,20 @@ class TestEntryUpdate:
     def test_rejects_out_of_set_status(self):
         with pytest.raises(ValidationError):
             EntryUpdate(status="archived")
+
+    def test_accepts_semantic_time_slot_labels(self):
+        for slot in ("morning", "afternoon", "evening"):
+            update = EntryUpdate(time_slot=slot)
+            assert update.time_slot == slot
+
+    def test_rejects_clock_time_string_for_time_slot(self):
+        """Regression: calendar_agent.TIME_SLOTS are semantic labels
+        ("morning"/"afternoon"/"evening"), never clock times. A native
+        `<input type="time">` bound to this field used to be able to save
+        "09:00" straight into the column, producing mixed formats in the
+        same table. The Literal type must reject it at the API boundary."""
+        with pytest.raises(ValidationError):
+            EntryUpdate(time_slot="09:00")
 
 
 class TestResponseSerialization:

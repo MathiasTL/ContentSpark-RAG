@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { TIME_SLOT_HOURS, TIME_SLOT_LABELS } from "@/shared/constants";
 import type { EntryItem } from "../services/calendar-api";
 import { useCalendarStore } from "../store/calendarStore";
 
@@ -75,8 +76,16 @@ const fadeUp = {
 };
 
 function parseEntryDateTime(entry: EntryItem): Date {
-  const time = entry.time_slot ?? "00:00";
-  return new Date(`${entry.date}T${time}:00`);
+  // entry.time_slot is a semantic label ("morning"/"afternoon"/"evening"),
+  // never a clock time — map it to a representative hour via the shared
+  // constant instead of parsing the label itself as HH:MM. `new Date` on
+  // an unmapped/legacy value (or the label itself) would silently produce
+  // an Invalid Date, which always compares false and made the 48h window
+  // filter permanently empty.
+  const hours =
+    (entry.time_slot && TIME_SLOT_HOURS[entry.time_slot as keyof typeof TIME_SLOT_HOURS]) ??
+    "00:00";
+  return new Date(`${entry.date}T${hours}:00`);
 }
 
 function isWithinNextWindow(entry: EntryItem, now: Date, windowHours: number): boolean {
@@ -88,7 +97,12 @@ function isWithinNextWindow(entry: EntryItem, now: Date, windowHours: number): b
 function formatScheduledAt(entry: EntryItem): string {
   const parsed = new Date(`${entry.date}T00:00:00`);
   const weekday = DAYS_OF_WEEK[parsed.getDay()];
-  return entry.time_slot ? `${weekday}, ${entry.time_slot}` : weekday;
+  // Se muestra la etiqueta traducida, nunca el identificador crudo del
+  // backend ("morning"), que no es copy de interfaz.
+  const slotLabel =
+    entry.time_slot &&
+    TIME_SLOT_LABELS[entry.time_slot as keyof typeof TIME_SLOT_LABELS];
+  return slotLabel ? `${weekday}, ${slotLabel}` : weekday;
 }
 
 export default function TimelineCards({ onEditEntry }: TimelineCardsProps) {

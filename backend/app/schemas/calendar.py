@@ -2,12 +2,18 @@
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 FormatLiteral = Literal["short_video", "carousel", "story", "long_video", "post"]
 PlatformLiteral = Literal["tiktok", "instagram", "youtube", "linkedin", "x"]
 PeriodLiteral = Literal["current_week", "next_week", "month"]
 EntryStatusLiteral = Literal["idea", "drafted", "recorded", "published"]
+# calendar_agent.TIME_SLOTS: etiquetas semanticas ("morning"/"afternoon"/
+# "evening"), NUNCA horas de reloj (design.md). Tipar el schema como
+# Literal cierra permanentemente la via de corrupcion en la que un
+# `PUT /entries/{id}` con un valor tipo "09:00" (proveniente de un
+# `<input type="time">`) se colaba a la columna sin validacion.
+TimeSlotLiteral = Literal["morning", "afternoon", "evening"]
 
 
 class CalendarGenerateRequest(BaseModel):
@@ -15,6 +21,22 @@ class CalendarGenerateRequest(BaseModel):
     frequency: int | None = Field(default=None, ge=1, le=14)
     formats: dict[FormatLiteral, int] | None = None
     calendar_id: str | None = None
+
+    @field_validator("formats")
+    @classmethod
+    def _validate_formats(
+        cls, value: dict[str, int] | None
+    ) -> dict[str, int] | None:
+        """Per-value ge=0 (a negative count reaches target_count = sum(...)
+        and slices weirdly downstream) and a total cap of 14, matching
+        `frequency`'s upper bound."""
+        if value is None:
+            return value
+        if any(count < 0 for count in value.values()):
+            raise ValueError("formats values must be >= 0")
+        if sum(value.values()) > 14:
+            raise ValueError("sum(formats.values()) must be <= 14")
+        return value
 
 
 class EntryUpdate(BaseModel):
@@ -24,7 +46,7 @@ class EntryUpdate(BaseModel):
     format: FormatLiteral | None = None
     platform: PlatformLiteral | None = None
     status: EntryStatusLiteral | None = None
-    time_slot: str | None = None
+    time_slot: TimeSlotLiteral | None = None
 
 
 class EntryResponse(BaseModel):
@@ -32,7 +54,7 @@ class EntryResponse(BaseModel):
     id: str
     calendar_id: str
     date: date
-    time_slot: str | None = None
+    time_slot: TimeSlotLiteral | None = None
     title: str
     format: str
     platform: str

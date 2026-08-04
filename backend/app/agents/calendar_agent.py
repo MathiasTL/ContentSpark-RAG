@@ -109,12 +109,18 @@ def _entry_count(frequency: int, start_date: date, end_date: date) -> int:
 
 
 def _distribute(entry_count: int, weights: list[str]) -> dict[str, int]:
-    """Reparto por resto mayor: sum(result.values()) == entry_count siempre."""
-    n = len(weights)
+    """Reparto por resto mayor: sum(result.values()) == entry_count siempre,
+    para CUALQUIER input. `weights` se deduplica primero (orden de primera
+    aparicion) — de lo contrario un duplicado colapsaria en el dict
+    comprehension mientras `n` seguiria contando la entrada repetida,
+    rompiendo la invariante (bug reproducido con preferred_formats
+    duplicados, p.ej. ["post", "post", "carousel"])."""
+    deduped = list(dict.fromkeys(weights))
+    n = len(deduped)
     base, remainder = divmod(entry_count, n)
-    counts = {f: base for f in weights}
+    counts = {f: base for f in deduped}
     # Reparte el resto a los primeros `remainder` formatos (orden estable)
-    for f in weights[:remainder]:
+    for f in deduped[:remainder]:
         counts[f] += 1
     return counts
 
@@ -185,22 +191,30 @@ def format_calendar(
     ordered_ideas: list[dict], start_date: date, end_date: date
 ) -> list[dict]:
     """Asigna date/time_slot a cada idea ya optimizada, dentro de
-    [start_date, end_date] inclusive. Avanza al siguiente día libre en caso
-    de colisión, topando en end_date."""
+    [start_date, end_date] inclusive.
+
+    Placement index-proporcional: target = start_date + floor(i * total_days
+    / n). Esto reemplaza el viejo esquema round(i*step) + colision-hasta-
+    end_date, que topaba en end_date y apilaba TODO el sobrante ahi (p.ej.
+    14 ideas en un rango de 7 dias ponia 8 entries el ultimo dia). La formula
+    index-proporcional:
+      - siempre cae dentro de [start_date, end_date] (0 <= floor(...) <
+        total_days para todo i < n);
+      - produce fechas estrictamente crecientes sin colisiones cuando
+        n <= total_days;
+      - cuando n > total_days, reparte el exceso EVENLY entre los dias en
+        vez de amontonarlo al final (ningun dia recibe mas de
+        ceil(n / total_days) entries)."""
     n = len(ordered_ideas)
     if n == 0:
         # Inalcanzable en producción (generate_ideas siempre rellena hasta
         # entry_count con plantillas), pero no debe ser un crash si ocurriera.
         return []
     total_days = (end_date - start_date).days + 1
-    step = total_days / n
     entries = []
-    used_dates: set[date] = set()
     for i, idea in enumerate(ordered_ideas):
-        target = start_date + timedelta(days=round(i * step))
-        while target in used_dates and target < end_date:
-            target += timedelta(days=1)
-        used_dates.add(target)
+        offset = (i * total_days) // n
+        target = start_date + timedelta(days=offset)
         entries.append(
             {
                 **idea,

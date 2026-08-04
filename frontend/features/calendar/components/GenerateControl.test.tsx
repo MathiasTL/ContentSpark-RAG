@@ -39,6 +39,14 @@ describe("GenerateControl — controles", () => {
     expect(screen.getByLabelText(/frecuencia/i)).toBeInTheDocument();
   });
 
+  it("el input de frecuencia respeta los mismos límites que CalendarGenerateRequest.frequency (ge=1, le=14)", () => {
+    render(<GenerateControl />);
+
+    const input = screen.getByLabelText(/frecuencia/i);
+    expect(input).toHaveAttribute("min", "1");
+    expect(input).toHaveAttribute("max", "14");
+  });
+
   it("renderiza inputs de cantidad por formato", () => {
     render(<GenerateControl />);
 
@@ -78,6 +86,24 @@ describe("GenerateControl — envío", () => {
     const callArg = generateSpy.mock.calls[0][0];
     expect(callArg.frequency).toBe(4);
     expect(callArg.formats).toEqual({ short_video: 2 });
+  });
+});
+
+describe("GenerateControl — error", () => {
+  it("muestra el mensaje de error del store cuando la generación falla", () => {
+    resetStore({ error: "No se pudo generar el calendario" });
+
+    render(<GenerateControl />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "No se pudo generar el calendario",
+    );
+  });
+
+  it("no muestra ninguna alerta cuando no hay error", () => {
+    render(<GenerateControl />);
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
 

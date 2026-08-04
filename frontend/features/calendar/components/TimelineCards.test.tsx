@@ -31,7 +31,7 @@ const withinWindowEntry = {
   id: "e1",
   calendar_id: "c1",
   date: "2026-08-04",
-  time_slot: "09:00",
+  time_slot: "morning",
   title: "Estrategia de hooks para retener audiencia",
   format: "short_video",
   platform: "instagram",
@@ -83,6 +83,24 @@ describe("TimelineCards — render", () => {
 
     expect(screen.queryByText(/hilo: algoritmo de tiktok/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/tutorial: edición con capcut/i)).not.toBeInTheDocument();
+  });
+
+  it("una entry con un time_slot real del backend ('morning'/'afternoon'/'evening') aparece en el timeline de 48h", () => {
+    // Regression: the backend's format_calendar assigns time_slot from the
+    // semantic TIME_SLOTS labels, never clock times. Parsing the label
+    // directly as "${date}T${time_slot}:00" used to yield an Invalid Date
+    // for every real entry, making isWithinNextWindow always false and the
+    // timeline permanently empty for any real calendar.
+    resetStore([
+      { ...withinWindowEntry, time_slot: "afternoon" },
+      { ...withinWindowEntry, id: "e3", time_slot: "evening" },
+    ]);
+
+    render(<TimelineCards />);
+
+    expect(
+      screen.getAllByText("Estrategia de hooks para retener audiencia"),
+    ).toHaveLength(2);
   });
 
   it("no renderiza ninguna entry cuando no hay calendario activo", () => {

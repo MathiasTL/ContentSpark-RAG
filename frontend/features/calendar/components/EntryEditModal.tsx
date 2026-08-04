@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FORMATS, PLATFORMS } from "@/shared/constants";
+import { FORMATS, PLATFORMS, TIME_SLOT_LABELS, TIME_SLOTS } from "@/shared/constants";
 import type { EntryItem, EntryUpdateInput } from "../services/calendar-api";
 import { useCalendarStore } from "../store/calendarStore";
 
@@ -58,6 +58,7 @@ function toFields(entry: EntryItem): EditableFields {
 
 export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) {
   const updateEntry = useCalendarStore((s) => s.updateEntry);
+  const error = useCalendarStore((s) => s.error);
   const [fields, setFields] = useState<EditableFields>(toFields(entry));
   const initial = toFields(entry);
 
@@ -73,7 +74,13 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
       }
     });
     await updateEntry(entry.id, partial);
-    onClose();
+    // updateEntry catches its own failures (calendarStore) and records them
+    // in `error` instead of throwing — read the store directly right after
+    // the await so the modal stays open and shows the message on failure,
+    // instead of closing silently.
+    if (!useCalendarStore.getState().error) {
+      onClose();
+    }
   }
 
   return (
@@ -96,6 +103,15 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
             ✕
           </button>
         </div>
+
+        {error && (
+          <p
+            role="alert"
+            className="mb-4 rounded-2xl border border-red-400/40 bg-red-500/10 px-4 py-2.5 text-sm text-red-200"
+          >
+            {error}
+          </p>
+        )}
 
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -217,13 +233,19 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
               >
                 Horario
               </label>
-              <input
+              <select
                 id="entry-time-slot"
-                type="time"
                 value={fields.time_slot}
                 onChange={(e) => updateField("time_slot", e.target.value)}
                 className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
+              >
+                <option value="">Sin definir</option>
+                {TIME_SLOTS.map((slot) => (
+                  <option key={slot} value={slot}>
+                    {TIME_SLOT_LABELS[slot]}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

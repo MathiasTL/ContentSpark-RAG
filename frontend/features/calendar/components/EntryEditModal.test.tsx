@@ -8,7 +8,7 @@ const entry: EntryItem = {
   id: "e1",
   calendar_id: "c1",
   date: "2026-08-05",
-  time_slot: "09:00",
+  time_slot: "morning",
   title: "IG: Reel matutino",
   format: "short_video",
   platform: "instagram",
@@ -56,7 +56,7 @@ describe("EntryEditModal — formulario pre-rellenado", () => {
     expect(screen.getByLabelText(/formato/i)).toHaveValue("short_video");
     expect(screen.getByLabelText(/plataforma/i)).toHaveValue("instagram");
     expect(screen.getByLabelText(/estado/i)).toHaveValue("idea");
-    expect(screen.getByLabelText(/horario/i)).toHaveValue("09:00");
+    expect(screen.getByLabelText(/horario/i)).toHaveValue("morning");
   });
 });
 

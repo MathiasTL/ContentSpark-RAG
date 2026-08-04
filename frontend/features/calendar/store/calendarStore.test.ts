@@ -161,6 +161,21 @@ describe('updateEntry', () => {
     const state = useCalendarStore.getState();
     expect(state.currentCalendar?.entries[0]).toEqual(updatedEntry);
   });
+
+  it('setea error (no revienta / no unhandled rejection) cuando updateEntry falla', async () => {
+    useCalendarStore.setState({ currentCalendar: fakeCalendarDetail });
+    vi.spyOn(calendarApi, 'updateEntry').mockRejectedValue(new ApiError(500, 'boom'));
+
+    await expect(
+      useCalendarStore.getState().updateEntry('e1', { title: 'x' }),
+    ).resolves.not.toThrow();
+
+    const state = useCalendarStore.getState();
+    expect(state.error).toBeTruthy();
+    expect(state.errorStatus).toBe(500);
+    // La entry local no se toca en el fallo.
+    expect(state.currentCalendar?.entries[0]).toEqual(fakeEntry);
+  });
 });
 
 describe('confirm', () => {
@@ -179,6 +194,21 @@ describe('confirm', () => {
     expect(state.currentCalendar?.status).toBe('confirmed');
     expect(state.calendars[0].status).toBe('confirmed');
   });
+
+  it('setea error (no revienta) cuando confirmCalendar falla', async () => {
+    useCalendarStore.setState({
+      currentCalendar: fakeCalendarDetail,
+      calendars: [fakeCalendarItem],
+    });
+    vi.spyOn(calendarApi, 'confirmCalendar').mockRejectedValue(new ApiError(409, 'boom'));
+
+    await expect(useCalendarStore.getState().confirm()).resolves.not.toThrow();
+
+    const state = useCalendarStore.getState();
+    expect(state.error).toBeTruthy();
+    expect(state.errorStatus).toBe(409);
+    expect(state.currentCalendar?.status).toBe('draft');
+  });
 });
 
 describe('remove', () => {
@@ -195,6 +225,22 @@ describe('remove', () => {
     const state = useCalendarStore.getState();
     expect(state.calendars).toEqual([]);
     expect(state.currentCalendar).toBeNull();
+  });
+
+  it('setea error (no revienta) cuando deleteCalendar falla', async () => {
+    useCalendarStore.setState({
+      calendars: [fakeCalendarItem],
+      currentCalendar: fakeCalendarDetail,
+    });
+    vi.spyOn(calendarApi, 'deleteCalendar').mockRejectedValue(new ApiError(409, 'boom'));
+
+    await expect(useCalendarStore.getState().remove('c1')).resolves.not.toThrow();
+
+    const state = useCalendarStore.getState();
+    expect(state.error).toBeTruthy();
+    expect(state.errorStatus).toBe(409);
+    // No se remueve localmente en el fallo.
+    expect(state.calendars).toEqual([fakeCalendarItem]);
   });
 });
 
