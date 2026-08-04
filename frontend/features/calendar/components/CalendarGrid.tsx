@@ -1,52 +1,100 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { EntryItem } from "../services/calendar-api";
+import { useCalendarStore } from "../store/calendarStore";
 
-interface CalendarEvent {
-  day: number;
-  label: string;
-  color: string;
-  textColor: string;
-  isHighlight?: boolean;
+interface CalendarGridProps {
+  onEditEntry?: (entryId: string) => void;
 }
 
-const events: CalendarEvent[] = [
-  { day: 1, label: "IG: Morning Reel", color: "border-primary bg-primary/10", textColor: "text-primary-container" },
-  { day: 3, label: "TT: Vlog Recap", color: "border-pink-500 bg-pink-500/10", textColor: "text-pink-400" },
-  { day: 7, label: "Live Event", color: "border-primary bg-primary", textColor: "text-white", isHighlight: true },
-  { day: 10, label: "YT: Tutorial", color: "border-red-500 bg-red-500/10", textColor: "text-red-400" },
-  { day: 14, label: "IG: Carrusel", color: "border-primary bg-primary/10", textColor: "text-primary-container" },
-  { day: 18, label: "TT: Trend", color: "border-pink-500 bg-pink-500/10", textColor: "text-pink-400" },
-  { day: 22, label: "Thread X", color: "border-blue-400 bg-blue-400/10", textColor: "text-blue-400" },
-  { day: 25, label: "IG: Story Q&A", color: "border-primary bg-primary/10", textColor: "text-primary-container" },
-  { day: 28, label: "TT: Collab", color: "border-pink-500 bg-pink-500/10", textColor: "text-pink-400" },
-];
+interface GridCell {
+  date: Date;
+  isCurrentMonth: boolean;
+}
 
 const DAYS_OF_WEEK = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const MONTH_NAMES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
 
-// Octubre 2024 empieza en martes (índice 2)
-const FIRST_DAY_OFFSET = 2;
-const DAYS_IN_MONTH = 31;
-const PREV_MONTH_DAYS = [29, 30]; // Últimos días del mes anterior
+const PLATFORM_CHIP_STYLES: Record<string, { color: string; textColor: string }> = {
+  instagram: { color: "border-primary bg-primary/10", textColor: "text-primary-container" },
+  tiktok: { color: "border-pink-500 bg-pink-500/10", textColor: "text-pink-400" },
+  youtube: { color: "border-red-500 bg-red-500/10", textColor: "text-red-400" },
+  x: { color: "border-blue-400 bg-blue-400/10", textColor: "text-blue-400" },
+  linkedin: { color: "border-sky-500 bg-sky-500/10", textColor: "text-sky-400" },
+};
+const DEFAULT_CHIP_STYLE = {
+  color: "border-white/20 bg-surface-container-lowest/10",
+  textColor: "text-on-surface-variant",
+};
 
-export default function CalendarGrid() {
-  const cells: { day: number; isCurrentMonth: boolean }[] = [];
+function toISODate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
-  // Días del mes anterior
-  PREV_MONTH_DAYS.forEach((d) => cells.push({ day: d, isCurrentMonth: false }));
+function getMonthCells(anchor: Date): GridCell[] {
+  const year = anchor.getFullYear();
+  const month = anchor.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const leadingOffset = new Date(year, month, 1).getDay();
 
-  // Días del mes actual
-  for (let d = 1; d <= DAYS_IN_MONTH; d++) {
-    cells.push({ day: d, isCurrentMonth: true });
+  const cells: GridCell[] = [];
+  for (let i = leadingOffset; i > 0; i--) {
+    cells.push({ date: new Date(year, month, 1 - i), isCurrentMonth: false });
   }
-
-  // Completar última fila
-  const remaining = 7 - (cells.length % 7);
-  if (remaining < 7) {
-    for (let d = 1; d <= remaining; d++) {
-      cells.push({ day: d, isCurrentMonth: false });
-    }
+  for (let day = 1; day <= daysInMonth; day++) {
+    cells.push({ date: new Date(year, month, day), isCurrentMonth: true });
   }
+  const trailing = (7 - (cells.length % 7)) % 7;
+  for (let day = 1; day <= trailing; day++) {
+    cells.push({ date: new Date(year, month + 1, day), isCurrentMonth: false });
+  }
+  return cells;
+}
+
+function getWeekCells(anchor: Date): GridCell[] {
+  const weekStart = new Date(anchor);
+  weekStart.setDate(anchor.getDate() - anchor.getDay());
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + i);
+    return { date, isCurrentMonth: date.getMonth() === anchor.getMonth() };
+  });
+}
+
+export default function CalendarGrid({ onEditEntry }: CalendarGridProps) {
+  const currentCalendar = useCalendarStore((s) => s.currentCalendar);
+  const viewMode = useCalendarStore((s) => s.viewMode);
+
+  const anchor = currentCalendar?.start_date
+    ? new Date(`${currentCalendar.start_date}T00:00:00`)
+    : new Date();
+
+  const cells = viewMode === "week" ? getWeekCells(anchor) : getMonthCells(anchor);
+  const headerLabel = `${MONTH_NAMES[anchor.getMonth()]} ${anchor.getFullYear()}`;
+
+  const entriesByDate = new Map<string, EntryItem[]>();
+  (currentCalendar?.entries ?? []).forEach((entry) => {
+    const list = entriesByDate.get(entry.date) ?? [];
+    list.push(entry);
+    entriesByDate.set(entry.date, list);
+  });
 
   return (
     <motion.section
@@ -60,7 +108,9 @@ export default function CalendarGrid() {
         <h2 className="text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">
           Calendario completo
         </h2>
-        <span className="text-base font-light text-on-surface-variant sm:text-lg">Octubre 2024</span>
+        <span className="text-base font-light text-on-surface-variant sm:text-lg">
+          {headerLabel}
+        </span>
       </div>
 
       {/* Grid del calendario */}
@@ -79,42 +129,45 @@ export default function CalendarGrid() {
 
         {/* Celdas del calendario */}
         <div className="grid grid-cols-7 gap-px bg-surface-container-lowest/5">
-          {cells.map((cell, idx) => {
-            const event = cell.isCurrentMonth
-              ? events.find((e) => e.day === cell.day)
+          {cells.map((cell) => {
+            const isoDate = toISODate(cell.date);
+            const dayEntries = cell.isCurrentMonth ? entriesByDate.get(isoDate) : undefined;
+            const entry = dayEntries?.[0];
+            const chipStyle = entry
+              ? PLATFORM_CHIP_STYLES[entry.platform] ?? DEFAULT_CHIP_STYLE
               : undefined;
 
             return (
               <div
-                key={idx}
+                key={isoDate}
+                data-testid={`calendar-cell-${isoDate}`}
                 className={`min-h-[80px] p-2 transition-colors sm:min-h-[120px] sm:p-3 lg:min-h-[130px] lg:p-4 ${
                   cell.isCurrentMonth
                     ? "bg-surface-container-lowest/[0.02] hover:bg-surface-container-lowest/[0.06]"
                     : "bg-surface-container-lowest/[0.01] opacity-30"
-                } ${event?.isHighlight ? "relative" : ""}`}
+                }`}
               >
                 <span
                   className={`text-xs font-bold sm:text-sm ${
                     cell.isCurrentMonth ? "text-on-surface-variant" : "text-on-surface-variant/60"
                   }`}
                 >
-                  {cell.day}
+                  {cell.date.getDate()}
                 </span>
 
-                {event && (
-                  <div
-                    className={`mt-2 rounded-lg border-l-[3px] p-1.5 shadow-sm sm:mt-3 sm:rounded-xl sm:p-2 ${event.color} ${
-                      event.isHighlight
-                        ? "text-center shadow-xl"
-                        : ""
-                    }`}
+                {entry && chipStyle && (
+                  <button
+                    type="button"
+                    onClick={() => onEditEntry?.(entry.id)}
+                    aria-label={`Editar ${entry.title}`}
+                    className={`mt-2 block w-full rounded-lg border-l-[3px] p-1.5 text-left shadow-sm transition-transform hover:scale-[1.02] sm:mt-3 sm:rounded-xl sm:p-2 ${chipStyle.color}`}
                   >
                     <p
-                      className={`truncate text-[8px] font-bold uppercase tracking-tight sm:text-[10px] sm:tracking-tighter ${event.textColor}`}
+                      className={`truncate text-[8px] font-bold uppercase tracking-tight sm:text-[10px] sm:tracking-tighter ${chipStyle.textColor}`}
                     >
-                      {event.label}
+                      {entry.title}
                     </p>
-                  </div>
+                  </button>
                 )}
               </div>
             );

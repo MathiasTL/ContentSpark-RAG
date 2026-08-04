@@ -436,7 +436,7 @@ Depends on Phase 7. Split into 8a (`TimelineCards`) and 8b (`CalendarGrid`,
 HIGH-risk flag.
 
 ### 8a — `TimelineCards.tsx`
-- [ ] **8a.1** [RED] Create/extend
+- [x] **8a.1** [RED] Create/extend
   `frontend/features/calendar/components/TimelineCards.test.tsx` with
   failing tests (`@testing-library/react`, mocked `calendarStore` state):
   renders exactly `currentCalendar.entries` filtered to the next 48h, no
@@ -447,7 +447,7 @@ HIGH-risk flag.
   modal in 10.2).
   Spec: content-calendar-ui / Real-Data Rendering Replaces Mocks (timeline
   scenario).
-- [ ] **8a.2** [GREEN] Edit
+- [x] **8a.2** [GREEN] Edit
   `frontend/features/calendar/components/TimelineCards.tsx`: remove
   `sampleCards`, render `currentCalendar.entries` filtered to the next 48h
   via `calendarStore`, wire the `⋮` button to an `onEditEntry(entryId)` prop
@@ -455,7 +455,7 @@ HIGH-risk flag.
   8a.1 to green.
 
 ### 8b — `CalendarGrid.tsx`
-- [ ] **8b.1** [RED] Create/extend
+- [x] **8b.1** [RED] Create/extend
   `frontend/features/calendar/components/CalendarGrid.test.tsx` with
   failing tests: no hardcoded `events`/`"Octubre 2024"`/`FIRST_DAY_OFFSET`
   remain; grid derives its displayed dates from
@@ -466,7 +466,7 @@ HIGH-risk flag.
   stubbed-callback pattern as 8a).
   Spec: content-calendar-ui / Real-Data Rendering Replaces Mocks (grid
   scenario, "never a fixed hardcoded month").
-- [ ] **8b.2** [GREEN] Edit
+- [x] **8b.2** [GREEN] Edit
   `frontend/features/calendar/components/CalendarGrid.tsx`: remove
   `events`/hardcoded month/`FIRST_DAY_OFFSET`, derive the grid from
   `currentCalendar.start_date`/`end_date` and `calendarStore.viewMode`, wire
