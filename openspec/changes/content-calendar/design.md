@@ -356,17 +356,42 @@ class GeneratedIdeasList(BaseModel):
 Call shape (new territory — no prior `with_structured_output` usage in
 `llm_services.py:21-25`):
 ```python
-structured_llm = llm_service.llm.with_structured_output(GeneratedIdeasList)
+structured_llm = llm_service.llm.with_structured_output(
+    GeneratedIdeasList, method="json_mode"
+)
 result: GeneratedIdeasList = await structured_llm.ainvoke(messages)
 ```
+
+> **REVISED by the Phase 0 spike (2026-08-03).** The original design assumed
+> the default tool-calling path and an `OutputParserException`-family failure.
+> Measured against the real Groq `llama-3.1-8b-instant` endpoint:
+>
+> | Arm | Method | Schema-conformant | Failure exception |
+> |-----|--------|-------------------|-------------------|
+> | A | default (tool calling) | 7/10 | `groq.BadRequestError` (`code: tool_use_failed`, HTTP 400 from `groq/_base_client.py`) |
+> | B | `method="json_mode"` | 10/10 | none observed in 10 runs |
+>
+> Two corrections are binding on task 4b.2:
+> 1. Use `method="json_mode"`. The default tool-calling path fails ~30% of the
+>    time, and LangChain does **not** wrap the provider error — `groq.BadRequestError`
+>    propagates raw through `ChatGroq._generate`.
+> 2. `json_mode` does not transmit a tool schema, so the prompt must contain the
+>    literal word "JSON" and an inlined description of the expected shape.
+>
+> Repair-retry (tier 2) recovered non-deterministically under Arm A and was never
+> exercised under Arm B. Treat it as best-effort, **not** as a reliability
+> guarantee — tier 3 is the only tier proven never to raise.
 
 ### Fallback / repair ladder
 
 1. **Happy path**: `result.ideas` has `sum(formats.values())` items — use as-is.
-2. **Schema/tool-call failure** (Groq/Llama-3.1-8B doesn't honor the tool
-   schema — `OutputParserException` or a LangChain validation error): retry
-   **once** with a repair prompt that appends the raw error text and
-   re-states the exact required count/format distribution.
+2. **Schema failure**: retry **once** with a repair prompt that appends the raw
+   error text and re-states the exact required count/format distribution.
+   `json_mode` guarantees syntactically valid JSON but **not** schema
+   conformance, and the failing exception family is not fully characterized, so
+   the `except` clause must catch all of `OutputParserException`, pydantic
+   `ValidationError`, and `groq.APIStatusError` (the base class of
+   `groq.BadRequestError`) rather than assuming a single family.
 3. **Repair also fails, or `len(result.ideas) < sum(formats.values())`**:
    deterministically pad the shortfall using a template built from `profile`
    alone (no LLM call):
@@ -383,6 +408,9 @@ result: GeneratedIdeasList = await structured_llm.ainvoke(messages)
    This guarantees `generate_ideas` **never raises** — the worst case is an
    entirely template-generated calendar, which is a documented degradation
    (same posture as RAG degrading to `""`), not a 500.
+   Tier 3 must emit a distinct log line each time it fires. The Phase 0 spike
+   showed padding is a routine path, not a rare one; silent padding would make
+   a degraded calendar indistinguishable from a good one.
 4. If `len(result.ideas) > sum(formats.values())`, truncate to the target
    count (drop the excess, preserving order) rather than erroring.
 
