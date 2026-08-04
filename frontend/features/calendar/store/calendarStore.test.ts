@@ -11,6 +11,7 @@ function resetStore() {
     isLoading: false,
     isGenerating: false,
     error: null,
+    errorStatus: null,
   });
 }
 
@@ -72,6 +73,7 @@ describe('loadCalendars', () => {
     const state = useCalendarStore.getState();
     expect(state.isLoading).toBe(false);
     expect(state.error).toBeTruthy();
+    expect(state.errorStatus).toBe(500);
   });
 });
 
@@ -107,7 +109,7 @@ describe('generate', () => {
     expect(state.currentCalendar).toEqual(fakeCalendarDetail);
   });
 
-  it('setea error (no revienta) en un 409 ApiError', async () => {
+  it('setea error (no revienta) en un 409 ApiError, y errorStatus queda en 409', async () => {
     const errorBody = { detail: 'Perfil incompleto', missing_fields: ['niche'] };
     vi.spyOn(calendarApi, 'generateCalendar').mockRejectedValue(
       new ApiError(409, 'generateCalendar fallo con status 409', errorBody),
@@ -120,6 +122,28 @@ describe('generate', () => {
     const state = useCalendarStore.getState();
     expect(state.isGenerating).toBe(false);
     expect(state.error).toBeTruthy();
+    expect(state.errorStatus).toBe(409);
+  });
+
+  it('errorStatus queda en null cuando el error no es un ApiError (aunque el mensaje mencione un status)', async () => {
+    vi.spyOn(calendarApi, 'generateCalendar').mockRejectedValue(
+      new Error('fallo generico con codigo 409 en el texto'),
+    );
+
+    await useCalendarStore.getState().generate({ period: 'current_week' });
+
+    const state = useCalendarStore.getState();
+    expect(state.error).toBeTruthy();
+    expect(state.errorStatus).toBeNull();
+  });
+
+  it('limpia errorStatus al iniciar una nueva llamada a generate', async () => {
+    useCalendarStore.setState({ errorStatus: 409, error: 'error previo' });
+    vi.spyOn(calendarApi, 'generateCalendar').mockResolvedValue(fakeCalendarDetail);
+
+    await useCalendarStore.getState().generate({ period: 'current_week' });
+
+    expect(useCalendarStore.getState().errorStatus).toBeNull();
   });
 });
 

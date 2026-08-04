@@ -551,7 +551,7 @@ eventually assembled here). Split into 11a (`ConfirmBar`) and 11b
 composition), per the design's HIGH-risk flag.
 
 ### 11a — `ConfirmBar.tsx`
-- [ ] **11a.1** [RED] Create
+- [x] **11a.1** [RED] Create
   `frontend/features/calendar/components/ConfirmBar.test.tsx` with failing
   tests: renders a status badge (`draft`/`confirmed`/`synced`); "Confirmar
   calendario" button calls `calendarStore.confirm`, disabled when status is
@@ -560,12 +560,12 @@ composition), per the design's HIGH-risk flag.
   Spec: content-calendar-api / Calendar Status Lifecycle (confirm client
   mirror), Calendar Deletion Rules (delete-disabled-on-synced client
   mirror).
-- [ ] **11a.2** [GREEN] Create
+- [x] **11a.2** [GREEN] Create
   `frontend/features/calendar/components/ConfirmBar.tsx` (glassmorphism,
   Inter). Run 11a.1 to green.
 
 ### 11b — `CalendarEmptyState.tsx` + `proxy.ts` comment + `CalendarView.tsx` composition
-- [ ] **11b.1** [RED] Create
+- [x] **11b.1** [RED] Create
   `frontend/features/calendar/components/CalendarEmptyState.test.tsx` with
   failing tests: renders when `calendars.length === 0`; renders when the
   last `generate()` call resolved a `409`; CTA button links to
@@ -580,7 +580,7 @@ composition), per the design's HIGH-risk flag.
   `/onboarding`.
   Spec: content-calendar-ui / Calendar Page Accessible Without a Complete
   Profile, Empty State with Onboarding CTA (all 3 scenarios).
-- [ ] **11b.2** [GREEN] Create
+- [x] **11b.2** [GREEN] Create
   `frontend/features/calendar/components/CalendarEmptyState.tsx`
   (glassmorphism, Inter, CTA linking to `/onboarding`). Edit
   `frontend/features/calendar/CalendarView.tsx`: load calendars on mount,

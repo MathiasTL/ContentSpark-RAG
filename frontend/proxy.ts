@@ -67,6 +67,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Soft gate deliberado (content-calendar-ui / Calendar Page Accessible
+  // Without a Complete Profile, design.md:579-582): /calendar se mantiene
+  // alcanzable con perfil incompleto. La UI del propio calendario
+  // (CalendarEmptyState) es la que muestra el CTA a /onboarding, no este
+  // proxy — por eso NO se agrega /calendar a la redireccion de abajo.
   const allowWithoutOnboarding = pathname.startsWith("/calendar");
 
   if (

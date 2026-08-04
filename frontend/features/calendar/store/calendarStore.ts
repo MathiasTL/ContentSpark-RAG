@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { ApiError } from "@/shared/lib/api-fetch";
 import type {
   CalendarDetail,
   CalendarItem,
@@ -14,6 +15,13 @@ export interface CalendarState {
   isLoading: boolean;
   isGenerating: boolean;
   error: string | null;
+  // Codigo de status HTTP del ultimo error, cuando proviene de un
+  // ApiError (ver shared/lib/api-fetch). Null si no hubo error o si el
+  // error no trajo un status tipado. Usado para distinguir el rechazo
+  // 409 del soft gate (content-calendar-ui / Empty State with
+  // Onboarding CTA) de cualquier otro error sin depender de un match de
+  // substring sobre el mensaje.
+  errorStatus: number | null;
 
   setViewMode: (mode: "month" | "week") => void;
   loadCalendars: () => Promise<void>;
@@ -31,11 +39,12 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   isLoading: false,
   isGenerating: false,
   error: null,
+  errorStatus: null,
 
   setViewMode: (mode) => set({ viewMode: mode }),
 
   loadCalendars: async () => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, errorStatus: null });
     try {
       const calendars = await calendarApi.getCalendars();
       set({ calendars, isLoading: false });
@@ -43,12 +52,13 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
       set({
         isLoading: false,
         error: err instanceof Error ? err.message : "No se pudieron cargar los calendarios",
+        errorStatus: err instanceof ApiError ? err.status : null,
       });
     }
   },
 
   loadCalendar: async (id) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, errorStatus: null });
     try {
       const currentCalendar = await calendarApi.getCalendar(id);
       set({ currentCalendar, isLoading: false });
@@ -56,12 +66,13 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
       set({
         isLoading: false,
         error: err instanceof Error ? err.message : "No se pudo cargar el calendario",
+        errorStatus: err instanceof ApiError ? err.status : null,
       });
     }
   },
 
   generate: async (input) => {
-    set({ isGenerating: true, error: null });
+    set({ isGenerating: true, error: null, errorStatus: null });
     try {
       const currentCalendar = await calendarApi.generateCalendar(input);
       set({ currentCalendar, isGenerating: false });
@@ -69,6 +80,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
       set({
         isGenerating: false,
         error: err instanceof Error ? err.message : "No se pudo generar el calendario",
+        errorStatus: err instanceof ApiError ? err.status : null,
       });
     }
   },
