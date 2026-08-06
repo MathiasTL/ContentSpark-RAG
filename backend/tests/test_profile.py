@@ -18,6 +18,7 @@ def _fake_profile(**overrides):
         current_frequency=None,
         desired_frequency=None,
         preferred_formats=[],
+        timezone=None,
         social_accounts=[],
     )
     base.update(overrides)
@@ -340,3 +341,55 @@ def test_get_status_returns_completion_shape(client, patch_profile_service):
 def test_get_status_without_token_returns_401(client):
     response = client.get("/api/profile/status")
     assert response.status_code == 401
+
+
+# --- timezone: schema validation + round-trip ------------------------------
+
+
+def test_put_profile_invalid_timezone_returns_422_and_does_not_persist(
+    client, patch_profile_service
+):
+    response = client.put(
+        "/api/profile",
+        headers={"Authorization": "Bearer valid"},
+        json={"timezone": "Mars/Olympus_Mons"},
+    )
+
+    assert response.status_code == 422
+    patch_profile_service.update_profile.assert_not_awaited()
+
+
+def test_put_profile_valid_timezone_round_trips_through_get(
+    client, patch_profile_service
+):
+    updated = _fake_profile(timezone="America/Argentina/Buenos_Aires")
+    patch_profile_service.update_profile.return_value = updated
+
+    put_response = client.put(
+        "/api/profile",
+        headers={"Authorization": "Bearer valid"},
+        json={"timezone": "America/Argentina/Buenos_Aires"},
+    )
+
+    assert put_response.status_code == 200
+    assert put_response.json()["timezone"] == "America/Argentina/Buenos_Aires"
+
+    patch_profile_service.get_or_create_profile.return_value = updated
+    get_response = client.get(
+        "/api/profile", headers={"Authorization": "Bearer valid"}
+    )
+    assert get_response.status_code == 200
+    assert get_response.json()["timezone"] == "America/Argentina/Buenos_Aires"
+
+
+def test_get_profile_with_no_stored_timezone_returns_null(
+    client, patch_profile_service
+):
+    patch_profile_service.get_or_create_profile.return_value = _fake_profile()
+
+    response = client.get(
+        "/api/profile", headers={"Authorization": "Bearer valid"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["timezone"] is None

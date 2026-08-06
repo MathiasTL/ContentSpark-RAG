@@ -30,6 +30,7 @@ class CreatorProfile(Base, TimestampMixin):
     current_frequency: Mapped[str | None] = mapped_column(String(50), nullable=True)
     desired_frequency: Mapped[str | None] = mapped_column(String(50), nullable=True)
     preferred_formats: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     # Relaciones
     user: Mapped["User"] = relationship(back_populates="profile")

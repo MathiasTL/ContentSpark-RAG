@@ -2,7 +2,7 @@
 nodes/helpers: the 4 deterministic nodes (receive_params, analyze_profile,
 optimize_distribution, format_calendar), `query_rag`, and `generate_ideas`
 (LLM/Qdrant fully mocked — zero network calls anywhere in this file)."""
-from datetime import date
+from datetime import UTC, date, datetime
 from itertools import pairwise
 from typing import get_type_hints
 from unittest.mock import AsyncMock
@@ -23,8 +23,10 @@ from app.agents.calendar_agent import (
     GeneratedIdeasList,
     _distribute,
     _entry_count,
+    _period_bounds,
     _resolve_period,
     _template_idea,
+    _today_in,
     analyze_profile,
     calendar_app,
     format_calendar,
@@ -89,69 +91,41 @@ def test_calendar_state_accepts_dict_literal():
     assert state["is_optimized"] is False
 
 
-# --- 3a.1: _resolve_period -------------------------------------------------
+# --- 1.1: _period_bounds / _today_in / _resolve_period ----------------------
 
 
-def test_resolve_period_current_week(monkeypatch):
+def test_period_bounds_current_week():
     """current_week resolves to the Monday..Sunday containing today."""
-    fixed_today = date(2026, 8, 3)  # a Monday
-
-    class FixedDate(date):
-        @classmethod
-        def today(cls):
-            return fixed_today
-
-    monkeypatch.setattr(calendar_agent, "date", FixedDate)
-    start, end = _resolve_period("current_week")
+    today = date(2026, 8, 3)  # a Monday
+    start, end = _period_bounds("current_week", today)
     assert start == date(2026, 8, 3)
     assert end == date(2026, 8, 9)
     assert start.isoweekday() == 1
     assert end.isoweekday() == 7
 
 
-def test_resolve_period_next_week(monkeypatch):
+def test_period_bounds_next_week():
     """next_week resolves to the Monday..Sunday exactly 7 days after
     current_week's start."""
-    fixed_today = date(2026, 8, 5)  # a Wednesday
-
-    class FixedDate(date):
-        @classmethod
-        def today(cls):
-            return fixed_today
-
-    monkeypatch.setattr(calendar_agent, "date", FixedDate)
-    start, end = _resolve_period("next_week")
+    today = date(2026, 8, 5)  # a Wednesday
+    start, end = _period_bounds("next_week", today)
     assert start == date(2026, 8, 10)
     assert end == date(2026, 8, 16)
 
 
-def test_resolve_period_month_boundary_correctness(monkeypatch):
+def test_period_bounds_month_short_february():
     """month resolves to the 1st..last calendar day of today's month,
     correctly handling a short (28-day) February."""
-    fixed_today = date(2026, 2, 15)
-
-    class FixedDate(date):
-        @classmethod
-        def today(cls):
-            return fixed_today
-
-    monkeypatch.setattr(calendar_agent, "date", FixedDate)
-    start, end = _resolve_period("month")
+    today = date(2026, 2, 15)
+    start, end = _period_bounds("month", today)
     assert start == date(2026, 2, 1)
     assert end == date(2026, 2, 28)  # 2026 is not a leap year
 
 
-def test_resolve_period_month_boundary_31_day_month(monkeypatch):
+def test_period_bounds_month_31_day():
     """month correctly resolves a 31-day month's last day too."""
-    fixed_today = date(2026, 1, 10)
-
-    class FixedDate(date):
-        @classmethod
-        def today(cls):
-            return fixed_today
-
-    monkeypatch.setattr(calendar_agent, "date", FixedDate)
-    start, end = _resolve_period("month")
+    today = date(2026, 1, 10)
+    start, end = _period_bounds("month", today)
     assert start == date(2026, 1, 1)
     assert end == date(2026, 1, 31)
 
@@ -160,7 +134,36 @@ def test_resolve_period_unknown_raises():
     """Unreachable in production (PeriodLiteral-validated upstream), but
     the explicit guard must still exist."""
     with pytest.raises(ValueError):
-        _resolve_period("not_a_real_period")
+        _resolve_period("not_a_real_period", None)
+
+
+def test_today_in_none_is_utc():
+    instant = datetime(2026, 8, 3, 1, 0, tzinfo=UTC)
+    assert _today_in(None, now=instant) == date(2026, 8, 3)
+
+
+def test_today_in_applies_zone_offset():
+    """Same instant, Buenos Aires is 3h behind UTC — Monday 01:00 UTC is
+    still Sunday there."""
+    instant = datetime(2026, 8, 3, 1, 0, tzinfo=UTC)
+    assert _today_in("America/Argentina/Buenos_Aires", now=instant) == date(2026, 8, 2)
+
+
+def test_today_in_invalid_zone_falls_back_to_utc():
+    instant = datetime(2026, 8, 3, 1, 0, tzinfo=UTC)
+    assert _today_in("Mars/Olympus_Mons", now=instant) == _today_in(None, now=instant)
+
+
+def test_resolve_period_week_differs_across_utc_boundary():
+    """Exit criterion 4: the same instant resolves to two different weeks
+    depending on the creator's timezone. Monday 01:00 UTC is Sunday 22:00
+    in Buenos Aires, so Buenos Aires is still in the *previous* week."""
+    instant = datetime(2026, 8, 3, 1, 0, tzinfo=UTC)
+    bsas = _resolve_period("current_week", "America/Argentina/Buenos_Aires", now=instant)
+    utc = _resolve_period("current_week", None, now=instant)
+    assert bsas == (date(2026, 7, 27), date(2026, 8, 2))
+    assert utc == (date(2026, 8, 3), date(2026, 8, 9))
+    assert bsas != utc
 
 
 # --- 3a.1: _entry_count -----------------------------------------------------
@@ -245,15 +248,7 @@ def test_distribute_dedupe_preserves_first_seen_order_for_remainder():
 # --- 3a.1: receive_params -----------------------------------------------
 
 
-def test_receive_params_initializes_accumulators_and_computes_dates(monkeypatch):
-    fixed_today = date(2026, 8, 3)  # a Monday
-
-    class FixedDate(date):
-        @classmethod
-        def today(cls):
-            return fixed_today
-
-    monkeypatch.setattr(calendar_agent, "date", FixedDate)
+def test_receive_params_initializes_accumulators_and_computes_dates():
     state: CalendarState = {
         "user_id": "u1",
         "profile": {"niche": "fitness"},
@@ -269,12 +264,65 @@ def test_receive_params_initializes_accumulators_and_computes_dates(monkeypatch)
         "is_optimized": None,
     }
     result = receive_params(state)
-    assert result["start_date"] == date(2026, 8, 3)
-    assert result["end_date"] == date(2026, 8, 9)
+    expected_start, expected_end = _period_bounds("current_week", _today_in(None))
+    assert result["start_date"] == expected_start
+    assert result["end_date"] == expected_end
     assert result["rag_context"] == ""
     assert result["raw_ideas"] == []
     assert result["calendar_entries"] == []
     assert result["is_optimized"] is False
+
+
+def test_receive_params_uses_profile_timezone():
+    """Relational assertion (not a literal date) so it cannot flake at a
+    real-world date boundary."""
+    state: CalendarState = {
+        "user_id": "u1",
+        "profile": {"timezone": "Pacific/Kiritimati"},
+        "calendar_id": None,
+        "period": "current_week",
+        "start_date": None,
+        "end_date": None,
+        "frequency": None,
+        "formats": None,
+        "rag_context": None,
+        "raw_ideas": None,
+        "calendar_entries": None,
+        "is_optimized": None,
+    }
+    result = receive_params(state)
+    expected = _period_bounds("current_week", _today_in("Pacific/Kiritimati"))
+    assert (result["start_date"], result["end_date"]) == expected
+
+
+def test_receive_params_missing_timezone_key_resolves_utc():
+    """A pre-existing 7-key profile (no `timezone` key at all) resolves in
+    UTC, same as an explicit `None`."""
+    state: CalendarState = {
+        "user_id": "u1",
+        "profile": {
+            "niche": "fitness",
+            "sub_niche": None,
+            "primary_goal": "crecer",
+            "tone": "cercano",
+            "target_audience": "adultos",
+            "desired_frequency": None,
+            "preferred_formats": [],
+        },
+        "calendar_id": None,
+        "period": "current_week",
+        "start_date": None,
+        "end_date": None,
+        "frequency": None,
+        "formats": None,
+        "rag_context": None,
+        "raw_ideas": None,
+        "calendar_entries": None,
+        "is_optimized": None,
+    }
+    result = receive_params(state)
+    expected = _period_bounds("current_week", _today_in(None))
+    assert (result["start_date"], result["end_date"]) == expected
 
 
 # --- 3a.1: analyze_profile ----------------------------------------------

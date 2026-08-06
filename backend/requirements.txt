@@ -38,3 +38,7 @@ httpx
 # Linting
 # Pinned: Ruff's default ruleset changes between releases. See ruff.toml.
 ruff==0.16.1
+
+# Zonas horarias: zoneinfo cae a este paquete cuando la imagen de deploy
+# no trae la tzdata del sistema. Sin el, available_timezones() es vacio.
+tzdata

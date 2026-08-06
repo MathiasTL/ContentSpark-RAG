@@ -41,6 +41,7 @@ def _narrow_profile(profile: Any) -> dict:
         "target_audience": profile.target_audience,
         "desired_frequency": profile.desired_frequency,  # free text, unused for parsing
         "preferred_formats": profile.preferred_formats or [],
+        "timezone": profile.timezone,  # None => UTC en _resolve_period, no coaccionar
     }
 
 
@@ -128,13 +129,16 @@ class CalendarService:
                     detail="Solo se puede regenerar un calendario en borrador",
                 )
         else:
-            today = date.today()
+            # Marcadores: se sobrescriben en el Paso 5 con final_state
+            # ["start_date"]/["end_date"], ya resueltos en la zona horaria
+            # del creador. No usar el reloj local del servidor aqui.
+            placeholder = date.min
             calendar = ContentCalendar(
                 id=uuid.uuid4(),
                 user_id=uid,
                 status="draft",
-                start_date=today,
-                end_date=today,
+                start_date=placeholder,
+                end_date=placeholder,
                 frequency=frequency or 1,
             )
             db.add(calendar)

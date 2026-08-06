@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import calendar
 from collections import Counter, deque
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta, tzinfo
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import groq
 from langchain_core.exceptions import OutputParserException
@@ -85,9 +86,26 @@ class GeneratedIdeasList(BaseModel):
     ideas: list[GeneratedIdea]
 
 
-def _resolve_period(period: str) -> tuple[date, date]:
-    """Resuelve un PeriodLiteral al rango [start, end] inclusive."""
-    today = date.today()
+def _zone_or_utc(tz: str | None) -> tzinfo:
+    """Nunca lanza: un nombre invalido o ausente cae a UTC (defensa en
+    profundidad — la validacion real vive en el schema, design §3)."""
+    if not tz:
+        return UTC
+    try:
+        return ZoneInfo(tz)
+    except (ZoneInfoNotFoundError, ValueError):
+        return UTC
+
+
+def _today_in(tz: str | None, now: datetime | None = None) -> date:
+    """La fecha local del creador. `now` es una costura de inyeccion de
+    reloj para tests — produccion nunca la pasa."""
+    instant = now or datetime.now(UTC)
+    return instant.astimezone(_zone_or_utc(tz)).date()
+
+
+def _period_bounds(period: str, today: date) -> tuple[date, date]:
+    """Aritmetica pura de calendario: sin reloj, sin zona horaria."""
     if period == "current_week":
         start = today - timedelta(days=today.isoweekday() - 1)  # lunes
         return start, start + timedelta(days=6)  # domingo
@@ -99,6 +117,14 @@ def _resolve_period(period: str) -> tuple[date, date]:
         _, last_day = calendar.monthrange(today.year, today.month)
         return start, today.replace(day=last_day)
     raise ValueError(f"unknown period: {period}")  # unreachable — Literal-validated upstream
+
+
+def _resolve_period(
+    period: str, tz: str | None, now: datetime | None = None
+) -> tuple[date, date]:
+    """Resuelve un PeriodLiteral al rango [start, end] inclusive, en la
+    zona horaria del creador (`tz`, IANA name o None => UTC)."""
+    return _period_bounds(period, _today_in(tz, now))
 
 
 def _entry_count(frequency: int, start_date: date, end_date: date) -> int:
@@ -127,7 +153,8 @@ def _distribute(entry_count: int, weights: list[str]) -> dict[str, int]:
 
 def receive_params(state: CalendarState) -> dict:
     """Nodo puro: resuelve start_date/end_date e inicializa acumuladores."""
-    start_date, end_date = _resolve_period(state["period"])
+    profile = state.get("profile") or {}
+    start_date, end_date = _resolve_period(state["period"], profile.get("timezone"))
     return {
         "start_date": start_date,
         "end_date": end_date,

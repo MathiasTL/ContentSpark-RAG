@@ -28,13 +28,14 @@ def _fake_creator_profile(**overrides):
         "target_audience": "emprendedores",
         "desired_frequency": "3 por semana",
         "preferred_formats": ["short_video", "post"],
+        "timezone": "America/Bogota",
     }
     base.update(overrides)
     return SimpleNamespace(**base)
 
 
-def test_narrow_profile_returns_exactly_seven_keys():
-    """`_narrow_profile` expone exactamente el subconjunto de 7 campos del diseno."""
+def test_narrow_profile_returns_exactly_eight_keys():
+    """`_narrow_profile` expone exactamente el subconjunto de 8 campos del diseno."""
     profile = _fake_creator_profile()
     narrowed = _narrow_profile(profile)
     assert narrowed == {
@@ -45,6 +46,7 @@ def test_narrow_profile_returns_exactly_seven_keys():
         "target_audience": "emprendedores",
         "desired_frequency": "3 por semana",
         "preferred_formats": ["short_video", "post"],
+        "timezone": "America/Bogota",
     }
 
 
@@ -53,6 +55,14 @@ def test_narrow_profile_defaults_preferred_formats_to_empty_list():
     profile = _fake_creator_profile(preferred_formats=None)
     narrowed = _narrow_profile(profile)
     assert narrowed["preferred_formats"] == []
+
+
+def test_narrow_profile_preserves_null_timezone():
+    """`timezone` nulo NO se coacciona — `None` es un valor significativo
+    (implica UTC downstream)."""
+    profile = _fake_creator_profile(timezone=None)
+    narrowed = _narrow_profile(profile)
+    assert narrowed["timezone"] is None
 
 
 # --- list_calendars / get_calendar — ownership scoping ---------------------
