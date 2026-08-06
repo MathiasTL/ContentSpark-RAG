@@ -20,6 +20,7 @@ export interface Profile {
   current_frequency: string | null;
   desired_frequency: string | null;
   preferred_formats: string[];
+  timezone: string | null;
   social_accounts: SocialAccount[];
 }
 
@@ -39,6 +40,7 @@ export interface ProfileOnboardingInput {
   current_frequency?: string | null;
   desired_frequency?: string | null;
   preferred_formats?: string[];
+  timezone?: string | null;
   social_accounts?: SocialAccount[];
 }
 
@@ -53,6 +55,7 @@ export interface ProfileUpdateInput {
   current_frequency?: string | null;
   desired_frequency?: string | null;
   preferred_formats?: string[] | null;
+  timezone?: string | null;
 }
 
 async function ensureOk(response: Response, action: string): Promise<void> {

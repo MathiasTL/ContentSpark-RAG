@@ -25,6 +25,7 @@ const fakeProfile = {
   current_frequency: null,
   desired_frequency: null,
   preferred_formats: [],
+  timezone: null,
   social_accounts: [],
 };
 

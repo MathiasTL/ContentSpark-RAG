@@ -125,6 +125,109 @@ describe("recomendación de frecuencia", () => {
   });
 });
 
+describe("submit — timezone auto-detectada", () => {
+  it("incluye la timezone detectada por el navegador en el payload", async () => {
+    const resolvedOptionsSpy = vi
+      .spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+      .mockReturnValue({
+        timeZone: "America/Argentina/Buenos_Aires",
+      } as Intl.ResolvedDateTimeFormatOptions);
+    const submitSpy = vi
+      .spyOn(profileApi, "submitOnboarding")
+      .mockResolvedValue({
+        id: "p1",
+        user_id: "u1",
+        display_name: null,
+        bio: null,
+        niche: "tecnologia",
+        sub_niche: null,
+        primary_goal: "crecer",
+        tone: "cercano",
+        target_audience: "devs",
+        current_frequency: null,
+        desired_frequency: null,
+        preferred_formats: [],
+        timezone: "America/Argentina/Buenos_Aires",
+        social_accounts: [],
+      });
+
+    const { result } = renderHook(() => useOnboardingWizard());
+
+    act(() => {
+      result.current.updateDraft({
+        niche: "tecnologia",
+        primary_goal: "crecer",
+        tone: "cercano",
+        target_audience: "devs",
+      });
+    });
+
+    await act(async () => {
+      await result.current.submit();
+    });
+
+    expect(submitSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ timezone: "America/Argentina/Buenos_Aires" }),
+    );
+
+    resolvedOptionsSpy.mockRestore();
+  });
+
+  it("degrada a null cuando el navegador no reporta timeZone", async () => {
+    const resolvedOptionsSpy = vi
+      .spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+      .mockReturnValue({
+        timeZone: undefined,
+      } as unknown as Intl.ResolvedDateTimeFormatOptions);
+    const submitSpy = vi
+      .spyOn(profileApi, "submitOnboarding")
+      .mockResolvedValue({
+        id: "p1",
+        user_id: "u1",
+        display_name: null,
+        bio: null,
+        niche: "tecnologia",
+        sub_niche: null,
+        primary_goal: "crecer",
+        tone: "cercano",
+        target_audience: "devs",
+        current_frequency: null,
+        desired_frequency: null,
+        preferred_formats: [],
+        timezone: null,
+        social_accounts: [],
+      });
+
+    const { result } = renderHook(() => useOnboardingWizard());
+
+    act(() => {
+      result.current.updateDraft({
+        niche: "tecnologia",
+        primary_goal: "crecer",
+        tone: "cercano",
+        target_audience: "devs",
+      });
+    });
+
+    await act(async () => {
+      await result.current.submit();
+    });
+
+    expect(submitSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ timezone: null }),
+    );
+
+    resolvedOptionsSpy.mockRestore();
+  });
+
+  it("no agrega un paso nuevo al wizard ni un campo nuevo al draft", () => {
+    const { result } = renderHook(() => useOnboardingWizard());
+
+    expect(result.current.totalSteps).toBe(4);
+    expect(Object.keys(result.current.draft)).not.toContain("timezone");
+  });
+});
+
 describe("submit", () => {
   it("llama submitOnboarding una sola vez con todos los campos del draft", async () => {
     const submitSpy = vi
@@ -142,6 +245,7 @@ describe("submit", () => {
         current_frequency: null,
         desired_frequency: null,
         preferred_formats: [],
+        timezone: null,
         social_accounts: [],
       });
 

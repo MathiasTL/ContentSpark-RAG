@@ -4,3 +4,4 @@ export { useProfileStore } from "./store/profileStore";
 export type { ProfileState } from "./store/profileStore";
 export { default as ProfileView } from "./components/ProfileView";
 export { default as ProfileForm } from "./components/ProfileForm";
+export { default as TimezoneNudge } from "./components/TimezoneNudge";

@@ -107,6 +107,9 @@ export function useOnboardingWizard() {
         desired_frequency: draft.desired_frequency,
         preferred_formats: draft.preferred_formats,
         social_accounts: draft.social_accounts,
+        // Autodetectada en silencio al enviar (design.md §7.1): el wizard
+        // nunca la pide explícitamente y no agrega un paso nuevo.
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? null,
       };
       const profile = await submitOnboarding(payload);
       return profile;

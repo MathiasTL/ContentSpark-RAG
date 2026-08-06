@@ -3,6 +3,7 @@ import MobileNav from "@/shared/components/layout/MobileNav";
 import Background from "@/shared/components/ui/Background";
 import { SidebarProvider } from "@/shared/components/layout/SidebarProvider";
 import SidebarShell from "@/shared/components/layout/SidebarShell";
+import { TimezoneNudge } from "@/features/profile";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +11,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="relative h-dvh overflow-hidden">
         <Background />
         <AppSidebar />
-        <SidebarShell>{children}</SidebarShell>
+        <SidebarShell>
+          <TimezoneNudge />
+          {children}
+        </SidebarShell>
         <MobileNav />
       </div>
     </SidebarProvider>

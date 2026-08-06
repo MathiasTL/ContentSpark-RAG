@@ -246,7 +246,7 @@ explicit `tsc --noEmit` gate in Task 2.9 — Vitest passing is not sufficient
 proof this slice is done (see the `ProfileResponse` inheritance note above).
 
 ### 2.1 — `Profile`/`ProfileOnboardingInput`/`ProfileUpdateInput` types — RED
-- [ ] **2.1.1** [RED] In the relevant frontend type-test or fixture file
+- [x] **2.1.1** [RED] In the relevant frontend type-test or fixture file
   (`ProfileForm.test.tsx`'s `fakeProfile` fixture, `profileStore.test.ts`'s
   fixtures, and any onboarding fixture using `Profile`), add `timezone` to
   each fixture object matching the target shape (`timezone: string | null`
@@ -256,7 +256,7 @@ proof this slice is done (see the `ProfileResponse` inheritance note above).
   a fixture-only change; no assertion changes.
 
 ### 2.2 — `Profile`/`ProfileOnboardingInput`/`ProfileUpdateInput` types — GREEN
-- [ ] **2.2.1** [GREEN] Widen the shared `Profile` type (`timezone: string |
+- [x] **2.2.1** [GREEN] Widen the shared `Profile` type (`timezone: string |
   null`, required — matches the backend response contract, which always
   includes the key), `ProfileOnboardingInput` (`timezone?: string | null`),
   and `ProfileUpdateInput` (`timezone?: string | null`) in
@@ -266,7 +266,7 @@ proof this slice is done (see the `ProfileResponse` inheritance note above).
   check).
 
 ### 2.3 — Onboarding auto-detect — RED
-- [ ] **2.3.1** [RED] In `frontend/features/onboarding/hooks/`'s test file
+- [x] **2.3.1** [RED] In `frontend/features/onboarding/hooks/`'s test file
   for `useOnboardingWizard`, stub `Intl.DateTimeFormat` in jsdom to resolve
   `timeZone: "America/Argentina/Buenos_Aires"` and assert `submit()`'s
   payload includes `timezone: "America/Argentina/Buenos_Aires"`. Add a
@@ -277,7 +277,7 @@ proof this slice is done (see the `ProfileResponse` inheritance note above).
   timezone submission scenario, adds-no-step scenario).
 
 ### 2.4 — Onboarding auto-detect — GREEN
-- [ ] **2.4.1** [GREEN] In
+- [x] **2.4.1** [GREEN] In
   `frontend/features/onboarding/hooks/useOnboardingWizard.ts`'s `submit()`
   payload literal (lines 98-110), add one line: `timezone:
   Intl.DateTimeFormat().resolvedOptions().timeZone ?? null,`. Detected at
@@ -286,7 +286,7 @@ proof this slice is done (see the `ProfileResponse` inheritance note above).
   Spec: creator-onboarding / Multi-Step Wizard Form.
 
 ### 2.5 — Curated timezone `<select>` constant + `ProfileForm` field — RED
-- [ ] **2.5.1** [RED] Add a test for the new curated-timezone-list constant
+- [x] **2.5.1** [RED] Add a test for the new curated-timezone-list constant
   (`frontend/shared/constants/`) asserting it is a non-empty array of IANA
   names and does not itself contain `"America/Argentina/Buenos_Aires"`-style
   duplicates. Extend `ProfileForm.test.tsx`: renders a `timezone` `<select>`
@@ -302,7 +302,7 @@ proof this slice is done (see the `ProfileResponse` inheritance note above).
   clear scenarios, client-side mirror).
 
 ### 2.6 — Curated timezone `<select>` constant + `ProfileForm` field — GREEN
-- [ ] **2.6.1** [GREEN] Add the curated timezone list constant to
+- [x] **2.6.1** [GREEN] Add the curated timezone list constant to
   `frontend/shared/constants/` next to `NICHES`/`FORMATS`/`PLATFORMS`
   (Latin America, Spain, major US/EU zones, per design §7.2). In
   `ProfileForm.tsx`: add `timezone: string` to `EditableFields`; `timezone:
@@ -317,7 +317,7 @@ proof this slice is done (see the `ProfileResponse` inheritance note above).
   Spec: creator-profile / Profile Creation and Update.
 
 ### 2.7 — NULL-timezone nudge banner — RED
-- [ ] **2.7.1** [RED] Create
+- [x] **2.7.1** [RED] Create
   `frontend/features/profile/components/TimezoneNudge.test.tsx`: renders
   when the mocked profile store has `profile: {..., timezone: null}` and no
   dismissal in `localStorage`; does **not** render when `profile` is `null`
@@ -334,7 +334,7 @@ proof this slice is done (see the `ProfileResponse` inheritance note above).
   the null-vs-unloaded distinction it depends on traces to Profile Read).
 
 ### 2.8 — NULL-timezone nudge banner — GREEN
-- [ ] **2.8.1** [GREEN] Create
+- [x] **2.8.1** [GREEN] Create
   `frontend/features/profile/components/TimezoneNudge.tsx`: visibility
   condition `profile !== null && profile.timezone === null && !dismissed`;
   lazy `useState` initialiser reading `localStorage` once (SSR-safe, never
@@ -347,19 +347,19 @@ proof this slice is done (see the `ProfileResponse` inheritance note above).
   Spec: creator-profile / Profile Read.
 
 ### 2.9 — Verify (Slice 2 exit gate)
-- [ ] **2.9.1** [VERIFY] `pnpm --dir frontend test` — full green, including
+- [x] **2.9.1** [VERIFY] `pnpm --dir frontend test` — full green, including
   every new/updated suite from Tasks 2.1-2.8.
-- [ ] **2.9.2** [VERIFY] `pnpm --dir frontend exec tsc --noEmit` — clean, or
+- [x] **2.9.2** [VERIFY] `pnpm --dir frontend exec tsc --noEmit` — clean, or
   no new findings beyond documented pre-existing warnings. This is the
   **required** check for the `ProfileResponse`-inheritance trap: a green
   Vitest run alone does not prove every `Profile`-typed fixture across the
   frontend compiles against the widened type. Do not skip this task even if
   2.9.1 is green.
-- [ ] **2.9.3** [VERIFY] `pnpm --dir frontend lint` — no new findings.
-- [ ] **2.9.4** [VERIFY] `git diff frontend/app/(app)/layout.tsx` contains
+- [x] **2.9.3** [VERIFY] `pnpm --dir frontend lint` — no new findings.
+- [x] **2.9.4** [VERIFY] `git diff frontend/app/(app)/layout.tsx` contains
   only the `TimezoneNudge` mount — no unrelated changes to `SidebarShell` or
   route guards.
-- [ ] **2.9.5** [VERIFY] Manually confirm `TimelineCards.tsx:111`'s
+- [x] **2.9.5** [VERIFY] Manually confirm `TimelineCards.tsx:111`'s
   browser-local `now` is untouched (out of scope per proposal Decision 2)
   and `CalendarGrid.tsx:87`'s fallback `new Date()` is untouched (out of
   scope, normal-path anchor is server-resolved).
@@ -375,16 +375,16 @@ out-of-curated-list zone; the nudge banner correctly distinguishes
 
 ## Final verification (both slices)
 
-- [ ] **F.1** Run `mamba run -n contentspark pytest backend/tests && pnpm
+- [x] **F.1** Run `mamba run -n contentspark pytest backend/tests && pnpm
   --dir frontend test` — both green.
-- [ ] **F.2** Confirm all 10 proposal exit criteria
+- [x] **F.2** Confirm all 10 proposal exit criteria
   (`proposal.md:283-311`) are covered by at least one automated test above;
   do not add new tests here, only confirm coverage via the traceability
   table below.
-- [ ] **F.3** Confirm `REQUIRED_PROFILE_FIELDS`
+- [x] **F.3** Confirm `REQUIRED_PROFILE_FIELDS`
   (`backend/app/services/profile_service.py:13-18`) is unchanged (exit
   criterion 7) — `timezone` never blocks generation via the 409 soft gate.
-- [ ] **F.4** Confirm no `ContentEntry`/`ContentCalendar` row is
+- [x] **F.4** Confirm no `ContentEntry`/`ContentCalendar` row is
   migrated, backfilled, or rewritten by the new Alembic revision (exit
   criterion 9) — the migration is additive-column-only.
 

@@ -75,6 +75,7 @@ describe("OnboardingWizard — flujo completo", () => {
       current_frequency: null,
       desired_frequency: null,
       preferred_formats: ["short_video"],
+      timezone: null,
       social_accounts: [],
     });
 

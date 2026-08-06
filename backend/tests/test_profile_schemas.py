@@ -2,7 +2,8 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.profile import ProfileCreate, ProfileUpdate
+import app.schemas.profile as profile_schemas
+from app.schemas.profile import ProfileCreate, ProfileUpdate, _validate_timezone
 
 VALID_TZ = "America/Argentina/Buenos_Aires"
 
@@ -48,3 +49,24 @@ class TestProfileUpdateTimezone:
     def test_rejects_empty_string(self):
         with pytest.raises(ValidationError):
             ProfileUpdate(timezone="")
+
+
+class TestValidateTimezoneDegradationBranch:
+    """Covers the R3-degradation-branch-untested finding from the slice 1
+    review (backend/app/schemas/profile.py:24): when the process has no
+    tzdata at all, `_AVAILABLE_TIMEZONES` is an empty frozenset and the
+    validator must accept any string unchanged rather than raising or
+    silently becoming unreachable."""
+
+    def test_accepts_any_value_unchanged_when_available_timezones_is_empty(
+        self, monkeypatch
+    ):
+        monkeypatch.setattr(profile_schemas, "_AVAILABLE_TIMEZONES", frozenset())
+
+        assert _validate_timezone("Mars/Olympus_Mons") == "Mars/Olympus_Mons"
+        assert _validate_timezone(VALID_TZ) == VALID_TZ
+
+    def test_still_accepts_none_when_available_timezones_is_empty(self, monkeypatch):
+        monkeypatch.setattr(profile_schemas, "_AVAILABLE_TIMEZONES", frozenset())
+
+        assert _validate_timezone(None) is None

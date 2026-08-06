@@ -18,6 +18,7 @@ const fakeProfile = {
   current_frequency: "3 por semana",
   desired_frequency: "5 por semana",
   preferred_formats: ["short_video"],
+  timezone: "America/Argentina/Buenos_Aires",
   social_accounts: [],
 };
 
@@ -44,6 +45,91 @@ describe("ProfileForm — render", () => {
     expect(screen.getByLabelText(/audiencia objetivo/i)).toHaveValue(
       "devs junior",
     );
+  });
+});
+
+describe("ProfileForm — zona horaria", () => {
+  it("renderiza un select de timezone con una opción vacía 'Sin especificar'", () => {
+    render(<ProfileForm />);
+
+    const select = screen.getByLabelText(/zona horaria/i);
+    expect(select.tagName).toBe("SELECT");
+    expect(screen.getByRole("option", { name: /sin especificar/i })).toBeInTheDocument();
+  });
+
+  it("toEditable siembra el select desde profile?.timezone ?? ''", () => {
+    render(<ProfileForm />);
+
+    expect(screen.getByLabelText(/zona horaria/i)).toHaveValue(
+      "America/Argentina/Buenos_Aires",
+    );
+  });
+
+  it("incluye timezone en el diff cuando cambia", async () => {
+    const updateSpy = vi
+      .spyOn(profileApi, "updateProfile")
+      .mockResolvedValue({ ...fakeProfile, timezone: "America/Bogota" });
+
+    render(<ProfileForm />);
+
+    fireEvent.change(screen.getByLabelText(/zona horaria/i), {
+      target: { value: "America/Bogota" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /guardar/i }));
+
+    await waitFor(() => expect(updateSpy).toHaveBeenCalledTimes(1));
+    expect(updateSpy).toHaveBeenCalledWith({ timezone: "America/Bogota" });
+  });
+
+  it("antepone la zona detectada por el navegador cuando no está en la lista curada", () => {
+    const resolvedOptionsSpy = vi
+      .spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+      .mockReturnValue({
+        timeZone: "Pacific/Kiritimati",
+      } as Intl.ResolvedDateTimeFormatOptions);
+
+    useProfileStore.setState({
+      profile: { ...fakeProfile, timezone: null },
+      isLoading: false,
+      error: null,
+    });
+
+    render(<ProfileForm />);
+
+    expect(
+      screen.getByRole("option", { name: "Pacific/Kiritimati" }),
+    ).toBeInTheDocument();
+
+    resolvedOptionsSpy.mockRestore();
+  });
+
+  it("conserva la zona guardada fuera de la lista curada aunque el navegador reporte otra que sí está", () => {
+    // Caso real: el creador guardó su zona desde otro dispositivo, o viajó,
+    // o usa VPN. Si solo se antepone la zona detectada, el <select> se queda
+    // sin <option> para el valor guardado y cae a "Sin especificar",
+    // pisando en silencio la zona real al guardar.
+    const resolvedOptionsSpy = vi
+      .spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+      .mockReturnValue({
+        timeZone: "America/Bogota",
+      } as Intl.ResolvedDateTimeFormatOptions);
+
+    useProfileStore.setState({
+      profile: { ...fakeProfile, timezone: "Pacific/Kiritimati" },
+      isLoading: false,
+      error: null,
+    });
+
+    render(<ProfileForm />);
+
+    expect(
+      screen.getByRole("option", { name: "Pacific/Kiritimati" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/zona horaria/i)).toHaveValue(
+      "Pacific/Kiritimati",
+    );
+
+    resolvedOptionsSpy.mockRestore();
   });
 });
 

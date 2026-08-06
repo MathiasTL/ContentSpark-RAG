@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useProfileStore } from "../store/profileStore";
 import type { Profile, ProfileUpdateInput } from "../services/profile-api";
-import { FORMATS, NICHES } from "@/shared/constants";
+import { FORMATS, NICHES, TIMEZONES } from "@/shared/constants";
 
 const NICHE_LABELS: Record<string, string> = {
   tecnologia: "Tecnología",
@@ -35,6 +35,7 @@ interface EditableFields {
   current_frequency: string;
   desired_frequency: string;
   preferred_formats: string[];
+  timezone: string;
 }
 
 function toEditable(profile: Profile | null): EditableFields {
@@ -49,6 +50,7 @@ function toEditable(profile: Profile | null): EditableFields {
     current_frequency: profile?.current_frequency ?? "",
     desired_frequency: profile?.desired_frequency ?? "",
     preferred_formats: profile?.preferred_formats ?? [],
+    timezone: profile?.timezone ?? "",
   };
 }
 
@@ -134,6 +136,28 @@ export default function ProfileForm() {
   }
 
   const { edited } = formState;
+
+  // La zona detectada por el navegador y la que el creador ya tiene
+  // guardada se anteponen a la lista curada cuando no figuran en ella, así
+  // un creador fuera de la lista sigue viendo (y conservando) su zona real
+  // en vez de perderla en silencio (design.md §7.2/D11). La guardada es
+  // imprescindible aparte de la detectada: si difieren (otro dispositivo,
+  // VPN, viaje) y solo se antepone la detectada, el <select> se queda sin
+  // <option> para el valor guardado y cae a "Sin especificar", que es
+  // exactamente la pérdida silenciosa que la lista curada debía evitar.
+  // Calculado por render, no se muta la constante.
+  const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const timezoneOptions = [
+    ...new Set(
+      [detectedTimezone, edited.timezone].filter(
+        (tz): tz is string =>
+          typeof tz === "string" &&
+          tz.length > 0 &&
+          !TIMEZONES.includes(tz as (typeof TIMEZONES)[number]),
+      ),
+    ),
+    ...TIMEZONES,
+  ];
 
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-5">
@@ -324,6 +348,28 @@ export default function ProfileForm() {
           })}
         </div>
       </fieldset>
+
+      <div className="space-y-1.5">
+        <label
+          htmlFor="timezone"
+          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
+        >
+          Zona horaria
+        </label>
+        <select
+          id="timezone"
+          value={edited.timezone}
+          onChange={(e) => updateField("timezone", e.target.value)}
+          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+        >
+          <option value="">Sin especificar</option>
+          {timezoneOptions.map((tz) => (
+            <option key={tz} value={tz}>
+              {tz}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <button
         type="submit"
