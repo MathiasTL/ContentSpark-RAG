@@ -308,17 +308,17 @@ change works — a green build is necessary but explicitly **not** sufficient
   "verify, do not assume"; if it conflicts, the documented resolution is
   dropping `:ro` from the base entry).
   Exit criterion: 5.
-- [ ] **5.7** [VERIFY] `mamba run -n contentspark pytest backend/tests` and
+- [x] **5.7** [VERIFY] `mamba run -n contentspark pytest backend/tests` and
   `pnpm --dir frontend test` both still pass **host-native**, and `pnpm
   --dir frontend dev` still serves against `http://localhost:8000` with no
   `BACKEND_INTERNAL_URL` set (proves Task 0's fallback order is a byte-for-byte
   no-op outside a container).
   Exit criterion: 9.
-- [ ] **5.8** [VERIFY] Confirm `backend/alembic/versions/` has zero new or
+- [x] **5.8** [VERIFY] Confirm `backend/alembic/versions/` has zero new or
   modified files, and confirm no container in either compose file runs
   `alembic` in any `command`, `entrypoint`, or startup script.
   Exit criterion: 10.
-- [ ] **5.9** [VERIFY] Confirm no file under `.github/workflows/`, no
+- [x] **5.9** [VERIFY] Confirm no file under `.github/workflows/`, no
   `cloudbuild.yaml`, no GCP/Cloud Run/Artifact Registry reference was created
   or modified anywhere in the diff for this change.
   Exit criterion: 11.
