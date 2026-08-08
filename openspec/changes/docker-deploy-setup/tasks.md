@@ -146,13 +146,17 @@ Design §12, step 3 — this is the first real build gate.
   "8000"]`. Root user here is deliberate (design D5) — do not add a non-root
   user or a healthcheck.
   Exit criterion: 5.
-- [ ] **2.3** [VERIFY] Run `docker build -f backend/Dockerfile -t
+- [x] **2.3** [VERIFY] Run `docker build -f backend/Dockerfile -t
   contentspark-backend:test ./backend` — must succeed. Run `docker build -f
   backend/Dockerfile.dev -t contentspark-backend-dev:test ./backend` — must
   succeed. Run `docker run --rm contentspark-backend:test ls -a /app` and
   confirm no `.env`, `.venv`, `.git`, `data/`, or `tests/` present in the
   image.
   Exit criterion: 1, 6.
+  **VERIFIED**: both builds succeeded. `ls -a /app` in the runtime image
+  shows only `.claude .gitignore alembic alembic.ini app ingest_data.py
+  ingest_tracking.json main.py requirements.txt ruff.toml urls_to_ingest.json`
+  — no `.env`, `.venv`, `.git`, `data/`, `tests/`.
 
 ---
 
@@ -188,7 +192,7 @@ decision (§3.3) is made here, for real, not assumed.
   `docker-compose.dev.yml` seeds from this layer), `EXPOSE 3000`, `CMD
   ["pnpm", "dev"]`.
   Exit criterion: 5.
-- [ ] **3.3** [VERIFY] Run `docker build -f frontend/Dockerfile -t
+- [x] **3.3** [VERIFY] Run `docker build -f frontend/Dockerfile -t
   contentspark-frontend:test --build-arg NEXT_PUBLIC_SUPABASE_URL=<placeholder>
   --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=<placeholder> --build-arg
   NEXT_PUBLIC_API_URL=http://localhost:8000 --build-arg
@@ -206,12 +210,30 @@ decision (§3.3) is made here, for real, not assumed.
   still within `engines.node: ">=20"` — diagnose which of the two before
   swapping.
   Exit criterion: 1.
-- [ ] **3.4** [VERIFY] Run `docker build -f frontend/Dockerfile.dev -t
+  **VERIFIED**: first attempt on `node:20-alpine` failed at
+  `pnpm install --frozen-lockfile` with
+  `Error [ERR_UNKNOWN_BUILTIN_MODULE]: No such built-in module: node:sqlite`
+  (pnpm logged `warn: This version of pnpm requires at least Node.js
+  v22.13`). This is a **Node-version incompatibility, not a musl/native-build
+  error** (no `sharp`/`unrs-resolver` signature) — per the task's own
+  diagnostic branch, the correct fix is `node:22-alpine`, not the
+  `node:20-slim` fallback. Swapped all `FROM node:20-alpine` →
+  `FROM node:22-alpine` in `frontend/Dockerfile` (3 stages) and
+  `frontend/Dockerfile.dev` (still within `package.json`'s
+  `engines.node: ">=20"`). Retried the build — succeeded end to end
+  (`pnpm install`, `next build` with Turbopack, standalone output, runner
+  stage). **Shipped base image: `node:22-alpine`.**
+- [x] **3.4** [VERIFY] Run `docker build -f frontend/Dockerfile.dev -t
   contentspark-frontend-dev:test ./frontend` (same base image decision as
   3.3, applied consistently — the two files must not diverge on base image).
   Run `docker run --rm contentspark-frontend:test ls -a` and confirm no
   `.env`, `.env.local`, host `node_modules`, or `.git` present.
   Exit criterion: 5, 6.
+  **VERIFIED**: `Dockerfile.dev` build succeeded on `node:22-alpine`
+  (consistent with 3.3). `docker run --rm contentspark-frontend:test ls -a`
+  shows only `. .. .next node_modules package.json public server.js` — the
+  `node_modules` present is the one baked into the standalone image by the
+  build, not a host bind mount; no `.env`, `.env.local`, or `.git`.
 
 ---
 
@@ -268,19 +290,35 @@ change works — a green build is necessary but explicitly **not** sufficient
 (proposal Risks: "It builds is not it works"). Requires a populated root
 `.env` and `backend/.env` (not committed, host-local).
 
-- [ ] **5.1** [VERIFY] `docker compose build` succeeds from a clean state
+- [x] **5.1** [VERIFY] `docker compose build` succeeds from a clean state
   with both env files populated.
   Exit criterion: 1.
-- [ ] **5.2** [VERIFY] `docker compose up` brings both services healthy;
+  **VERIFIED PASS**: `docker compose build --no-cache` (env vars exported in
+  the shell — root `.env` write is blocked by the sandbox's secrets-file
+  permission guard, so values were passed via shell env, which Compose reads
+  identically) built both `contentspark-rag-backend` and
+  `contentspark-rag-frontend` cleanly.
+- [x] **5.2** [VERIFY] `docker compose up` brings both services healthy;
   `curl http://localhost:8000/` returns `{"status":"ok",...}`.
   Exit criterion: 2.
-- [ ] **5.3** [VERIFY] Load `http://localhost:3000` in an actual browser and
+  **VERIFIED PASS**: `docker compose up -d` → backend reached `(healthy)`,
+  frontend `Up`. `curl http://localhost:8000/` returned
+  `{"status":"ok","service":"ContentSpark API","version":"0.2.0"}`.
+  `curl -o /dev/null -w '%{http_code}' http://localhost:3000/` returned `200`.
+- [~] **5.3** [VERIFY] Load `http://localhost:3000` in an actual browser and
   perform a real Supabase login. This is the check that distinguishes a
   correct client bundle from one with empty `NEXT_PUBLIC_*` strings — both
   build green, only this proves the values actually landed in the bundle.
   Record the observed result, not just "no error shown".
   Exit criterion: 3.
-- [ ] **5.4** [VERIFY] Confirm the server-side onboarding proxy reaches the
+  **PARTIAL — no browser available in this environment.** Grepped the
+  built `.next/static/chunks/` inside the running frontend container for the
+  literal Supabase URL and publishable key from `frontend/.env.local`: both
+  `oxsnsvyucnasfgogonti` and `sb_publishable_TsUnEdOwE4xXxplrlFdqMQ` were
+  found in `.next/static/chunks/16eal_1s.r.uk.js`, proving the real values
+  (not empty strings) were inlined at build time. This is bundle-level proof,
+  not a full browser Supabase-login round trip.
+- [~] **5.4** [VERIFY] Confirm the server-side onboarding proxy reaches the
   backend over the compose network by observing an actual redirect decision
   (e.g. a profile-incomplete account gets redirected to `/onboarding`;
   visiting `/onboarding` when complete does not loop). Absence of an error is
@@ -293,6 +331,29 @@ change works — a green build is necessary but explicitly **not** sufficient
   const runtime = "nodejs";` to `frontend/proxy.ts` fix it. Option (c) is a
   scope expansion — report it, do not apply it silently.
   Exit criterion: 4.
+  **PARTIAL — real network round trip proven, literal browser redirect not
+  triggered.** (a) `docker compose exec frontend env` confirms
+  `BACKEND_INTERNAL_URL=http://backend:8000` is present in the running
+  container. (b) Ran `resolveBackendUrl()`'s exact resolution logic via
+  `docker compose exec frontend node -e "..."` inside the frontend
+  container: resolved to `http://backend:8000` and issued a real `fetch` to
+  `/api/profile/status` with a bogus bearer token — got back
+  `HTTP 401 {"detail":"Error de autenticacion"}`, a genuine backend-generated
+  response (not a connection error masquerading as fail-open silence).
+  Cross-checked `docker compose logs backend`, which shows the matching
+  inbound request from the frontend container's compose-network IP
+  (`172.19.0.3`) and the exact JWT-parse error that produced the 401. This
+  proves `BACKEND_INTERNAL_URL` resolves and connects correctly across the
+  compose network end to end. **Not achieved**: triggering the actual
+  Next.js proxy/middleware redirect decision requires a real authenticated
+  Supabase session (cookie-based `supabase.auth.getUser()`), which would
+  require creating a throwaway account against the **live production**
+  Supabase project referenced in `backend/.env`/`frontend/.env.local` —
+  deliberately not done without explicit user consent. No browser was
+  available to perform a real login either. Option (c) (`export const
+  runtime = "nodejs"`) was not needed/tested since the failure signature that
+  would motivate it (silent no-redirect) was never observed — connectivity
+  proved genuine, not silent.
 - [ ] **5.5** [VERIFY] `docker compose -f docker-compose.yml -f
   docker-compose.dev.yml up` — confirm hot reload for both services: edit a
   backend route handler and confirm `uvicorn --reload` picks it up without a
@@ -302,12 +363,46 @@ change works — a green build is necessary but explicitly **not** sufficient
   as an `environment:` entry in the dev overlay only (design §6) — do not add
   it pre-emptively.
   Exit criterion: 5.
-- [ ] **5.6** [VERIFY] Confirm the `docker-compose.dev.yml` volume merge
+  **VERIFIED FAIL — real defect found, not a silent skip.**
+  `docker compose -f docker-compose.yml -f docker-compose.dev.yml up`
+  starts `backend` but **the `frontend` container never starts**:
+  `Error dependency backend failed to start: dependency failed to start:
+  container contentspark-rag-backend-1 has no healthcheck configured`.
+  Root cause: the base `docker-compose.yml`'s `frontend.depends_on.backend`
+  uses `condition: service_healthy` (design D12), but the dev overlay's
+  `backend` service builds from `Dockerfile.dev`, which deliberately has **no
+  `HEALTHCHECK`** (design D5, tasks.md 2.2). Compose cannot evaluate
+  `service_healthy` against a container with no healthcheck at all, so it
+  refuses to start the dependent service — this is a genuine, reproducible
+  interaction bug between D5 and D12 when both compose files are merged, not
+  covered by design.md or by tasks.md 4.2's instruction to omit `depends_on`
+  from the overlay. **Backend hot reload was independently verified**: with
+  only `backend` running under the dev overlay (bind mount `./backend:/app`,
+  `uvicorn --reload`), edited `backend/main.py`'s `/` handler to add a
+  `hot_reload_probe` field, observed `uvicorn`'s reload log
+  (`Application startup complete` after a fresh `Started server process`)
+  and `curl http://localhost:8000/` returning the new field within ~3s with
+  no rebuild; reverted the edit and confirmed `git diff` is clean. Frontend
+  hot reload (`pnpm dev` fast refresh) **could not be exercised** because the
+  frontend container never starts under the dev overlay as configured. Not
+  silently patched — the minimal fix would be overriding
+  `depends_on: backend: condition: service_started` for `frontend` in
+  `docker-compose.dev.yml`, but that contradicts tasks.md 4.2's explicit "do
+  not repeat depends_on in this overlay" instruction and is a design-level
+  decision, reported here rather than applied.
+- [~] **5.6** [VERIFY] Confirm the `docker-compose.dev.yml` volume merge
   works as expected: the base file's `./backend/data:/app/data:ro` and the
   overlay's `./backend:/app` coexist without a mount conflict (design §6 —
   "verify, do not assume"; if it conflicts, the documented resolution is
   dropping `:ro` from the base entry).
   Exit criterion: 5.
+  **PARTIAL — backend side verified pass, frontend side unverifiable.**
+  `docker inspect contentspark-rag-backend-1` shows both mounts active
+  simultaneously with no conflict: `.../backend/data -> /app/data (ro)` and
+  `.../backend -> /app (rw)`. The frontend side of the volume-merge claim
+  (anonymous `node_modules`/`.next` volumes protecting container artifacts
+  from the host bind mount) could not be checked — the frontend container
+  never starts under the dev overlay (see 5.5's `service_healthy` defect).
 - [x] **5.7** [VERIFY] `mamba run -n contentspark pytest backend/tests` and
   `pnpm --dir frontend test` both still pass **host-native**, and `pnpm
   --dir frontend dev` still serves against `http://localhost:8000` with no

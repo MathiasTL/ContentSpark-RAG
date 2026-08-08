@@ -1,7 +1,11 @@
 # ---------- deps ----------
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 # libc6-compat: musl vs glibc para binarios nativos (sharp, unrs-resolver).
-# Si aun asi falla el install, la salida documentada es node:20-slim (ver design §3.3).
+# NOTA (design §3.3, decision real durante apply): con node:20-alpine, pnpm
+# 11.1.1 falla con ERR_UNKNOWN_BUILTIN_MODULE (node:sqlite) porque pnpm 11
+# requiere Node >=22.13 y node:20 no lo trae. No es un fallo musl/nativo, asi
+# que la salida no es node:20-slim sino node:22-alpine (sigue dentro de
+# engines.node: ">=20" de package.json).
 RUN apk add --no-cache libc6-compat
 
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
@@ -14,7 +18,7 @@ COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # ---------- builder ----------
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 RUN apk add --no-cache libc6-compat
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
@@ -39,7 +43,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
 # ---------- runner ----------
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production \
