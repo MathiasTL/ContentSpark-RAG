@@ -17,6 +17,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
+    depends_on:
+      backend:
+        # La imagen .dev del backend no tiene HEALTHCHECK (design D5),
+        # asi que el service_healthy de la base no se puede cumplir aqui.
+        condition: service_started
     volumes:
       - ./frontend:/app
       # Volumenes anonimos: protegen los artefactos del contenedor de ser

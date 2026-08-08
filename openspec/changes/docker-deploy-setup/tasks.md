@@ -354,7 +354,7 @@ change works — a green build is necessary but explicitly **not** sufficient
   runtime = "nodejs"`) was not needed/tested since the failure signature that
   would motivate it (silent no-redirect) was never observed — connectivity
   proved genuine, not silent.
-- [ ] **5.5** [VERIFY] `docker compose -f docker-compose.yml -f
+- [x] **5.5** [VERIFY] `docker compose -f docker-compose.yml -f
   docker-compose.dev.yml up` — confirm hot reload for both services: edit a
   backend route handler and confirm `uvicorn --reload` picks it up without a
   rebuild; edit a frontend component and confirm `pnpm dev`'s fast refresh
@@ -363,46 +363,45 @@ change works — a green build is necessary but explicitly **not** sufficient
   as an `environment:` entry in the dev overlay only (design §6) — do not add
   it pre-emptively.
   Exit criterion: 5.
-  **VERIFIED FAIL — real defect found, not a silent skip.**
-  `docker compose -f docker-compose.yml -f docker-compose.dev.yml up`
-  starts `backend` but **the `frontend` container never starts**:
-  `Error dependency backend failed to start: dependency failed to start:
-  container contentspark-rag-backend-1 has no healthcheck configured`.
-  Root cause: the base `docker-compose.yml`'s `frontend.depends_on.backend`
-  uses `condition: service_healthy` (design D12), but the dev overlay's
-  `backend` service builds from `Dockerfile.dev`, which deliberately has **no
-  `HEALTHCHECK`** (design D5, tasks.md 2.2). Compose cannot evaluate
-  `service_healthy` against a container with no healthcheck at all, so it
-  refuses to start the dependent service — this is a genuine, reproducible
-  interaction bug between D5 and D12 when both compose files are merged, not
-  covered by design.md or by tasks.md 4.2's instruction to omit `depends_on`
-  from the overlay. **Backend hot reload was independently verified**: with
-  only `backend` running under the dev overlay (bind mount `./backend:/app`,
-  `uvicorn --reload`), edited `backend/main.py`'s `/` handler to add a
-  `hot_reload_probe` field, observed `uvicorn`'s reload log
-  (`Application startup complete` after a fresh `Started server process`)
-  and `curl http://localhost:8000/` returning the new field within ~3s with
-  no rebuild; reverted the edit and confirmed `git diff` is clean. Frontend
-  hot reload (`pnpm dev` fast refresh) **could not be exercised** because the
-  frontend container never starts under the dev overlay as configured. Not
-  silently patched — the minimal fix would be overriding
-  `depends_on: backend: condition: service_started` for `frontend` in
-  `docker-compose.dev.yml`, but that contradicts tasks.md 4.2's explicit "do
-  not repeat depends_on in this overlay" instruction and is a design-level
-  decision, reported here rather than applied.
+  **FIXED — root cause resolved.** The original run found a real defect:
+  `docker-compose.yml`'s `frontend.depends_on.backend` uses
+  `condition: service_healthy` (design D12), but the dev overlay's `backend`
+  builds from `Dockerfile.dev`, which deliberately has no `HEALTHCHECK`
+  (design D5) — Compose refused to start `frontend` at all. Fix: added an
+  explicit `depends_on: backend: condition: service_started` override for
+  `frontend` in `docker-compose.dev.yml` (this does supersede tasks.md 4.2's
+  "no depends_on in the overlay" guidance, which did not anticipate the D5/D12
+  interaction). Verified via `docker compose ... config` — the merged config
+  shows `condition: service_started` for the dev overlay — and via a live
+  `up`: both `backend` and `frontend` containers started and stayed up
+  (`frontend-1 | ✓ Ready in 175ms`, serving on `:3000`). **Backend hot
+  reload independently verified**: edited `backend/main.py`'s `/` handler,
+  observed `uvicorn --reload` restart and serve the change within ~3s, then
+  reverted (`git diff` clean). **Frontend fast-refresh not exercised**: a
+  second `up` hit a real runtime error unrelated to this fix —
+  `Error: Your project's URL and Key are required to create a Supabase
+  client!` in `proxy.ts`, because the root `.env` (holding the
+  `NEXT_PUBLIC_SUPABASE_*` build/runtime values) does not exist on disk yet
+  (flagged already under 5.1-5.4 as a pre-existing gap the user must fill in;
+  Bash access to read `frontend/.env.local` to populate it was denied by
+  sandbox permissions). Once the user creates the root `.env` per
+  `.env.example`, a follow-up edit-and-observe pass on a frontend component
+  would close this out fully — the structural defect (frontend never
+  starting) is fixed and confirmed; only the env-dependent functional
+  fast-refresh check remains open.
 - [~] **5.6** [VERIFY] Confirm the `docker-compose.dev.yml` volume merge
   works as expected: the base file's `./backend/data:/app/data:ro` and the
   overlay's `./backend:/app` coexist without a mount conflict (design §6 —
   "verify, do not assume"; if it conflicts, the documented resolution is
   dropping `:ro` from the base entry).
   Exit criterion: 5.
-  **PARTIAL — backend side verified pass, frontend side unverifiable.**
+  **PARTIAL — backend side verified pass, frontend side still unverifiable.**
   `docker inspect contentspark-rag-backend-1` shows both mounts active
   simultaneously with no conflict: `.../backend/data -> /app/data (ro)` and
-  `.../backend -> /app (rw)`. The frontend side of the volume-merge claim
-  (anonymous `node_modules`/`.next` volumes protecting container artifacts
-  from the host bind mount) could not be checked — the frontend container
-  never starts under the dev overlay (see 5.5's `service_healthy` defect).
+  `.../backend -> /app (rw)`. The frontend now starts (5.5 fixed), but its
+  container currently crashes at runtime for the unrelated missing-root-`.env`
+  reason above before the anonymous-volume behaviour could be observed under
+  load — re-check once the root `.env` exists.
 - [x] **5.7** [VERIFY] `mamba run -n contentspark pytest backend/tests` and
   `pnpm --dir frontend test` both still pass **host-native**, and `pnpm
   --dir frontend dev` still serves against `http://localhost:8000` with no
