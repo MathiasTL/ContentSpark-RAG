@@ -1,47 +1,52 @@
-version: '3.9'
+# ContentSpark — stack local.
+#
+# Postgres NO vive aqui: la base de datos es la de Supabase y se alcanza
+# por DATABASE_URL (backend/app/config.py). No hay modo offline.
+#
+# Las migraciones de Alembic NO corren desde ningun contenedor (design D4).
+# Se ejecutan a mano desde el host contra la base compartida:
+#   mamba run -n contentspark alembic upgrade head
+#
+# Variables:
+#   - backend  -> se leen de ./backend/.env via env_file (runtime).
+#   - frontend -> los NEXT_PUBLIC_* deben existir en un .env en la raiz
+#     del repo porque Compose NO puede alimentar build.args desde env_file,
+#     y next build los inlinea en el bundle. Ver .env.example.
 
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
     ports:
       - "8000:8000"
-    environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - QDRANT_URL=${QDRANT_URL}
-      - QDRANT_API_KEY=${QDRANT_API_KEY}
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - DATABASE_URL=${DATABASE_URL}
-      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
-      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+    env_file:
+      - ./backend/.env
     volumes:
-      - ./backend/data:/app/data
-    depends_on:
-      - postgres
+      # Corpus de ingesta: no va dentro de la imagen (.dockerignore),
+      # llega por montaje de solo lectura para `python ingest_data.py`.
+      - ./backend/data:/app/data:ro
+    restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        # El navegador resuelve esto: DEBE ser localhost, no backend.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        # El servidor de Next (proxy.ts) resuelve esto: red de compose.
+        BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:8000}
     ports:
       - "3000:3000"
     environment:
+      # Runtime, para la mitad server-side de la app. Los NEXT_PUBLIC_*
+      # del bundle del cliente ya quedaron fijados en build.args.
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - BACKEND_INTERNAL_URL=${BACKEND_INTERNAL_URL:-http://backend:8000}
     depends_on:
-      - backend
-
-  postgres:
-    image: postgres:15-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER:-contentspark}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-contentspark}
-      - POSTGRES_DB=${POSTGRES_DB:-contentspark}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

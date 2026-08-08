@@ -219,7 +219,7 @@ decision (§3.3) is made here, for real, not assumed.
 
 Design §12, step 5.
 
-- [ ] **4.1** [IMPL] Rewrite `docker-compose.yml` per design §5, verbatim:
+- [x] **4.1** [IMPL] Rewrite `docker-compose.yml` per design §5, verbatim:
   drop the `version:` key, the `postgres` service, the `postgres_data`
   volume, the `depends_on: [postgres]` edge, and `SUPABASE_JWT_SECRET`.
   `backend`: `build.context: ./backend`, `env_file: ./backend/.env`,
@@ -236,7 +236,7 @@ Design §12, step 5.
   header comment block explaining Postgres-is-Supabase-managed and
   Alembic-is-host-only.
   Exit criterion: 1, 2, 4, 7.
-- [ ] **4.2** [IMPL] Fix `docker-compose.dev.yml`: drop `version:`, change
+- [x] **4.2** [IMPL] Fix `docker-compose.dev.yml`: drop `version:`, change
   `npm run dev` → `pnpm dev` in the frontend `command`, add the
   `dockerfile: Dockerfile.dev` context references for both services if not
   already present, keep the anonymous `node_modules`/`.next` volumes exactly
@@ -246,7 +246,7 @@ Design §12, step 5.
   --port 8000`. Do not repeat `build.args`, `depends_on`, or `env_file` in
   this overlay — Compose merges/inherits them from the base file.
   Exit criterion: 5, 7, 8.
-- [ ] **4.3** [IMPL] Re-run the repo-wide grep for
+- [x] **4.3** [IMPL] Re-run the repo-wide grep for
   `supabase_jwt_secret|SUPABASE_JWT_SECRET|jwt_secret` (design §9) to confirm
   no live reader landed since design time. If the result matches the design
   §9 table (declaration + compose wiring + prose mentions only), remove the
@@ -254,7 +254,7 @@ Design §12, step 5.
   `Settings`. If a live reader is found, stop and report — scope shrinks to
   the compose line only (already done in 4.1).
   Exit criterion: 7.
-- [ ] **4.4** [VERIFY] `rg -n 'postgres|SUPABASE_JWT_SECRET'
+- [x] **4.4** [VERIFY] `rg -n 'postgres|SUPABASE_JWT_SECRET'
   docker-compose.yml docker-compose.dev.yml` returns nothing. `rg -n 'npm
   run' docker-compose.yml docker-compose.dev.yml` returns nothing.
   Exit criterion: 7, 8.

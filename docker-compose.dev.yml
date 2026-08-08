@@ -1,5 +1,8 @@
-# Override para desarrollo: hot reload y volumes
-version: '3.9'
+# Override de desarrollo: hot reload por bind mount.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Las imagenes .dev son single-stage y corren como root a proposito
+# (design D5): existen para iterar, no para parecerse a produccion.
 
 services:
   backend:
@@ -16,6 +19,8 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./frontend:/app
+      # Volumenes anonimos: protegen los artefactos del contenedor de ser
+      # tapados por los del host (node_modules de macOS/arm64 romperia sharp).
       - /app/node_modules
       - /app/.next
-    command: npm run dev
+    command: pnpm dev
