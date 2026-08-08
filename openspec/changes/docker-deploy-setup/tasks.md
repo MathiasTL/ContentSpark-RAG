@@ -92,24 +92,24 @@ change depends on Docker existing yet (design §12, step 1).
 Nothing here has an effect until a build runs (design §12, step 2). No TDD
 applies — none of these files has a test surface.
 
-- [ ] **1.1** [IMPL] In `frontend/next.config.ts`, add `output: "standalone"`
+- [x] **1.1** [IMPL] In `frontend/next.config.ts`, add `output: "standalone"`
   to the exported `NextConfig`. Confirm `pnpm --dir frontend build` still
   succeeds host-native and additionally emits `.next/standalone` (host `pnpm
   dev`/`pnpm start` behaviour is unaffected — verify by spot-check, not by a
   new test).
   Exit criterion: 1, 3 (standalone output is what the frontend runner stage
   copies).
-- [ ] **1.2** [IMPL] Create `backend/.dockerignore` per design §4: `.env`,
+- [x] **1.2** [IMPL] Create `backend/.dockerignore` per design §4: `.env`,
   `.env.*`, `__pycache__/`, `*.py[cod]`, `*.pyo`, `.venv/`, `venv/`,
   `.pytest_cache/`, `.ruff_cache/`, `.coverage`, `htmlcov/`, `*.egg-info/`,
   `data/`, `tests/`, `Dockerfile*`, `.dockerignore`.
   Exit criterion: 6.
-- [ ] **1.3** [IMPL] Create `frontend/.dockerignore` per design §4: `.env`,
+- [x] **1.3** [IMPL] Create `frontend/.dockerignore` per design §4: `.env`,
   `.env.*`, `node_modules/`, `.next/`, `out/`, `build/`, `coverage/`,
   `.pnpm-store/`, `*.tsbuildinfo`, `.vercel/`, `Dockerfile*`, `.dockerignore`,
   `README.md`.
   Exit criterion: 6.
-- [ ] **1.4** [IMPL] Create root `.env.example` documenting only the three
+- [x] **1.4** [IMPL] Create root `.env.example` documenting only the three
   build-time `NEXT_PUBLIC_*` values Compose must interpolate into
   `build.args`, plus the optional `BACKEND_INTERNAL_URL` override, with the
   design §8 comment block explaining the build-arg/env_file duplication and

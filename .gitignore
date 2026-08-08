@@ -4,6 +4,9 @@
 .env.local
 .env.production
 .env.staging
+# .env.example SI se versiona: documenta los build args de docker compose
+# y no contiene secretos.
+!.env.example
 
 # Sistemas operativos
 .DS_Store
