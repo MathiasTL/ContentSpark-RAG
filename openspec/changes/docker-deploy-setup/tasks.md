@@ -126,7 +126,7 @@ applies — none of these files has a test surface.
 
 Design §12, step 3 — this is the first real build gate.
 
-- [ ] **2.1** [IMPL] Create `backend/Dockerfile`: two-stage
+- [x] **2.1** [IMPL] Create `backend/Dockerfile`: two-stage
   (`builder`/`runtime`) on `python:3.11-slim`, `/opt/venv` as the transfer
   unit, non-root `appuser` (uid/gid 1001), `WORKDIR /app`, `COPY . .` after
   `COPY --from=builder`, `EXPOSE 8000`, `HEALTHCHECK` via
@@ -139,7 +139,7 @@ Design §12, step 3 — this is the first real build gate.
   descriptivos" convention needs unbuffered stdout inside a container). Verbatim
   per design §1.
   Exit criterion: 1, 2.
-- [ ] **2.2** [IMPL] Create `backend/Dockerfile.dev`: single stage,
+- [x] **2.2** [IMPL] Create `backend/Dockerfile.dev`: single stage,
   `python:3.11-slim`, root user, no `COPY` of source (bind mount will shadow
   it), `pip install -r requirements.txt` in its own layer, `EXPOSE 8000`,
   `CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port",
