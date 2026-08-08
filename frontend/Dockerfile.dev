@@ -1,0 +1,13 @@
+# Imagen de desarrollo: single-stage, root, sin healthcheck (design D5).
+FROM node:20-alpine
+RUN apk add --no-cache libc6-compat
+
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
+
+WORKDIR /app
+COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+EXPOSE 3000
+CMD ["pnpm", "dev"]

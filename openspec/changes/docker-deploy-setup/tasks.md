@@ -162,7 +162,7 @@ Design §12, step 4 — **the risky step, deliberately last** so a base-image
 fallback does not invalidate already-verified backend work. The alpine→slim
 decision (§3.3) is made here, for real, not assumed.
 
-- [ ] **3.1** [IMPL] Create `frontend/Dockerfile`: three-stage
+- [x] **3.1** [IMPL] Create `frontend/Dockerfile`: three-stage
   (`deps`/`builder`/`runner`) on `node:20-alpine`, `apk add --no-cache
   libc6-compat` in `deps` and `builder`, corepack pinning `pnpm@11.1.1`, `deps`
   copies `package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml` (not just
@@ -181,7 +181,7 @@ decision (§3.3) is made here, for real, not assumed.
   writable cache under the non-root user, `EXPOSE 3000`, `CMD ["node",
   "server.js"]`. Verbatim per design §3.
   Exit criterion: 1, 3, 6.
-- [ ] **3.2** [IMPL] Create `frontend/Dockerfile.dev`: single stage,
+- [x] **3.2** [IMPL] Create `frontend/Dockerfile.dev`: single stage,
   `node:20-alpine` + `libc6-compat`, corepack `pnpm@11.1.1`, copies the same
   four files as `deps` above, `pnpm install --frozen-lockfile` **at image
   build** (not container start — the anonymous `node_modules` volume in
