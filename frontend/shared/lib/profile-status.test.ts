@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchProfileStatus } from "./profile-status";
+import { fetchProfileStatus, resolveBackendUrl } from "./profile-status";
 
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 describe("fetchProfileStatus", () => {
@@ -56,5 +57,28 @@ describe("fetchProfileStatus", () => {
     );
 
     await expect(fetchProfileStatus("token-123")).resolves.toBeNull();
+  });
+});
+
+describe("resolveBackendUrl", () => {
+  it("prefiere BACKEND_INTERNAL_URL cuando ambas variables estan definidas", () => {
+    vi.stubEnv("BACKEND_INTERNAL_URL", "http://backend:8000");
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://localhost:8000");
+
+    expect(resolveBackendUrl()).toBe("http://backend:8000");
+  });
+
+  it("cae a NEXT_PUBLIC_API_URL cuando solo esa esta definida", () => {
+    vi.stubEnv("BACKEND_INTERNAL_URL", undefined);
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test:9000");
+
+    expect(resolveBackendUrl()).toBe("http://api.test:9000");
+  });
+
+  it("cae al default hardcodeado cuando ninguna esta definida", () => {
+    vi.stubEnv("BACKEND_INTERNAL_URL", undefined);
+    vi.stubEnv("NEXT_PUBLIC_API_URL", undefined);
+
+    expect(resolveBackendUrl()).toBe("http://localhost:8000");
   });
 });
