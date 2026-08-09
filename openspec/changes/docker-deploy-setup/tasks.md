@@ -305,7 +305,7 @@ change works — a green build is necessary but explicitly **not** sufficient
   frontend `Up`. `curl http://localhost:8000/` returned
   `{"status":"ok","service":"ContentSpark API","version":"0.2.0"}`.
   `curl -o /dev/null -w '%{http_code}' http://localhost:3000/` returned `200`.
-- [~] **5.3** [VERIFY] Load `http://localhost:3000` in an actual browser and
+- [x] **5.3** [VERIFY] Load `http://localhost:3000` in an actual browser and
   perform a real Supabase login. This is the check that distinguishes a
   correct client bundle from one with empty `NEXT_PUBLIC_*` strings — both
   build green, only this proves the values actually landed in the bundle.
@@ -316,9 +316,12 @@ change works — a green build is necessary but explicitly **not** sufficient
   literal Supabase URL and publishable key from `frontend/.env.local`: both
   `oxsnsvyucnasfgogonti` and `sb_publishable_TsUnEdOwE4xXxplrlFdqMQ` were
   found in `.next/static/chunks/16eal_1s.r.uk.js`, proving the real values
-  (not empty strings) were inlined at build time. This is bundle-level proof,
-  not a full browser Supabase-login round trip.
-- [~] **5.4** [VERIFY] Confirm the server-side onboarding proxy reaches the
+  (not empty strings) were inlined at build time.
+  **Follow-up with the user's real browser**: user opened
+  `http://localhost:3000`, logged in with a real Supabase account, login
+  succeeded. **Fully closed** — real browser Supabase-login round trip
+  confirmed, not just bundle-level inspection.
+- [x] **5.4** [VERIFY] Confirm the server-side onboarding proxy reaches the
   backend over the compose network by observing an actual redirect decision
   (e.g. a profile-incomplete account gets redirected to `/onboarding`;
   visiting `/onboarding` when complete does not loop). Absence of an error is
@@ -354,6 +357,11 @@ change works — a green build is necessary but explicitly **not** sufficient
   runtime = "nodejs"`) was not needed/tested since the failure signature that
   would motivate it (silent no-redirect) was never observed — connectivity
   proved genuine, not silent.
+  **Follow-up with the user's real browser**: logged in with a real Supabase
+  account with an incomplete profile — the proxy redirected to `/onboarding`
+  as expected. **Fully closed** — the literal redirect decision fired
+  correctly, not just the underlying network round trip. `export const
+  runtime = "nodejs"` was not needed.
 - [x] **5.5** [VERIFY] `docker compose -f docker-compose.yml -f
   docker-compose.dev.yml up` — confirm hot reload for both services: edit a
   backend route handler and confirm `uvicorn --reload` picks it up without a
@@ -386,6 +394,19 @@ change works — a green build is necessary but explicitly **not** sufficient
   in the frontend container logs and the new string served by `curl :3000`
   within ~3s with no rebuild, then reverted (`git status` clean). **Frontend
   fast-refresh confirmed working.** 5.5 fully closed.
+  **Second defect found (post-fix) and resolved**: switching from the dev
+  overlay back to the base `docker-compose.yml` alone (`docker compose up`,
+  no `-f docker-compose.dev.yml`) failed with the same
+  `has no healthcheck configured` error — because Compose tags images as
+  `<project>-<service>` by default regardless of which `dockerfile:` built
+  them, so the dev-overlay build (`Dockerfile.dev`, no `HEALTHCHECK`) and a
+  base-file build (`Dockerfile`, has `HEALTHCHECK`) silently shared the same
+  image name/tag. Whichever was built last "won" on the next `up` with no
+  rebuild trigger. Fixed by giving the dev overlay's services explicit
+  `image: contentspark-rag-backend:dev` / `image: contentspark-rag-frontend:dev`
+  tags in `docker-compose.dev.yml`, so dev and prod builds never collide.
+  Verified: `docker compose build && docker compose up -d` (base file only)
+  now shows `backend-1 ... Healthy` on a clean build.
 - [x] **5.6** [VERIFY] Confirm the `docker-compose.dev.yml` volume merge
   works as expected: the base file's `./backend/data:/app/data:ro` and the
   overlay's `./backend:/app` coexist without a mount conflict (design §6 —

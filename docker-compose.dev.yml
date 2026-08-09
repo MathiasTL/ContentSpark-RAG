@@ -6,6 +6,7 @@
 
 services:
   backend:
+    image: contentspark-rag-backend:dev
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -14,6 +15,7 @@ services:
     command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
   frontend:
+    image: contentspark-rag-frontend:dev
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
