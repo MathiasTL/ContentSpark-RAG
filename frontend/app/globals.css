@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
+/* El modo oscuro se activa por clase sobre <html>, no por media query.
+   La preferencia del sistema sigue siendo el valor inicial: la pone el script
+   de shared/lib/theme.ts antes del primer pintado. `:where()` mantiene la
+   especificidad en cero para que `dark:` gane por orden y no por peso. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* `inline` solo acá: --font-sans referencia una variable que Next define
+   sobre <html>, y necesita resolverse en ese ambito.
+   OJO: `inline` hornea el valor literal en cada utilidad, asi que ningun
+   token que deba cambiar en tiempo de ejecucion puede vivir en este bloque. */
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
 
+/* Tokens de color: SIN `inline`, para que las utilidades emitan `var(...)`
+   y el bloque `.dark` de abajo pueda redefinirlos en caliente. */
+@theme {
   --color-primary: #6e2ce0;
   --color-primary-container: #b08cff;
   --color-secondary: #b4005d;
+
   --color-surface: #f5f6fb;
   --color-surface-container: #e6e8ee;
   --color-surface-container-lowest: #ffffff;
   --color-on-surface: #2c2f33;
   --color-on-surface-variant: #595c60;
+
+  /* Filo de vidrio: el borde que define donde termina una lamina.
+     Reemplaza a los `border-white/40` y `border-white/20` hardcodeados. */
+  --color-glass-edge: rgba(255, 255, 255, 0.4);
+  --color-glass-edge-soft: rgba(255, 255, 255, 0.2);
+
+  /* Unico rojo del sistema. */
+  --color-danger: #b3261e;
+  --color-danger-container: #fceceb;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-surface: #1a1625;
-    --color-surface-container: #241f33;
-    --color-surface-container-lowest: #0e0c16;
-    --color-on-surface: #f1eef8;
-    --color-on-surface-variant: #b3aec4;
-  }
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* El acento se aclara: #6e2ce0 sobre #0e0c16 no alcanza contraste legible. */
+  --color-primary: #a97dff;
+  --color-primary-container: #d6c2ff;
+  --color-secondary: #ff7fb0;
+
+  --color-surface: #1a1625;
+  --color-surface-container: #241f33;
+  --color-surface-container-lowest: #0e0c16;
+  --color-on-surface: #f1eef8;
+  --color-on-surface-variant: #b3aec4;
+
+  /* El vidrio se apaga: en oscuro un filo al 40% se lee como plastico. */
+  --color-glass-edge: rgba(255, 255, 255, 0.12);
+  --color-glass-edge-soft: rgba(255, 255, 255, 0.06);
+
+  --color-danger: #f2b8b5;
+  --color-danger-container: #3b1512;
 }
 
 .liquid-gradient {

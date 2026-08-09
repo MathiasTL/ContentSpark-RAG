@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { THEME_INIT_SCRIPT } from "@/shared/lib/theme";
 
 // 1. Instanciamos la fuente Inter
 // Subsets 'latin' optimiza el peso del archivo para nuestro idioma
@@ -24,12 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      {/* Aplicamos la fuente 'inter.className' al body. 
-        También añadimos 'antialiased' (una clase de Tailwind) que hace que 
-        las fuentes se vean mucho más suaves y definidas, al estilo macOS.
-      */}
-      <body className={`${inter.className} antialiased bg-surface-container-lowest text-on-surface`}>
+    // 'inter.variable' expone --font-inter, que es lo que consume el token
+    // --font-sans de globals.css. Sin esto, 'font-sans' cae al fallback del sistema.
+    // 'suppressHydrationWarning' es necesario porque el script de tema modifica
+    // la clase y el estilo de <html> antes de que React hidrate.
+    <html lang="es" className={inter.variable} suppressHydrationWarning>
+      {/* 'antialiased' suaviza el renderizado de la tipografía, al estilo macOS. */}
+      <body className="font-sans antialiased bg-surface-container-lowest text-on-surface">
+        {/* Corre antes de pintar el contenido: evita el parpadeo de tema. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {children}
       </body>
     </html>

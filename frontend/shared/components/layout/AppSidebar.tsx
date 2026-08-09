@@ -3,9 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { CalendarDays, MessageSquare, User } from "lucide-react";
-import { createClient } from "@/shared/lib/supabase";
+import { useCurrentUser } from "@/shared/hooks/useCurrentUser";
 import { useSidebar } from "./SidebarProvider";
 import UserMenu from "./UserMenu";
 
@@ -18,28 +17,7 @@ export const NAV_ITEMS = [
 export default function AppSidebar() {
   const pathname = usePathname();
   const { collapsed, toggle } = useSidebar();
-  const [user, setUser] = useState<{
-    name: string;
-    email?: string;
-    avatar?: string;
-  } | null>(null);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      const meta = data.user.user_metadata ?? {};
-      setUser({
-        name:
-          meta.full_name ||
-          meta.name ||
-          data.user.email?.split("@")[0] ||
-          "Creator",
-        email: data.user.email ?? undefined,
-        avatar: meta.avatar_url ?? meta.picture,
-      });
-    });
-  }, []);
+  const user = useCurrentUser();
 
   return (
     <aside

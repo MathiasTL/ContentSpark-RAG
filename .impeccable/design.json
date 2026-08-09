@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-08T00:00:00.000Z",
+  "title": "Design System: ContentSpark",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Violeta Eléctrico",
+        "canonical": "#6e2ce0",
+        "darkPair": "primary-dark",
+        "tonalRamp": ["#150729", "#24104a", "#3a1a78", "#5222a8", "#6e2ce0", "#8f5ce9", "#b08cff", "#e3d6ff"]
+      },
+      "primary-container": {
+        "role": "primary",
+        "displayName": "Violeta Difuso",
+        "canonical": "#b08cff",
+        "darkPair": "primary-container-dark",
+        "tonalRamp": ["#1d1235", "#2e1d54", "#452b7d", "#6142ad", "#8161d6", "#b08cff", "#d0b8ff", "#efe7ff"]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Magenta Señal",
+        "canonical": "#b4005d",
+        "darkPair": "secondary-dark",
+        "tonalRamp": ["#2c0017", "#4d0027", "#77003c", "#96004d", "#b4005d", "#dd3d88", "#ff7fb0", "#ffd6e5"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Bruma Fría",
+        "canonical": "#f5f6fb",
+        "darkPair": "surface-dark",
+        "tonalRamp": ["#0e0c16", "#1a1625", "#241f33", "#3a3547", "#595c60", "#8b8d96", "#e6e8ee", "#f5f6fb"]
+      },
+      "surface-container": {
+        "role": "neutral",
+        "displayName": "Bruma Densa",
+        "canonical": "#e6e8ee",
+        "darkPair": "surface-container-dark",
+        "tonalRamp": ["#131120", "#1f1b2e", "#2b2540", "#403a55", "#666a75", "#a3a6b0", "#d3d6de", "#e6e8ee"]
+      },
+      "surface-container-lowest": {
+        "role": "neutral",
+        "displayName": "Cristal Base",
+        "canonical": "#ffffff",
+        "darkPair": "surface-container-lowest-dark",
+        "tonalRamp": ["#0e0c16", "#171426", "#221d38", "#393352", "#6b6b7d", "#a8a8b8", "#dedee6", "#ffffff"]
+      },
+      "on-surface": {
+        "role": "neutral",
+        "displayName": "Grafito",
+        "canonical": "#2c2f33",
+        "darkPair": "on-surface-dark",
+        "tonalRamp": ["#0d0e10", "#1a1c1f", "#2c2f33", "#454951", "#5f646d", "#8d929b", "#c4c8ce", "#f1eef8"]
+      },
+      "on-surface-variant": {
+        "role": "neutral",
+        "displayName": "Grafito Suave",
+        "canonical": "#595c60",
+        "darkPair": "on-surface-variant-dark",
+        "tonalRamp": ["#141518", "#242629", "#3b3e42", "#595c60", "#7c8085", "#a5a8ae", "#cfd2d7", "#eef0f3"]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Alerta",
+        "canonical": "#b3261e",
+        "darkPair": "danger-dark",
+        "tonalRamp": ["#2a0806", "#460d09", "#66130e", "#8c1c15", "#b3261e", "#d9564d", "#f2b8b5", "#fceceb"]
+      },
+      "glass-edge": {
+        "role": "neutral",
+        "displayName": "Filo de Vidrio",
+        "canonical": "rgba(255, 255, 255, 0.40)",
+        "darkPair": "glass-edge-dark",
+        "tonalRamp": ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.08)", "rgba(255,255,255,0.12)", "rgba(255,255,255,0.20)", "rgba(255,255,255,0.30)", "rgba(255,255,255,0.40)", "rgba(255,255,255,0.55)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Solo el titular principal de landing. No aparece dentro de la aplicación." },
+      "headline": { "displayName": "Headline", "purpose": "Encabezado de sección en landing y título de paso en el onboarding." },
+      "title": { "displayName": "Title", "purpose": "Título de vista, encabezado de tarjeta, título de modal." },
+      "body": { "displayName": "Body", "purpose": "Texto por defecto de todo el producto. Peso 300, máximo 70ch en bloques de lectura." },
+      "body-strong": { "displayName": "Body Strong", "purpose": "Etiqueta de botón, valor de dato, énfasis dentro de un párrafo." },
+      "label": { "displayName": "Label", "purpose": "Etiquetas de campo, encabezados de columna y metadatos, en versalitas espaciadas." }
+    },
+    "blurTiers": [
+      { "name": "glass-background", "value": "blur(12px)", "purpose": "Superficies del plano de fondo: barras laterales, cabeceras, paneles anclados a un borde." },
+      { "name": "glass-work", "value": "blur(24px)", "purpose": "Superficie principal de trabajo: tarjetas de contenido, tarjeta de auth, paneles del calendario." },
+      { "name": "glass-floating", "value": "blur(40px)", "purpose": "Elementos despegados del plano: modales, menús desplegables, popovers." }
+    ],
+    "shadows": [
+      { "name": "lift-ambient", "value": "0 32px 64px -16px rgba(110, 44, 224, 0.10)", "purpose": "Tarjeta de auth y modales. Sombra teñida de violeta muy diluida que simula la luz de la aurora atravesando el vidrio." },
+      { "name": "lift-menu", "value": "0 12px 32px -8px rgba(0, 0, 0, 0.18)", "purpose": "Menús desplegables y popovers, donde hace falta un corte neutro y definido." }
+    ],
+    "motion": [
+      { "name": "ease-control", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Curva por defecto de estados de control. Duración 150ms sobre color y background-color." },
+      { "name": "ease-surface", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Entrada de superficies (tarjetas, modales, cajón móvil). Duración 400ms." },
+      { "name": "drift-aurora", "value": "ease-in-out infinite, 16s–25s", "purpose": "Deriva continua de las manchas del fondo. Se anula bajo prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ],
+    "themeStrategy": {
+      "mode": "class-with-system-default",
+      "note": "Estrategia elegida: @custom-variant dark basada en clase, con prefers-color-scheme como valor inicial y conmutador manual que persiste la elección. Todavía NO implementada en el código."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de una vista. Fondo plano, nunca gradiente, y sin escalado en hover.",
+      "html": "<button class=\"ds-btn-primary\">Guardar cambios</button>",
+      "css": ".ds-btn-primary { background: #6e2ce0; color: #ffffff; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.6; padding: 12px 24px; border: none; border-radius: 9999px; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: #5f22c9; } .ds-btn-primary:focus-visible { outline: 2px solid #6e2ce0; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Acción secundaria por defecto, incluido el botón de OAuth en auth. Vidrio suave con filo.",
+      "html": "<button class=\"ds-btn-ghost\">Continuar con Google</button>",
+      "css": ".ds-btn-ghost { background: rgba(255, 255, 255, 0.20); color: #2c2f33; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.6; padding: 12px 24px; border: 1px solid rgba(255, 255, 255, 0.40); border-radius: 9999px; cursor: pointer; backdrop-filter: blur(12px); transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-ghost:hover { background: rgba(255, 255, 255, 0.40); } .ds-btn-ghost:focus-visible { outline: 2px solid #6e2ce0; outline-offset: 2px; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Campo de formulario de vidrio con icono guía opcional a la izquierda. El foco cambia borde y anillo, sin desplazar nada.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\">Correo electrónico</label><div class=\"ds-field-wrap\"><svg class=\"ds-field-icon\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"2\"/><path d=\"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7\"/></svg><input class=\"ds-input\" type=\"email\" placeholder=\"nombre@empresa.com\"/></div></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; } .ds-field-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #595c60; } .ds-field-wrap { position: relative; } .ds-field-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #595c60; pointer-events: none; } .ds-input { width: 100%; background: rgba(255, 255, 255, 0.20); color: #2c2f33; font-family: inherit; font-size: 0.875rem; font-weight: 300; line-height: 1.6; padding: 12px 16px 12px 44px; border: 1px solid rgba(255, 255, 255, 0.40); border-radius: 16px; outline: none; transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-input::placeholder { color: rgba(89, 92, 96, 0.6); } .ds-input:focus { border-color: #6e2ce0; box-shadow: 0 0 0 3px rgba(110, 44, 224, 0.20); }"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "card-glass",
+      "description": "Superficie de trabajo. Vidrio de trabajo (24px) con filo, sin sombra en reposo.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Calendario de la semana</h3><p class=\"ds-card-body\">Cinco entradas planificadas. Tres listas para publicar.</p></div>",
+      "css": ".ds-card { background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.40); border-radius: 24px; padding: 24px; backdrop-filter: blur(24px); font-family: Inter, ui-sans-serif, system-ui, sans-serif; } .ds-card-title { margin: 0 0 8px; font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; color: #2c2f33; } .ds-card-body { margin: 0; font-size: 0.875rem; font-weight: 300; line-height: 1.6; color: #595c60; }"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Selector de nicho, formato o plataforma. La selección se comunica solo por color de fondo.",
+      "html": "<div><button class=\"ds-chip\">Educación</button><button class=\"ds-chip ds-chip-selected\">Fitness</button></div>",
+      "css": ".ds-chip { background: rgba(255, 255, 255, 0.20); color: #595c60; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; margin-right: 8px; border: 1px solid rgba(255, 255, 255, 0.40); border-radius: 9999px; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-chip:hover { background: rgba(255, 255, 255, 0.40); color: #2c2f33; } .ds-chip:focus-visible { outline: 2px solid #6e2ce0; outline-offset: 2px; } .ds-chip-selected { background: #6e2ce0; color: #ffffff; border-color: transparent; } .ds-chip-selected:hover { background: #5f22c9; color: #ffffff; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Ítem de la barra lateral. El estado activo suma vidrio suave y un filete de 3px en el acento.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\"/></svg>Chat</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M16 2v4M8 2v4M3 10h18\"/></svg>Calendario</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 4px; padding: 8px; background: rgba(255, 255, 255, 0.20); backdrop-filter: blur(12px); font-family: Inter, ui-sans-serif, system-ui, sans-serif; } .ds-nav-item { display: flex; align-items: center; gap: 12px; position: relative; padding: 12px 16px; border-radius: 12px; font-size: 0.875rem; font-weight: 500; color: #595c60; text-decoration: none; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav-item:hover { background: rgba(255, 255, 255, 0.20); color: #2c2f33; } .ds-nav-item:focus-visible { outline: 2px solid #6e2ce0; outline-offset: 2px; } .ds-nav-item-active { background: rgba(255, 255, 255, 0.35); color: #2c2f33; } .ds-nav-item-active::before { content: \"\"; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 20px; border-radius: 9999px; background: #6e2ce0; }"
+    },
+    {
+      "name": "Inline Field Error",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Error de campo. Se muestra bajo el input, no como banner suelto, y usa el único rojo del sistema.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-error-label\">Contraseña</label><input class=\"ds-input-error\" type=\"password\" value=\"1234\"/><p class=\"ds-error-text\">Necesita al menos 8 caracteres.</p></div>",
+      "css": ".ds-error-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #595c60; font-family: Inter, ui-sans-serif, system-ui, sans-serif; } .ds-input-error { width: 100%; background: rgba(255, 255, 255, 0.20); color: #2c2f33; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 300; padding: 12px 16px; border: 1px solid #b3261e; border-radius: 16px; outline: none; } .ds-input-error:focus { box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.20); } .ds-error-text { margin: 6px 0 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 400; color: #b3261e; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Estudio de Cristal",
+    "overview": "ContentSpark es un taller profesional construido en vidrio. Cada superficie es translúcida y deja ver la estructura que tiene debajo: el fondo con aurora de color no es un adorno detrás de la interfaz, es el piso del estudio que se filtra a través de cada panel. El glassmorphism acá no decora — es el material del que está hecho el espacio de trabajo, y por eso obedece reglas físicas: el vidrio más cercano al usuario difumina más, el vidrio del fondo difumina menos, y ninguna superficie es opaca sin una razón funcional.\n\nLa densidad es de herramienta, no de landing. El creador viene a trabajar: a consultar su base de conocimiento, a leer respuestas largas, a mover entradas de calendario. Eso significa texto en cuerpo liviano (300) para lectura sostenida, etiquetas en versalitas espaciadas para orientarse sin ruido, y controles que responden rápido y sin teatro. La expresividad del producto vive en el material y en la luz de fondo, no en los botones.\n\nEl color se comporta como electricidad, no como pintura. El violeta primario es escaso y deliberado: marca lo que se puede accionar y lo que está activo, y nada más. Un panel entero teñido de violeta destruye la lectura del vidrio y aplana la jerarquía. La superficie de trabajo es neutra; el color llega desde el fondo, difuso, y desde el acento, puntual.",
+    "keyCharacteristics": [
+      "Vidrio como material estructural, con tres niveles de difuminado que codifican distancia",
+      "Violeta eléctrico escaso: interacción y estado activo, nunca relleno decorativo",
+      "Cuerpo de texto liviano (300) para lectura larga; etiquetas en versalitas espaciadas",
+      "Controles precisos: transiciones cortas, sin escalado, foco nítido y visible",
+      "Cuatro radios y nada más; la deriva de esquinas es un defecto, no una variación",
+      "Modo claro y oscuro son pares de primera clase, ambos con paleta completa"
+    ],
+    "rules": [
+      { "name": "La Regla del Diez Por Ciento", "body": "El Violeta Eléctrico no cubre más del 10% del área de ninguna pantalla. Su rareza es lo que lo hace legible como señal. Un fondo de sección teñido de violeta, una tarjeta con gradiente violeta o una sombra violeta bajo un elemento no interactivo violan esta regla.", "section": "colors" },
+      { "name": "La Regla del Filo, No del Relleno", "body": "El vidrio se define por su borde y su difuminado, no por su opacidad. Si una superficie necesita subir de opacidad para leerse, el problema es el contraste del texto, no el vidrio.", "section": "colors" },
+      { "name": "La Regla del Par Completo", "body": "Todo token de color existe en claro y en oscuro. Un color que solo funciona en un modo no es un token del sistema: es un hardcodeo, y se trata como defecto.", "section": "colors" },
+      { "name": "La Regla de la Voz Liviana", "body": "El texto de lectura es peso 300. Un párrafo en 400 se lee más pesado sin ganar legibilidad, y rompe el contraste con Body Strong que hace legible la jerarquía.", "section": "typography" },
+      { "name": "La Regla de las Versalitas Cortas", "body": "Las versalitas con 0.1em de espaciado sirven para etiquetas de una a tres palabras. Una frase completa en versalitas es ilegible y está prohibida.", "section": "typography" },
+      { "name": "La Regla del Pulgar", "body": "En móvil, todo control accionable tiene al menos 44px de altura táctil, aunque su caja visual sea menor.", "section": "layout" },
+      { "name": "La Regla de los Tres Vidrios", "body": "Solo existen tres niveles de difuminado. Un cuarto valor de backdrop-blur es deriva y se corrige, no se documenta.", "section": "elevation" },
+      { "name": "La Regla de la Sombra Muda", "body": "Una superficie en reposo no proyecta sombra. Si un elemento necesita sombra para verse, primero revisá si le corresponde otro nivel de vidrio.", "section": "elevation" },
+      { "name": "La Regla del Cuarto Radio", "body": "Cualquier radio arbitrario (rounded-[2rem], rounded-[3rem]) es deriva. Se resuelve mapeándolo al escalón más cercano, no agregando un escalón.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do definir todo color mediante un token de @theme con su par oscuro. Si el color no existe en ambos modos, todavía no es un token.",
+      "Do usar exactamente tres niveles de difuminado (md / xl / 2xl) según la distancia del elemento al usuario.",
+      "Do limitar los radios a sm 12px, md 16px, lg 24px y full.",
+      "Do escribir el cuerpo de texto en peso 300 y las etiquetas en versalitas con 0.1em.",
+      "Do dar a todo control un focus-visible con anillo de 2px en primary.",
+      "Do derivar el color desde el fondo de aurora: la interfaz se mantiene neutra y deja que la luz venga de atrás."
+    ],
+    "donts": [
+      "Don't usar el Violeta Eléctrico como relleno decorativo: nada de fondos de sección, tarjetas ni sombras teñidas bajo elementos no interactivos. Techo del 10% del área de pantalla.",
+      "Don't usar texto con gradiente. Es la marca de agua de la interfaz genérica y ya aparece en HeroSection.tsx y AppSidebar.tsx; ambos casos son deuda a corregir.",
+      "Don't escalar en hover (hover:scale-[1.02]) ni comprimir en active (active:scale-95). El carácter es preciso y contenido; el escalado lo vuelve blando.",
+      "Don't usar animate-bounce ni curvas elásticas. Las transiciones son cortas y desaceleran suavemente.",
+      "Don't hardcodear colores de Tailwind (bg-white/20, text-slate-500, bg-red-50) ni hexadecimales sueltos (text-[#75777b]) en un componente. Cada uno de esos es un punto donde el modo oscuro se rompe.",
+      "Don't agregar un cuarto nivel de backdrop-blur ni un radio arbitrario. La deriva se mapea al escalón existente.",
+      "Don't poner sombra en una superficie en reposo."
+    ]
+  }
+}
