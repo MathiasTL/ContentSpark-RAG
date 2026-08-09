@@ -377,31 +377,28 @@ change works — a green build is necessary but explicitly **not** sufficient
   (`frontend-1 | ✓ Ready in 175ms`, serving on `:3000`). **Backend hot
   reload independently verified**: edited `backend/main.py`'s `/` handler,
   observed `uvicorn --reload` restart and serve the change within ~3s, then
-  reverted (`git diff` clean). **Frontend fast-refresh not exercised**: a
-  second `up` hit a real runtime error unrelated to this fix —
-  `Error: Your project's URL and Key are required to create a Supabase
-  client!` in `proxy.ts`, because the root `.env` (holding the
-  `NEXT_PUBLIC_SUPABASE_*` build/runtime values) does not exist on disk yet
-  (flagged already under 5.1-5.4 as a pre-existing gap the user must fill in;
-  Bash access to read `frontend/.env.local` to populate it was denied by
-  sandbox permissions). Once the user creates the root `.env` per
-  `.env.example`, a follow-up edit-and-observe pass on a frontend component
-  would close this out fully — the structural defect (frontend never
-  starting) is fixed and confirmed; only the env-dependent functional
-  fast-refresh check remains open.
-- [~] **5.6** [VERIFY] Confirm the `docker-compose.dev.yml` volume merge
+  reverted (`git diff` clean). A first attempt hit an unrelated runtime error
+  (`Error: Your project's URL and Key are required to create a Supabase
+  client!` in `proxy.ts`) because the root `.env` did not exist yet.
+  **Follow-up after user created the root `.env`**: brought the dev overlay
+  up again — both `curl :3000` and `curl :8000/` now return 200. Edited
+  `frontend/app/layout.tsx`'s `title` string, observed `✓ Compiled in 73ms`
+  in the frontend container logs and the new string served by `curl :3000`
+  within ~3s with no rebuild, then reverted (`git status` clean). **Frontend
+  fast-refresh confirmed working.** 5.5 fully closed.
+- [x] **5.6** [VERIFY] Confirm the `docker-compose.dev.yml` volume merge
   works as expected: the base file's `./backend/data:/app/data:ro` and the
   overlay's `./backend:/app` coexist without a mount conflict (design §6 —
   "verify, do not assume"; if it conflicts, the documented resolution is
   dropping `:ro` from the base entry).
   Exit criterion: 5.
-  **PARTIAL — backend side verified pass, frontend side still unverifiable.**
   `docker inspect contentspark-rag-backend-1` shows both mounts active
   simultaneously with no conflict: `.../backend/data -> /app/data (ro)` and
-  `.../backend -> /app (rw)`. The frontend now starts (5.5 fixed), but its
-  container currently crashes at runtime for the unrelated missing-root-`.env`
-  reason above before the anonymous-volume behaviour could be observed under
-  load — re-check once the root `.env` exists.
+  `.../backend -> /app (rw)`. `docker inspect contentspark-rag-frontend-1`
+  (once 5.5 was fixed and the root `.env` existed) confirms the anonymous
+  volumes for `/app/node_modules` and `/app/.next` coexist with the
+  `./frontend:/app` bind mount with no conflict, and the container serves
+  successfully under that mount layout.
 - [x] **5.7** [VERIFY] `mamba run -n contentspark pytest backend/tests` and
   `pnpm --dir frontend test` both still pass **host-native**, and `pnpm
   --dir frontend dev` still serves against `http://localhost:8000` with no
