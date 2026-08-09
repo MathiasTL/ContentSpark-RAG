@@ -4,7 +4,7 @@ import logging
 from typing import Annotated
 from zoneinfo import available_timezones
 
-from pydantic import AfterValidator, BaseModel, ConfigDict
+from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +32,14 @@ def _validate_timezone(value: str | None) -> str | None:
 
 TimezoneName = Annotated[str | None, AfterValidator(_validate_timezone)]
 
+# El ORM expone `id`/`user_id` como `uuid.UUID`; Pydantic v2 no los coerciona
+# a `str` automaticamente en modo lax, hay que convertirlos explicitamente.
+StrFromUUID = Annotated[str, BeforeValidator(str)]
+
 
 class SocialAccountCreate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     platform: str  # tiktok | instagram | youtube | linkedin | x
     handle: str
     url: str | None = None
@@ -76,8 +82,8 @@ class ProfileUpdate(BaseModel):
 class ProfileResponse(ProfileCreate):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    user_id: str
+    id: StrFromUUID
+    user_id: StrFromUUID
     # Un perfil recien creado (sin onboarding) no tiene estos campos aun;
     # a diferencia de ProfileCreate, la respuesta debe poder representarlos
     # vacios (spec creator-profile / Profile Read, escenario "No profile yet").

@@ -321,6 +321,9 @@ async def test_replace_social_accounts_scopes_new_rows_to_profile():
     fake_profile = SimpleNamespace(id="profile-99", social_accounts=[])
     db = AsyncMock()
     db.add = MagicMock()
+    db.execute = AsyncMock(
+        return_value=MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[]))))
+    )
 
     await service._replace_social_accounts(
         db, fake_profile, [SocialAccountCreate(platform="tiktok", handle="@maria")]

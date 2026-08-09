@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.profile import CreatorProfile, SocialAccount
 
@@ -44,7 +45,11 @@ class ProfileService:
         self, db: AsyncSession, user_id: str
     ) -> CreatorProfile:
         uid = _to_uuid(user_id, "user_id")
-        stmt = select(CreatorProfile).where(CreatorProfile.user_id == uid)
+        stmt = (
+            select(CreatorProfile)
+            .options(selectinload(CreatorProfile.social_accounts))
+            .where(CreatorProfile.user_id == uid)
+        )
         result = await db.execute(stmt)
         profile = result.scalar_one_or_none()
         if profile is None:
@@ -52,6 +57,7 @@ class ProfileService:
             db.add(profile)
             await db.flush()
             await db.refresh(profile)
+            await db.refresh(profile, attribute_names=["social_accounts"])
         return profile
 
     async def get_status(
@@ -79,6 +85,12 @@ class ProfileService:
             await self._replace_social_accounts(db, profile, social_accounts)
         await db.flush()
         await db.refresh(profile)
+        # `refresh()` expira TODAS las relaciones ya cargadas (incluso las
+        # que trajo el `selectinload` de `get_or_create_profile`), aunque no
+        # se hayan tocado en este request. Sin este refresh explicito,
+        # `social_accounts` queda expirada y dispara un lazy-load sincronico
+        # al serializar la respuesta -> MissingGreenlet.
+        await db.refresh(profile, attribute_names=["social_accounts"])
         return profile
 
     async def complete_onboarding(
@@ -106,13 +118,16 @@ class ProfileService:
             await self._replace_social_accounts(db, profile, social_accounts)
         await db.flush()
         await db.refresh(profile)
+        await db.refresh(profile, attribute_names=["social_accounts"])
         return profile
 
     async def _replace_social_accounts(
         self, db: AsyncSession, profile: CreatorProfile, accounts: list[Any]
     ) -> None:
         """Reemplaza las cuentas sociales del perfil por las recibidas."""
-        for existing in list(profile.social_accounts):
+        stmt = select(SocialAccount).where(SocialAccount.profile_id == profile.id)
+        result = await db.execute(stmt)
+        for existing in result.scalars().all():
             await db.delete(existing)
         for account in accounts:
             data = account.model_dump() if hasattr(account, "model_dump") else dict(account)
