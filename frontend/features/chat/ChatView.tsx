@@ -6,7 +6,7 @@ import Image from "next/image";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AnimatePresence, motion } from "framer-motion";
-import { Paperclip, Send, UserCircle2 } from "lucide-react";
+import { Paperclip, Send, Square, UserCircle2 } from "lucide-react";
 
 import { getSourcesFromBackend } from "@/shared/lib/api-client";
 import type { Source } from "@/shared/lib/api-client";
@@ -19,6 +19,7 @@ import ChatHeader from "./components/ChatHeader";
 import SourcesModal from "./components/SourcesModal";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { buttonClass } from "@/shared/components/ui/Button";
+import Alert from "@/shared/components/ui/Alert";
 
 interface ChatViewProps {
   chatId?: string;
@@ -93,6 +94,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
   const setActiveChat = useChatSessionsStore((s) => s.setActiveChat);
   const loadChat = useChatSessionsStore((s) => s.loadChat);
   const sendMessage = useChatSessionsStore((s) => s.sendMessage);
+  const cancelStream = useChatSessionsStore((s) => s.cancelStream);
   const session = useChatSession(chatId);
   const pendingNewChat = useIsPendingNewChat();
 
@@ -110,6 +112,8 @@ export default function ChatView({ chatId }: ChatViewProps) {
   const isStreaming = session?.isStreaming ?? false;
   const hasStartedStreaming = session?.hasStartedStreaming ?? false;
   const error = session?.error ?? null;
+  const activeSessionChatId = session?.chatId ?? chatId;
+  const lastUserMessage = [...messages].reverse().find((m) => m.role === "user")?.content;
 
   useEffect(() => {
     setActiveChat(chatId ?? null);
@@ -176,6 +180,14 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
   function sendCurrentInput() {
     handleSend(input.trim());
+  }
+
+  function handleStop() {
+    if (activeSessionChatId) cancelStream(activeSessionChatId);
+  }
+
+  function handleRetry() {
+    if (lastUserMessage) handleSend(lastUserMessage);
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
@@ -278,9 +290,18 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
         <div className="relative z-10 mx-auto w-full max-w-4xl shrink-0 space-y-6 px-12 pb-24 lg:pb-8">
           {error && (
-            <div className="rounded-2xl border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {error}
-            </div>
+            <Alert tone="danger" className="flex items-center justify-between gap-3">
+              <span>{error}</span>
+              {lastUserMessage && (
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="shrink-0 rounded-full border border-danger/40 px-3 py-1 text-xs font-medium text-danger transition-colors duration-150 hover:bg-danger/10"
+                >
+                  Reintentar
+                </button>
+              )}
+            </Alert>
           )}
 
           <AnimatePresence>
@@ -319,7 +340,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
                 onKeyDown={handleKeyDown}
                 placeholder="Pregunta a ContentSpark lo que necesites..."
                 disabled={isStreaming || pendingNewChat}
-                className="max-h-40 flex-1 resize-none overflow-hidden border-none bg-transparent py-3 font-light leading-relaxed text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0 focus:outline-none disabled:opacity-50"
+                className="max-h-40 flex-1 resize-none overflow-hidden rounded-xl border-none bg-transparent py-3 font-light leading-relaxed text-on-surface placeholder:text-on-surface-variant/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-50"
               />
               <button
                 type="button"
@@ -332,13 +353,15 @@ export default function ChatView({ chatId }: ChatViewProps) {
               </button>
               <button
                 type="button"
-                onClick={sendCurrentInput}
-                disabled={isStreaming || pendingNewChat || !input.trim()}
-                aria-label="Enviar mensaje"
+                onClick={isStreaming ? handleStop : sendCurrentInput}
+                disabled={pendingNewChat || (!isStreaming && !input.trim())}
+                aria-label={isStreaming ? "Detener generación" : "Enviar mensaje"}
                 className={`${buttonClass("primary")} !w-12 h-12 shrink-0 !py-0 flex items-center justify-center rounded-full shadow-lg shadow-primary/30 disabled:cursor-not-allowed`}
               >
-                {isStreaming || pendingNewChat ? (
+                {pendingNewChat ? (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : isStreaming ? (
+                  <Square size={16} strokeWidth={2} fill="currentColor" />
                 ) : (
                   <Send size={18} strokeWidth={2} />
                 )}

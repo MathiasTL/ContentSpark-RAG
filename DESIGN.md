@@ -356,6 +356,16 @@ RESUELTO — pasada de chat (P0), 2026-08-17 (critique 25/40, dos P0 cerrados, P
    composer (focus:ring-0 sin reemplazo), sin detener/reintentar stream fallido,
    red-*/green-* sueltos en ChatListItem (controles de borrado), adopcion de
    Field/Button en el resto del feature.
+15. [x] CHAT P1, 2026-08-17: composer con focus-visible:ring-2 en primary (antes
+   focus:ring-0 focus:outline-none sin reemplazo). cancelStream ya existia
+   completo en chatSessionsStore.ts (abort limpio, sin error visible en abort
+   intencional) pero nunca estaba cableado a un boton — el boton de enviar
+   ahora se convierte en boton de detener (icono Square) mientras isStreaming.
+   El banner de error del hilo principal paso de red-300/red-500 sueltos al
+   componente Alert, con boton "Reintentar" que reenvia el ultimo mensaje del
+   usuario (antes solo la lista de chats tenia este patron).
+   PENDIENTE en chat: red-*/green-* en ChatListItem (controles de borrado, P2),
+   adopcion de Field/Button en el resto del feature.
 
 PENDIENTE:
 4. ~178 utilidades de color hardcodeadas en las vistas que faltan.
