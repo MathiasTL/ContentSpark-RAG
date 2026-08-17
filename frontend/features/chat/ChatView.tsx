@@ -18,6 +18,7 @@ import {
 import ChatHeader from "./components/ChatHeader";
 import SourcesModal from "./components/SourcesModal";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { buttonClass } from "@/shared/components/ui/Button";
 
 interface ChatViewProps {
   chatId?: string;
@@ -78,9 +79,9 @@ function TypingIndicator() {
       </div>
       <div className="rounded-3xl rounded-tl-none border border-white/10 bg-surface-container-lowest/40 px-6 py-4 backdrop-blur-2xl">
         <span className="flex h-5 items-center gap-1">
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.3s]" />
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant [animation-delay:-0.15s]" />
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-on-surface-variant" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-on-surface-variant [animation-delay:-0.3s]" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-on-surface-variant [animation-delay:-0.15s]" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-on-surface-variant" />
         </span>
       </div>
     </div>
@@ -232,8 +233,8 @@ export default function ChatView({ chatId }: ChatViewProps) {
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-primary-container shadow-lg">
                       <UserCircle2 className="h-7 w-7 text-white/80" strokeWidth={1.25} />
                     </div>
-                    <div className="liquid-gradient rounded-3xl rounded-tr-none border border-white/10 p-6 leading-relaxed text-white shadow-xl shadow-primary/10 backdrop-blur-2xl">
-                      <p className="font-light">{msg.content}</p>
+                    <div className="rounded-3xl rounded-tr-none border border-white/10 bg-primary p-6 leading-relaxed text-on-primary shadow-xl shadow-primary/10 backdrop-blur-2xl">
+                      <p className="whitespace-pre-wrap font-light">{msg.content}</p>
                     </div>
                   </motion.div>
                 ) : (
@@ -298,7 +299,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
                     type="button"
                     onClick={() => handleSend(prompt)}
                     disabled={isStreaming || pendingNewChat}
-                    className="rounded-full border border-white/10 bg-surface-container-lowest/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-all hover:scale-105 hover:bg-surface-container-lowest/40 disabled:opacity-40"
+                    className="rounded-full border border-white/10 bg-surface-container-lowest/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-colors duration-150 hover:bg-surface-container-lowest/40 disabled:opacity-40"
                   >
                     {prompt}
                   </button>
@@ -334,7 +335,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
                 onClick={sendCurrentInput}
                 disabled={isStreaming || pendingNewChat || !input.trim()}
                 aria-label="Enviar mensaje"
-                className="liquid-gradient flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg shadow-primary/30 transition-transform hover:scale-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                className={`${buttonClass("primary")} !w-12 h-12 shrink-0 !py-0 flex items-center justify-center rounded-full shadow-lg shadow-primary/30 disabled:cursor-not-allowed`}
               >
                 {isStreaming || pendingNewChat ? (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

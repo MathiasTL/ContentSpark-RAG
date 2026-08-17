@@ -52,8 +52,8 @@ export default function ChatSidebarContent({ collapsed = false, onNavigate }: Ch
           type="button"
           onClick={handleNewChat}
           aria-label="Nuevo chat"
-          className={`liquid-gradient flex items-center justify-center text-white shadow-md shadow-[#6e2ce0]/20 transition-transform hover:scale-105 active:scale-95 ${
-            collapsed ? "h-10 w-10 rounded-full" : "h-9 w-9 rounded-full"
+          className={`flex items-center justify-center rounded-full bg-primary text-on-primary shadow-md shadow-primary/20 transition-colors duration-150 hover:bg-primary-hover ${
+            collapsed ? "h-10 w-10" : "h-9 w-9"
           }`}
         >
           <Plus size={16} strokeWidth={2.5} />

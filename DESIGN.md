@@ -339,9 +339,27 @@ RESUELTO — pasada de onboarding, 2026-08-17 (critique 23/40, dos P0 y un P1 ce
    plataforma/usuario ahora vive detras de un toggle "+ Agregar red social"
    (revelado progresivo), en vez de estar siempre abierto.
 
+RESUELTO — pasada de chat (P0), 2026-08-17 (critique 25/40, dos P0 cerrados, P1/P2 pendientes):
+14. [x] CHAT P0: liquid-gradient + hover:scale/active:scale en burbuja de usuario,
+   boton enviar, boton nuevo chat y prompts sugeridos (ChatView.tsx,
+   ChatSidebarContent.tsx) reemplazados por bg-primary plano via Button/buttonClass.
+   animate-bounce del indicador de "escribiendo" (unico hallazgo real que SI marco
+   detect.mjs, regla bounce-easing) paso a animate-pulse.
+   SourcesModal.tsx no era un dialogo real (sin role/aria-modal/focus trap/Escape)
+   y estaba destonificado (gray/slate/rose sin par oscuro) — reconstruido sobre el
+   mismo patron de ChatMobileDrawer.tsx, con Alert para el estado de error.
+   Indicador "en vivo" de streaming (ChatListItem.tsx): bg-green-400 (token de
+   success reutilizado incorrectamente para estado permanente, no confirmacion)
+   reemplazado por bg-primary + animate-pulse, con aria-label agregado a la
+   variante colapsada que no lo tenia.
+   PENDIENTE en chat (P1/P2, no tocado en esta pasada): anillo de foco del
+   composer (focus:ring-0 sin reemplazo), sin detener/reintentar stream fallido,
+   red-*/green-* sueltos en ChatListItem (controles de borrado), adopcion de
+   Field/Button en el resto del feature.
+
 PENDIENTE:
-4. ~187 utilidades de color hardcodeadas en las vistas que faltan.
-   Reparto: landing 107, calendar 80, chat 48, profile 20, shared 16. (onboarding: 0, resuelto)
+4. ~178 utilidades de color hardcodeadas en las vistas que faltan.
+   Reparto: landing 107, calendar 80, chat ~39, profile 20, shared 16. (onboarding: 0, resuelto)
    Mientras existan, esas zonas no responden al tema.
 5b. [x] RESUELTO junto con el punto 5. Las cuatro vistas bajaron de 1005 a 681 lineas
    (-32%) y los primitivos suman 463. El total sube ~139 lineas: extraer NO ahorra

@@ -80,7 +80,10 @@ export default function ChatListItem({
       >
         {displayTitle.charAt(0).toUpperCase()}
         {isStreaming && (
-          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-green-400 ring-2 ring-surface" />
+          <span
+            aria-label="Streameando"
+            className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-primary ring-2 ring-surface"
+          />
         )}
       </Link>
     );
@@ -106,7 +109,7 @@ export default function ChatListItem({
           {isStreaming && (
             <span
               aria-label="Streameando"
-              className="ml-1 h-2 w-2 shrink-0 animate-pulse rounded-full bg-green-400"
+              className="ml-1 h-2 w-2 shrink-0 animate-pulse rounded-full bg-primary"
             />
           )}
           <span className="shrink-0 text-[10px] text-on-surface-variant/70">
