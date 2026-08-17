@@ -366,10 +366,18 @@ RESUELTO — pasada de chat (P0), 2026-08-17 (critique 25/40, dos P0 cerrados, P
    usuario (antes solo la lista de chats tenia este patron).
    PENDIENTE en chat: red-*/green-* en ChatListItem (controles de borrado, P2),
    adopcion de Field/Button en el resto del feature.
+16. [x] CHAT P2, 2026-08-17: ChatListItem.tsx, ultimos dos literales rojos
+   (boton "Si" de confirmar borrado y hover del icono Trash2) migrados a
+   danger/danger-container. CHAT QUEDA CERRADO (P0+P1+P2): cero red-*/green-*/
+   gray-*/slate-*/hex sueltos en todo el feature (verificado con grep).
+   PENDIENTE (fuera de esta serie, no bloqueante): adopcion de Field/Button en
+   ChatHeader y otros botones-icono del feature; hit target de 20px en los
+   botones Si/No de confirmar borrado (persona Casey, nunca se numero como
+   issue formal, solo como red flag).
 
 PENDIENTE:
-4. ~178 utilidades de color hardcodeadas en las vistas que faltan.
-   Reparto: landing 107, calendar 80, chat ~39, profile 20, shared 16. (onboarding: 0, resuelto)
+4. ~176 utilidades de color hardcodeadas en las vistas que faltan.
+   Reparto: landing 107, calendar 80, profile 20, shared 16. (onboarding: 0, chat: 0, resueltos)
    Mientras existan, esas zonas no responden al tema.
 5b. [x] RESUELTO junto con el punto 5. Las cuatro vistas bajaron de 1005 a 681 lineas
    (-32%) y los primitivos suman 463. El total sube ~139 lineas: extraer NO ahorra

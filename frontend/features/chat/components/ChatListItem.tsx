@@ -124,7 +124,7 @@ export default function ChatListItem({
             type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="rounded-full bg-red-500/20 px-2 py-0.5 text-red-500 hover:bg-red-500/30 disabled:opacity-50"
+            className="rounded-full bg-danger-container px-2 py-0.5 text-danger hover:bg-danger/20 disabled:opacity-50"
           >
             {isDeleting ? "..." : "Si"}
           </button>
@@ -147,7 +147,7 @@ export default function ChatListItem({
           <Trash2
             size={14}
             strokeWidth={1.5}
-            className="text-on-surface-variant hover:text-red-500"
+            className="text-on-surface-variant hover:text-danger"
           />
         </button>
       )}
