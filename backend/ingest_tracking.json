@@ -55,6 +55,126 @@
             "language": "en",
             "chunks": 86,
             "pages": 25
+        },
+        "https://blog.youtube/intl/es-419/inside-youtube/sobre-el-sistema-de-recomendaciones-de-youtube/": {
+            "date": "2026-08-16T22:54:49.804962",
+            "type": "web",
+            "category": "plataformas_algoritmos",
+            "language": "es",
+            "chunks": 68,
+            "source": "https://blog.youtube/intl/es-419/inside-youtube/sobre-el-sistema-de-recomendaciones-de-youtube/"
+        },
+        "https://newsroom.tiktok.com/en-us/how-tiktok-recommends-videos-for-you": {
+            "date": "2026-08-16T22:54:58.558154",
+            "type": "web",
+            "category": "plataformas_algoritmos",
+            "language": "en",
+            "chunks": 30,
+            "source": "https://newsroom.tiktok.com/en-us/how-tiktok-recommends-videos-for-you"
+        },
+        "https://newsroom.tiktok.com/en-us/learn-why-a-video-is-recommended-for-you": {
+            "date": "2026-08-16T22:56:13.549904",
+            "type": "web",
+            "category": "plataformas_algoritmos",
+            "language": "en",
+            "chunks": 7,
+            "source": "https://newsroom.tiktok.com/en-us/learn-why-a-video-is-recommended-for-you"
+        },
+        "https://creators.instagram.com/earn-cash-making-what-you-love?locale=en_US": {
+            "date": "2026-08-16T22:56:19.226620",
+            "type": "web",
+            "category": "monetizacion",
+            "language": "en",
+            "chunks": 1,
+            "source": "https://creators.instagram.com/earn-cash-making-what-you-love?locale=en_US"
+        },
+        "https://creators.instagram.com/earn-money/subscriptions": {
+            "date": "2026-08-16T22:56:23.973082",
+            "type": "web",
+            "category": "monetizacion",
+            "language": "es",
+            "chunks": 2,
+            "source": "https://creators.instagram.com/earn-money/subscriptions"
+        },
+        "https://blog.youtube/intl/es-419/news-and-events/nuevas-oportunidades-para-ganar-dinero-y-cambios-en-el-programa-de-socios-de-youtube/": {
+            "date": "2026-08-16T22:56:28.091540",
+            "type": "web",
+            "category": "monetizacion",
+            "language": "es",
+            "chunks": 4,
+            "source": "https://blog.youtube/intl/es-419/news-and-events/nuevas-oportunidades-para-ganar-dinero-y-cambios-en-el-programa-de-socios-de-youtube/"
+        },
+        "https://blog.hubspot.com/marketing/short-form-video-psychology": {
+            "date": "2026-08-16T22:56:34.690070",
+            "type": "web",
+            "category": "hooks_retencion",
+            "language": "en",
+            "chunks": 39,
+            "source": "https://blog.hubspot.com/marketing/short-form-video-psychology"
+        },
+        "https://blog.hubspot.com/marketing/short-form-video-trends": {
+            "date": "2026-08-16T22:59:01.118952",
+            "type": "web",
+            "category": "hooks_retencion",
+            "language": "en",
+            "chunks": 78,
+            "source": "https://blog.hubspot.com/marketing/short-form-video-trends"
+        },
+        "https://ahrefs.com/blog/ai-visibility/": {
+            "date": "2026-08-16T23:00:14.160022",
+            "type": "web",
+            "category": "seo_ai_search",
+            "language": "en",
+            "chunks": 37,
+            "source": "https://ahrefs.com/blog/ai-visibility/"
+        },
+        "https://ahrefs.com/blog/ai-search-trends/": {
+            "date": "2026-08-16T23:00:20.406285",
+            "type": "web",
+            "category": "seo_ai_search",
+            "language": "en",
+            "chunks": 32,
+            "source": "https://ahrefs.com/blog/ai-search-trends/"
+        },
+        "https://ahrefs.com/blog/ai-seo/": {
+            "date": "2026-08-16T23:00:26.631548",
+            "type": "web",
+            "category": "seo_ai_search",
+            "language": "en",
+            "chunks": 31,
+            "source": "https://ahrefs.com/blog/ai-seo/"
+        },
+        "https://sproutsocial.com/insights/social-media-content-strategy/": {
+            "date": "2026-08-16T23:01:40.625522",
+            "type": "web",
+            "category": "estrategia_contenido",
+            "language": "en",
+            "chunks": 62,
+            "source": "https://sproutsocial.com/insights/social-media-content-strategy/"
+        },
+        "https://sproutsocial.com/insights/social-media-content-pillars/": {
+            "date": "2026-08-16T23:02:54.211719",
+            "type": "web",
+            "category": "estrategia_contenido",
+            "language": "en",
+            "chunks": 46,
+            "source": "https://sproutsocial.com/insights/social-media-content-pillars/"
+        },
+        "https://sproutsocial.com/insights/data/2026-social-media-content-strategy-report/": {
+            "date": "2026-08-16T23:02:58.673898",
+            "type": "web",
+            "category": "estrategia_contenido",
+            "language": "en",
+            "chunks": 4,
+            "source": "https://sproutsocial.com/insights/data/2026-social-media-content-strategy-report/"
+        },
+        "https://blog.hubspot.com/marketing/good-copywriting-practices-list": {
+            "date": "2026-08-16T23:17:29.497764",
+            "type": "web",
+            "category": "storytelling_copywriting",
+            "language": "en",
+            "chunks": 51,
+            "source": "https://blog.hubspot.com/marketing/good-copywriting-practices-list"
         }
     }
 }
