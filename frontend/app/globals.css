@@ -21,6 +21,11 @@
   --color-primary-container: #b08cff;
   --color-secondary: #b4005d;
 
+  /* Texto e iconos SOBRE el primario. Existe porque el blanco no es una
+     constante: en oscuro el primario se aclara y el blanco cae a 2.97:1. */
+  --color-on-primary: #ffffff;
+  --color-primary-hover: #5f22c9;
+
   --color-surface: #f5f6fb;
   --color-surface-container: #e6e8ee;
   --color-surface-container-lowest: #ffffff;
@@ -28,13 +33,21 @@
   --color-on-surface-variant: #595c60;
 
   /* Filo de vidrio: el borde que define donde termina una lamina.
-     Reemplaza a los `border-white/40` y `border-white/20` hardcodeados. */
-  --color-glass-edge: rgba(255, 255, 255, 0.4);
-  --color-glass-edge-soft: rgba(255, 255, 255, 0.2);
+     Reemplaza a los `border-white/40` y `border-white/20` hardcodeados.
+     En CLARO el filo es un tinte oscuro violaceo, no blanco: medido sobre el
+     render, un borde blanco sobre el fondo claro daba 1.30:1 de separacion
+     entre tarjeta y pagina, o sea invisible. El filo define el vidrio, y para
+     definirlo tiene que verse. */
+  --color-glass-edge: rgba(41, 28, 66, 0.18);
+  --color-glass-edge-soft: rgba(41, 28, 66, 0.1);
 
   /* Unico rojo del sistema. */
   --color-danger: #b3261e;
   --color-danger-container: #fceceb;
+
+  /* Unico verde del sistema. Confirmaciones, nada mas. */
+  --color-success: #1b6b45;
+  --color-success-container: #e4f4ea;
 }
 
 :root {
@@ -49,6 +62,12 @@
   --color-primary-container: #d6c2ff;
   --color-secondary: #ff7fb0;
 
+  /* Y al aclararse, deja de admitir texto blanco: #ffffff sobre #a97dff da
+     2.97:1, por debajo de AA. El texto sobre el primario se invierte. */
+  --color-on-primary: #1a1024;
+  /* En oscuro el hover aclara en vez de oscurecer. */
+  --color-primary-hover: #bd97ff;
+
   --color-surface: #1a1625;
   --color-surface-container: #241f33;
   --color-surface-container-lowest: #0e0c16;
@@ -61,6 +80,9 @@
 
   --color-danger: #f2b8b5;
   --color-danger-container: #3b1512;
+
+  --color-success: #7fd7a6;
+  --color-success-container: #0f2a1d;
 }
 
 .liquid-gradient {
