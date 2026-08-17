@@ -326,17 +326,31 @@ RESUELTO — pasada de login, 2026-08-09 (critique 22/40 -> ver siguiente corrid
        Las cuatro con htmlFor, autoComplete, role alert/status y toggle de 44px con
        aria-label. AuthBackground queda como excepcion declarada (ver Componentes).
 
+RESUELTO — pasada de onboarding, 2026-08-17 (critique 23/40, dos P0 y un P1 cerrados):
+12. [x] ONBOARDING migrado a los primitivos: OnboardingWizard.tsx, Step1Niche.tsx,
+   Step2Goals.tsx, Step3Frequency.tsx y Step4Formats.tsx consumen Button, Field y
+   Alert en vez de clases a mano. CTA de cierre paso de gradiente + hover:scale
+   (doble violacion) a Button plano con icono CheckCircle + copy "Finalizar
+   registro" — la diferenciacion del cierre viene de forma/copy, no de color o
+   movimiento. border-white/20, red-50/red-600/red-700 y text-[#75777b]/50
+   reemplazados por glass-edge/danger/on-surface-variant.
+13. [x] Step4Formats bajaba dos decisiones de +4 opciones (formatos + redes
+   sociales) a la vez, violando el checklist de carga cognitiva. El selector de
+   plataforma/usuario ahora vive detras de un toggle "+ Agregar red social"
+   (revelado progresivo), en vez de estar siempre abierto.
+
 PENDIENTE:
-4. ~211 utilidades de color hardcodeadas en las vistas que faltan.
-   Reparto: landing 107, calendar 80, chat 48, onboarding 24, profile 20, shared 16.
+4. ~187 utilidades de color hardcodeadas en las vistas que faltan.
+   Reparto: landing 107, calendar 80, chat 48, profile 20, shared 16. (onboarding: 0, resuelto)
    Mientras existan, esas zonas no responden al tema.
 5b. [x] RESUELTO junto con el punto 5. Las cuatro vistas bajaron de 1005 a 681 lineas
    (-32%) y los primitivos suman 463. El total sube ~139 lineas: extraer NO ahorra
    codigo, elimina puntos de cambio. Un ajuste de sistema que antes habia que hacer
    cuatro veces ahora se hace una.
-5c. REGLA PARA LAS SUPERFICIES QUE FALTAN: onboarding, chat, calendar, profile y landing
+5c. REGLA PARA LAS SUPERFICIES QUE FALTAN: chat, calendar, profile y landing
    deben consumir Button, Alert, Field y PasswordField. Si una vista nueva vuelve a
    escribir la clase de un input a mano, es un defecto, no una variante.
+   (onboarding: [x] resuelto 2026-08-17, ver punto 12)
 5. [x] RESUELTO 2026-08-09. Primitivos extraidos a shared/components/ui: Button (con
        buttonClass exportado para los casos en que la accion primaria es un Link),
        Alert (el role lo decide el tono), Field (ata label/input y arma aria-describedby;
