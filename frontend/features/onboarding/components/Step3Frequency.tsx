@@ -1,5 +1,7 @@
 "use client";
 
+import { CalendarClock, CalendarRange } from "lucide-react";
+import Field, { FIELD_ICON_CLASS } from "@/shared/components/ui/Field";
 import type { OnboardingDraft } from "../hooks/useOnboardingWizard";
 
 interface Step3FrequencyProps {
@@ -26,39 +28,25 @@ export default function Step3Frequency({
         </p>
       ) : null}
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="current_frequency"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
-          Frecuencia actual (opcional)
-        </label>
-        <input
-          id="current_frequency"
-          type="text"
-          value={draft.current_frequency ?? ""}
-          onChange={(e) => updateDraft({ current_frequency: e.target.value || null })}
-          placeholder="Ej. 3 por semana"
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+      <Field
+        id="current_frequency"
+        label="Frecuencia actual (opcional)"
+        type="text"
+        value={draft.current_frequency ?? ""}
+        onChange={(e) => updateDraft({ current_frequency: e.target.value || null })}
+        placeholder="Ej. 3 por semana"
+        icon={<CalendarClock aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+      />
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="desired_frequency"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
-          Frecuencia deseada (opcional)
-        </label>
-        <input
-          id="desired_frequency"
-          type="text"
-          value={draft.desired_frequency ?? ""}
-          onChange={(e) => updateDraft({ desired_frequency: e.target.value || null })}
-          placeholder="Ej. 5 por semana"
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+      <Field
+        id="desired_frequency"
+        label="Frecuencia deseada (opcional)"
+        type="text"
+        value={draft.desired_frequency ?? ""}
+        onChange={(e) => updateDraft({ desired_frequency: e.target.value || null })}
+        placeholder="Ej. 5 por semana"
+        icon={<CalendarRange aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+      />
     </div>
   );
 }

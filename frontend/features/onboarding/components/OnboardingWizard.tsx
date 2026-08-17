@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCircle } from "lucide-react";
+import Alert from "@/shared/components/ui/Alert";
+import Button from "@/shared/components/ui/Button";
 import { useOnboardingWizard } from "../hooks/useOnboardingWizard";
 import WizardProgress from "./WizardProgress";
 import Step1Niche from "./Step1Niche";
@@ -79,7 +82,7 @@ export default function OnboardingWizard() {
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col justify-center px-4 py-10 sm:px-6">
-      <div className="rounded-3xl border border-white/20 bg-surface-container-lowest/40 p-6 shadow-[0_32px_64px_-16px_rgba(110,44,224,0.12)] backdrop-blur-xl sm:p-10">
+      <div className="rounded-3xl border border-glass-edge bg-surface-container-lowest/40 p-6 shadow-[0_32px_64px_-16px_rgba(110,44,224,0.12)] backdrop-blur-xl sm:p-10">
         <WizardProgress step={step} totalSteps={totalSteps} titles={STEP_TITLES} />
 
         <h2
@@ -108,31 +111,28 @@ export default function OnboardingWizard() {
         </div>
 
         {submitError || error ? (
-          <p
-            role="alert"
-            className="mt-4 rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-700"
-          >
+          <Alert tone="danger" className="mt-4">
             {submitError ?? error}
-          </p>
+          </Alert>
         ) : null}
 
         <div className="mt-8 flex items-center justify-between gap-3">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={back}
             disabled={isFirstStep}
-            className="rounded-full border border-white/40 bg-surface-container-lowest/20 px-5 py-2.5 text-sm font-medium text-on-surface transition-all hover:bg-surface-container-lowest/40 disabled:cursor-not-allowed disabled:opacity-40"
+            className="!w-auto !py-2.5 px-6"
           >
             Atrás
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
             onClick={() => void handlePrimaryAction()}
             disabled={isSubmitting}
-            className="rounded-full bg-gradient-to-r from-primary to-primary-container px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100"
+            className="!w-auto inline-flex items-center justify-center gap-2 !py-2.5 px-6"
           >
-            {isLastStep ? (isSubmitting ? "Guardando..." : "Finalizar") : "Siguiente"}
-          </button>
+            {isLastStep ? <CheckCircle className="h-4 w-4" aria-hidden="true" /> : null}
+            {isLastStep ? (isSubmitting ? "Guardando..." : "Finalizar registro") : "Siguiente"}
+          </Button>
         </div>
       </div>
     </div>

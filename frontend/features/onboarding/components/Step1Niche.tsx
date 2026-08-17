@@ -1,5 +1,7 @@
 "use client";
 
+import { Tag } from "lucide-react";
+import Field, { FIELD_ICON_CLASS, FIELD_LABEL_CLASS, inputClass } from "@/shared/components/ui/Field";
 import { NICHES } from "@/shared/constants";
 import type { OnboardingDraft } from "../hooks/useOnboardingWizard";
 
@@ -24,10 +26,7 @@ export default function Step1Niche({ draft, updateDraft, showErrors }: Step1Nich
   return (
     <div className="space-y-5">
       <div className="space-y-1.5">
-        <label
-          htmlFor="niche"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
+        <label htmlFor="niche" className={FIELD_LABEL_CLASS}>
           Nicho
         </label>
         <select
@@ -37,7 +36,7 @@ export default function Step1Niche({ draft, updateDraft, showErrors }: Step1Nich
           aria-required="true"
           aria-invalid={nicheMissing}
           aria-describedby={nicheMissing ? "niche-error" : undefined}
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className={inputClass(nicheMissing, false)}
         >
           <option value="">Selecciona un nicho</option>
           {NICHES.map((n) => (
@@ -47,28 +46,21 @@ export default function Step1Niche({ draft, updateDraft, showErrors }: Step1Nich
           ))}
         </select>
         {nicheMissing ? (
-          <p id="niche-error" role="alert" className="ml-1 text-xs text-red-600">
+          <p id="niche-error" role="alert" className="ml-1 text-xs font-light text-danger">
             Selecciona un nicho para continuar.
           </p>
         ) : null}
       </div>
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="sub_niche"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
-          Sub-nicho (opcional)
-        </label>
-        <input
-          id="sub_niche"
-          type="text"
-          value={draft.sub_niche ?? ""}
-          onChange={(e) => updateDraft({ sub_niche: e.target.value || null })}
-          placeholder="Ej. desarrollo web, nutrición deportiva..."
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+      <Field
+        id="sub_niche"
+        label="Sub-nicho (opcional)"
+        type="text"
+        value={draft.sub_niche ?? ""}
+        onChange={(e) => updateDraft({ sub_niche: e.target.value || null })}
+        placeholder="Ej. desarrollo web, nutrición deportiva..."
+        icon={<Tag aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+      />
     </div>
   );
 }

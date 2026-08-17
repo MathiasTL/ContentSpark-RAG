@@ -1,5 +1,8 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { Sparkles, Target, Users } from "lucide-react";
+import Field, { FIELD_ICON_CLASS } from "@/shared/components/ui/Field";
 import type { OnboardingDraft } from "../hooks/useOnboardingWizard";
 
 interface Step2GoalsProps {
@@ -13,6 +16,7 @@ interface FieldConfig {
   label: string;
   placeholder: string;
   errorMessage: string;
+  icon: ReactNode;
 }
 
 const FIELDS: FieldConfig[] = [
@@ -21,18 +25,21 @@ const FIELDS: FieldConfig[] = [
     label: "Objetivo principal",
     placeholder: "Ej. crecer mi audiencia, vender un curso...",
     errorMessage: "Cuéntanos tu objetivo principal para continuar.",
+    icon: <Target aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />,
   },
   {
     id: "tone",
     label: "Tono de tu contenido",
     placeholder: "Ej. cercano, profesional, divertido...",
     errorMessage: "Describe el tono de tu contenido para continuar.",
+    icon: <Sparkles aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />,
   },
   {
     id: "target_audience",
     label: "Audiencia objetivo",
     placeholder: "Ej. desarrolladores junior, mamás primerizas...",
     errorMessage: "Describe tu audiencia objetivo para continuar.",
+    icon: <Users aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />,
   },
 ];
 
@@ -42,33 +49,20 @@ export default function Step2Goals({ draft, updateDraft, showErrors }: Step2Goal
       {FIELDS.map((field) => {
         const value = draft[field.id];
         const isMissing = showErrors && value.trim().length === 0;
-        const errorId = `${field.id}-error`;
 
         return (
-          <div key={field.id} className="space-y-1.5">
-            <label
-              htmlFor={field.id}
-              className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-            >
-              {field.label}
-            </label>
-            <input
-              id={field.id}
-              type="text"
-              value={value}
-              onChange={(e) => updateDraft({ [field.id]: e.target.value })}
-              placeholder={field.placeholder}
-              aria-required="true"
-              aria-invalid={isMissing}
-              aria-describedby={isMissing ? errorId : undefined}
-              className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-            {isMissing ? (
-              <p id={errorId} role="alert" className="ml-1 text-xs text-red-600">
-                {field.errorMessage}
-              </p>
-            ) : null}
-          </div>
+          <Field
+            key={field.id}
+            id={field.id}
+            type="text"
+            label={field.label}
+            value={value}
+            onChange={(e) => updateDraft({ [field.id]: e.target.value })}
+            placeholder={field.placeholder}
+            required
+            error={isMissing ? field.errorMessage : null}
+            icon={field.icon}
+          />
         );
       })}
     </div>
