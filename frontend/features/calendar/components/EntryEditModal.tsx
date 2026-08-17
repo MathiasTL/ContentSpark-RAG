@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FORMATS, PLATFORMS, TIME_SLOT_LABELS, TIME_SLOTS } from "@/shared/constants";
 import type { EntryItem, EntryUpdateInput } from "../services/calendar-api";
 import { useCalendarStore } from "../store/calendarStore";
@@ -9,6 +9,9 @@ interface EntryEditModalProps {
   entry: EntryItem;
   onClose: () => void;
 }
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
 const FORMAT_LABELS: Record<string, string> = {
   short_video: "Video corto",
@@ -61,6 +64,45 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
   const error = useCalendarStore((s) => s.error);
   const [fields, setFields] = useState<EditableFields>(toFields(entry));
   const initial = toFields(entry);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    triggerRef.current = document.activeElement as HTMLElement | null;
+
+    const panel = panelRef.current;
+    const firstFocusable = panel?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    firstFocusable?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !panel) return;
+
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      triggerRef.current?.focus();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function updateField<K extends keyof EditableFields>(key: K, value: EditableFields[K]): void {
     setFields((prev) => ({ ...prev, [key]: value }));
@@ -84,12 +126,14 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
-    >
-      <div className="w-full max-w-lg rounded-[2rem] border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Editar entrada"
+        className="w-full max-w-lg rounded-[2rem] border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-8"
+      >
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold tracking-tight text-on-surface sm:text-2xl">
             Editar entrada

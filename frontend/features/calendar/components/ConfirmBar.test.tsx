@@ -88,7 +88,7 @@ describe("ConfirmBar — confirmar", () => {
 });
 
 describe("ConfirmBar — eliminar", () => {
-  it("la acción de eliminar llama a calendarStore.remove con el id del calendario", () => {
+  it("clicar eliminar no llama a remove de inmediato, requiere confirmación", () => {
     const removeSpy = vi.fn().mockResolvedValue(undefined);
     useCalendarStore.setState({ remove: removeSpy });
 
@@ -96,7 +96,35 @@ describe("ConfirmBar — eliminar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /eliminar calendario/i }));
 
+    expect(removeSpy).not.toHaveBeenCalled();
+    expect(screen.getByText("¿Eliminar?")).toBeInTheDocument();
+  });
+
+  it('clicar eliminar y luego "Sí" llama a calendarStore.remove con el id del calendario', () => {
+    const removeSpy = vi.fn().mockResolvedValue(undefined);
+    useCalendarStore.setState({ remove: removeSpy });
+
+    render(<ConfirmBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: /eliminar calendario/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^sí$/i }));
+
     expect(removeSpy).toHaveBeenCalledWith("c1");
+  });
+
+  it('clicar eliminar y luego "No" cancela sin llamar a remove', () => {
+    const removeSpy = vi.fn().mockResolvedValue(undefined);
+    useCalendarStore.setState({ remove: removeSpy });
+
+    render(<ConfirmBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: /eliminar calendario/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^no$/i }));
+
+    expect(removeSpy).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: /eliminar calendario/i })
+    ).toBeInTheDocument();
   });
 
   it("la acción de eliminar está deshabilitada cuando el estado es synced", () => {

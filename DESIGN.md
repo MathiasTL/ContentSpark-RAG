@@ -375,8 +375,42 @@ RESUELTO — pasada de chat (P0), 2026-08-17 (critique 25/40, dos P0 cerrados, P
    botones Si/No de confirmar borrado (persona Casey, nunca se numero como
    issue formal, solo como red flag).
 
+RESUELTO — pasada de calendar (P0+P1), 2026-08-17 (critique 19/40 "Pobre" — vista pegada
+de un HTML de referencia, nunca paso por el sistema de diseño):
+17. [x] CALENDAR P0 bug funcional: el toggle Mes/Semana de TopBar.tsx tenia un
+   useState local desconectado del viewMode real que ya vivia (correcto) en
+   calendarStore.ts y que CalendarGrid.tsx ya consumia bien — el click no
+   cambiaba nada en el grid. Ahora TopBar lee/escribe el store, viewMode es una
+   sola fuente de verdad. CALENDAR P0 a11y: EntryEditModal.tsx tenia
+   role="dialog"/aria-modal pero sin focus trap, sin Escape, sin devolver foco
+   al trigger — mismo defecto que tenia SourcesModal.tsx. Se porto el mismo
+   patron (captura document.activeElement al abrir, focus trap Tab/Shift+Tab,
+   Escape cierra, foco vuelve al trigger al cerrar), mas aria-label porque no
+   tenia aria-labelledby.
+   CALENDAR P1: PerformancePanel.tsx, ActivityPanel.tsx y CreatorTip.tsx
+   mostraban datos 100% inventados como si fueran reales (grafico de barras
+   hardcodeado, actividad ficticia, "tu audiencia esta mas activa a las 7PM...
+   20% mas alcance") — confirmado por el usuario que hoy no existe backend
+   para ninguno de los tres. PRODUCT.md prohibe explicitamente inventar
+   metricas o prueba social. Reemplazados por estado vacio honesto ("Aun no
+   hay datos de rendimiento" / "Aun no hay actividad reciente"); CreatorTip
+   paso a un consejo editorial generico sin afirmar personalizacion ni medicion
+   ("la consistencia gana mas que la perfeccion..."), no un "no hay datos"
+   generico, porque ahi si hay contenido honesto que mostrar.
+   CALENDAR P1: borrado de calendario disparaba remove(id) directo en el
+   click, sin confirmacion — ahora usa el mismo patron Si/No de dos pasos que
+   ChatListItem.tsx, con tokens danger/danger-container en vez de red-* suelto.
+   PENDIENTE en calendar (P2/P3, no tocado en esta serie): ~80 utilidades
+   hardcodeadas en el resto (red-*/pink-*/blue-*/sky-*/emerald-*, hex sueltos,
+   gradiente decorativo en TimelineCards.tsx), hover:scale/active:scale en casi
+   todos los controles, radios rounded-[2rem]/rounded-[3rem] arbitrarios, cero
+   adopcion de Field/Button/Alert, "Visual Timeline" sin traducir, chips a
+   text-[8px] en mobile, generacion fallida sin reintento.
+
 PENDIENTE:
-4. ~176 utilidades de color hardcodeadas en las vistas que faltan.
+4. ~176 utilidades de color hardcodeadas en las vistas que faltan (calendar
+   sigue en ~80, el P1 de esta pasada no toco tokens de color, solo datos
+   fabricados y el bug/a11y).
    Reparto: landing 107, calendar 80, profile 20, shared 16. (onboarding: 0, chat: 0, resueltos)
    Mientras existan, esas zonas no responden al tema.
 5b. [x] RESUELTO junto con el punto 5. Las cuatro vistas bajaron de 1005 a 681 lineas

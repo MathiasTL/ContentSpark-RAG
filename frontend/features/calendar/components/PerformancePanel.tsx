@@ -2,8 +2,6 @@
 
 import { motion } from "framer-motion";
 
-const bars = [40, 60, 30, 90, 50, 75, 45];
-
 export default function PerformancePanel() {
   return (
     <motion.section
@@ -22,37 +20,29 @@ export default function PerformancePanel() {
         </svg>
       </div>
 
-      {/* Gráfico de barras */}
-      <div className="relative flex h-32 items-end justify-between gap-1.5 px-2 sm:h-36">
-        {bars.map((height, i) => (
-          <motion.div
-            key={i}
-            initial={{ height: 0 }}
-            animate={{ height: `${height}%` }}
-            transition={{ delay: 0.6 + i * 0.08, duration: 0.6, ease: "easeOut" }}
-            className={`w-2.5 rounded-t-full ${
-              height === Math.max(...bars)
-                ? "bg-gradient-to-t from-primary to-primary-container shadow-lg shadow-primary/20"
-                : "bg-primary/20"
-            }`}
-          />
-        ))}
-      </div>
-
-      {/* Stats */}
-      <div className="mt-6 flex items-center justify-between sm:mt-8">
-        <div>
-          <p className="text-2xl font-bold text-on-surface sm:text-3xl">8.4k</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-            Alcance
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-emerald-400 sm:text-3xl">+12%</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-            Semanal
-          </p>
-        </div>
+      <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
+        <svg
+          className="text-on-surface-variant/50"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+        <p className="text-sm font-light leading-relaxed text-on-surface-variant">
+          Aún no hay datos de rendimiento.
+        </p>
+        <p className="text-xs font-light leading-relaxed text-on-surface-variant/70">
+          Cuando confirmes y publiques entradas de tu calendario, vas a ver tu alcance acá.
+        </p>
       </div>
     </motion.section>
   );

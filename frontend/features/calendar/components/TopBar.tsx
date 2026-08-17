@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCalendarStore } from "../store/calendarStore";
 
 export default function TopBar() {
-  const [view, setView] = useState<"month" | "week">("month");
+  const view = useCalendarStore((s) => s.viewMode);
+  const setView = useCalendarStore((s) => s.setViewMode);
 
   return (
     <header className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-surface-container-lowest/5 px-6 py-5 backdrop-blur-xl sm:px-8">

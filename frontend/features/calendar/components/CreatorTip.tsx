@@ -19,10 +19,9 @@ export default function CreatorTip() {
         <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Tip del creador</span>
       </div>
       <p className="text-sm font-light leading-relaxed text-on-surface-variant">
-        Tu audiencia está más activa a las{" "}
-        <span className="font-bold text-primary-container">7:00 PM</span>. Programa tu
-        próximo Reel a esa hora para un{" "}
-        <span className="font-bold text-on-surface">20% más de alcance</span>.
+        La consistencia gana más que la perfección: una cadencia de publicación
+        que puedas sostener suele funcionar mejor que picos aislados de
+        contenido muy pulido.
       </p>
     </motion.div>
   );
