@@ -6,6 +6,14 @@ import CalendarView from "../CalendarView";
 import { useCalendarStore } from "../store/calendarStore";
 import CalendarGrid from "./CalendarGrid";
 
+vi.mock("@/shared/lib/supabase", () => ({
+  createClient: () => ({
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null } }),
+    },
+  }),
+}));
+
 function resetStore(overrides: Partial<ReturnType<typeof useCalendarStore.getState>> = {}) {
   useCalendarStore.setState({
     calendars: [],

@@ -400,27 +400,65 @@ de un HTML de referencia, nunca paso por el sistema de diseño):
    CALENDAR P1: borrado de calendario disparaba remove(id) directo en el
    click, sin confirmacion — ahora usa el mismo patron Si/No de dos pasos que
    ChatListItem.tsx, con tokens danger/danger-container en vez de red-* suelto.
-   PENDIENTE en calendar (P2/P3, no tocado en esta serie): ~80 utilidades
-   hardcodeadas en el resto (red-*/pink-*/blue-*/sky-*/emerald-*, hex sueltos,
-   gradiente decorativo en TimelineCards.tsx), hover:scale/active:scale en casi
-   todos los controles, radios rounded-[2rem]/rounded-[3rem] arbitrarios, cero
-   adopcion de Field/Button/Alert, "Visual Timeline" sin traducir, chips a
-   text-[8px] en mobile, generacion fallida sin reintento.
+18. [x] CALENDAR P2+P3, 2026-08-17: las 12 vistas migradas a tokens/primitivos
+   en dos agentes paralelos por archivo (sin solapamiento). Todos los radios
+   rounded-[2rem]/rounded-[3rem] arbitrarios pasaron a rounded-3xl; todo
+   border-white/*, bg-white/* paso a glass-edge/glass-edge-soft; hover:scale/
+   active:scale/group-hover:scale eliminados de todos los controles (incluido
+   GoogleSyncButton, CalendarGrid, TimelineCards, EntryEditModal, GenerateControl,
+   ConfirmBar, CalendarEmptyState). "Visual Timeline" traducido a "Linea de
+   tiempo". Chips de CalendarGrid pasaron de text-[8px] a text-xs (12px, piso
+   legible del sistema tipografico).
+   DECISION DE DISENO: PLATFORM_CHIP_STYLES/PLATFORM_STYLES (paleta de 5
+   colores por red social, red-500/pink-500/blue-400/sky-500 hardcodeados,
+   duplicada con valores levemente distintos en CalendarGrid.tsx y
+   TimelineCards.tsx) NO se retokenizo 1:1 — el sistema de diseno solo define
+   primary + secondary (maximo dos series de datos, ver "Magenta Senal") y
+   cinco plataformas no entran ahi sin inventar tokens nuevos por red social,
+   que es exactamente lo que la Regla del Diez Por Ciento prohibe. Se extrajo
+   `platformStyles.ts` (nuevo, compartido entre ambos archivos): la identidad
+   de plataforma ahora se comunica solo por texto (la etiqueta), con el acento
+   primary reservado para marcar lo accionable (el chip abre el editor), no la
+   identidad de la red social. Resuelve la deriva de duplicacion citada en el
+   critique por construccion, no por parche.
+   EntryEditModal.tsx y GenerateControl.tsx migrados a Field/Button/Alert
+   (Titulo/Hook/Frecuencia via Field con iconos lucide-react; selects via
+   inputClass/FIELD_LABEL_CLASS igual que Step4Formats.tsx; errores via Alert).
+   TopBar.tsx: avatar dejo de ser un gradiente decorativo con "M" hardcodeada
+   — ahora usa el hook useCurrentUser ya existente en el codebase (mismo que
+   AppSidebar/MobileNav), con imagen real o inicial derivada del nombre real.
+   GoogleSyncButton.tsx: los 4 hex de marca de Google (#4285F4 etc.) se
+   dejaron como estan — exencion de marca, se usan solo en el trazo del
+   isotipo, nunca como relleno decorativo de contenedor.
+   CREATORTIP: rounded-[2rem]/border-white/20 sueltos (fuera de ambos
+   reportes de los agentes) corregidos aparte, mismo patron.
+   Verificacion: tsc limpio, 213/213 tests, lint sin warnings, detect.mjs []
+   (grep de sanidad manual confirmo cero red-*/pink-*/blue-*/sky-*/emerald-*/
+   scale/rounded-[]/border-white/bg-white en las 12 vistas no-test).
+   CALENDAR QUEDA CERRADO (P0+P1+P2+P3) salvo lo explicitamente diferido:
+   generacion fallida sin boton de reintento (mencionado como persona red flag
+   de Riley, nunca numerado P0-P3), y el fieldset "Cantidad por formato" de
+   GenerateControl.tsx que sigue mostrando 5 inputs simultaneos sin revelado
+   progresivo (mismo patron ya resuelto en Step4Formats.tsx de onboarding,
+   pero explicitamente fuera de alcance de esta pasada por decision del
+   usuario de ir solo P2+P3 tokens/primitivos, no reestructurar IA).
 
 PENDIENTE:
-4. ~176 utilidades de color hardcodeadas en las vistas que faltan (calendar
-   sigue en ~80, el P1 de esta pasada no toco tokens de color, solo datos
-   fabricados y el bug/a11y).
-   Reparto: landing 107, calendar 80, profile 20, shared 16. (onboarding: 0, chat: 0, resueltos)
+4. ~143 utilidades de color hardcodeadas en las vistas que faltan.
+   Reparto: landing 107 (aun no auditado con este metodo, cifra original del
+   ledger), profile 20, shared 16, calendar 0. (onboarding: 0, chat: 0, calendar: 0, resueltos)
+   Nota: landing es la unica cifra no confirmada por un critique real todavia.
    Mientras existan, esas zonas no responden al tema.
 5b. [x] RESUELTO junto con el punto 5. Las cuatro vistas bajaron de 1005 a 681 lineas
    (-32%) y los primitivos suman 463. El total sube ~139 lineas: extraer NO ahorra
    codigo, elimina puntos de cambio. Un ajuste de sistema que antes habia que hacer
    cuatro veces ahora se hace una.
-5c. REGLA PARA LAS SUPERFICIES QUE FALTAN: chat, calendar, profile y landing
-   deben consumir Button, Alert, Field y PasswordField. Si una vista nueva vuelve a
-   escribir la clase de un input a mano, es un defecto, no una variante.
-   (onboarding: [x] resuelto 2026-08-17, ver punto 12)
+5c. REGLA PARA LAS SUPERFICIES QUE FALTAN: profile y landing deben consumir
+   Button, Alert, Field y PasswordField. Si una vista nueva vuelve a escribir
+   la clase de un input a mano, es un defecto, no una variante.
+   (onboarding: [x] resuelto 2026-08-17 ver punto 12; calendar: [x] resuelto
+   2026-08-17 ver punto 18; chat: parcial, Alert/Button adoptados en
+   SourcesModal/ChatView/ChatSidebarContent, resto del feature sin Field)
 5. [x] RESUELTO 2026-08-09. Primitivos extraidos a shared/components/ui: Button (con
        buttonClass exportado para los casos en que la accion primaria es un Link),
        Alert (el role lo decide el tono), Field (ata label/input y arma aria-describedby;

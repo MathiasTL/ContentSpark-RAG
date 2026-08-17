@@ -8,7 +8,7 @@ export default function PerformancePanel() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.5, duration: 0.5 }}
-      className="rounded-[2rem] border border-white/10 bg-surface-container-lowest/5 p-6 shadow-2xl backdrop-blur-md sm:p-8"
+      className="rounded-3xl border border-glass-edge-soft bg-surface-container-lowest/5 p-6 shadow-2xl backdrop-blur-md sm:p-8"
     >
       <div className="mb-6 flex items-center justify-between sm:mb-8">
         <h3 className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">

@@ -8,7 +8,7 @@ export default function ActivityPanel() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.6, duration: 0.5 }}
-      className="rounded-[2rem] border border-white/10 bg-surface-container-lowest/5 p-6 shadow-2xl backdrop-blur-md sm:p-8"
+      className="rounded-3xl border border-glass-edge-soft bg-surface-container-lowest/5 p-6 shadow-2xl backdrop-blur-md sm:p-8"
     >
       <h3 className="mb-6 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant sm:mb-8">
         Actividad del día

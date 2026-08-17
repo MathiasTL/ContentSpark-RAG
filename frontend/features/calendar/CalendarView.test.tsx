@@ -10,6 +10,14 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
 }));
 
+vi.mock("@/shared/lib/supabase", () => ({
+  createClient: () => ({
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null } }),
+    },
+  }),
+}));
+
 const entry: EntryItem = {
   id: "e1",
   calendar_id: "c1",

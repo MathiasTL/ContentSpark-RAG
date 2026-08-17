@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { TIME_SLOT_HOURS, TIME_SLOT_LABELS } from "@/shared/constants";
 import type { EntryItem } from "../services/calendar-api";
 import { useCalendarStore } from "../store/calendarStore";
+import { platformLabel } from "./platformStyles";
 
 interface TimelineCardsProps {
   onEditEntry?: (entryId: string) => void;
@@ -13,55 +14,28 @@ const NEXT_WINDOW_HOURS = 48;
 
 const DAYS_OF_WEEK = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-const PLATFORM_STYLES: Record<string, { label: string; color: string; gradient: string }> = {
-  instagram: {
-    label: "Instagram",
-    color: "text-primary",
-    gradient: "from-primary/20 to-primary-container/10",
-  },
-  tiktok: {
-    label: "TikTok",
-    color: "text-pink-400",
-    gradient: "from-pink-500/20 to-pink-400/10",
-  },
-  x: {
-    label: "X",
-    color: "text-blue-400",
-    gradient: "from-blue-500/20 to-blue-400/10",
-  },
-  youtube: {
-    label: "YouTube",
-    color: "text-red-400",
-    gradient: "from-red-500/20 to-red-400/10",
-  },
-  linkedin: {
-    label: "LinkedIn",
-    color: "text-sky-400",
-    gradient: "from-sky-500/20 to-sky-400/10",
-  },
-};
-const DEFAULT_PLATFORM_STYLE = {
-  label: "Contenido",
-  color: "text-on-surface-variant",
-  gradient: "from-surface-container-lowest/20 to-surface-container-lowest/10",
-};
+// Ver platformStyles.ts: una plataforma se identifica solo por su etiqueta de
+// texto, no por un color propio — el sistema de diseño no tiene una paleta
+// de cinco tonos categóricos. El acento primario queda para lo accionable.
+const PLATFORM_BADGE_STYLE = "text-on-surface-variant";
+const PLATFORM_PANEL_STYLE = "bg-surface-container-lowest/10";
 
 const STATUS_STYLES: Record<string, { label: string; style: string }> = {
   idea: {
     label: "Idea",
-    style: "bg-surface-container-lowest/10 text-on-surface-variant border border-white/20",
+    style: "bg-surface-container-lowest/10 text-on-surface-variant border border-glass-edge",
   },
   drafted: {
     label: "Borrador",
-    style: "bg-surface-container-lowest/10 text-on-surface-variant border border-white/20",
+    style: "bg-surface-container-lowest/10 text-on-surface-variant border border-glass-edge",
   },
   recorded: {
     label: "Grabado",
-    style: "bg-primary text-white border border-white/20",
+    style: "bg-primary text-on-primary border border-glass-edge",
   },
   published: {
     label: "Publicado",
-    style: "bg-secondary text-white border border-white/20",
+    style: "bg-secondary text-on-primary border border-glass-edge",
   },
 };
 const DEFAULT_STATUS_STYLE = STATUS_STYLES.idea;
@@ -118,7 +92,7 @@ export default function TimelineCards({ onEditEntry }: TimelineCardsProps) {
       <div className="mb-8 flex items-end justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-on-surface sm:text-3xl lg:text-4xl">
-            Visual Timeline
+            Línea de tiempo
           </h2>
           <p className="mt-1 text-sm font-light text-on-surface-variant">
             Tu cola de contenido para las próximas 48 horas
@@ -129,9 +103,9 @@ export default function TimelineCards({ onEditEntry }: TimelineCardsProps) {
             disabled
             title="Próximamente"
             aria-label="Anterior"
-            className="rounded-2xl border border-white/20 bg-surface-container-lowest/10 p-2.5 shadow-sm backdrop-blur-md transition-all hover:bg-surface-container-lowest/20 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-container-lowest/10 disabled:active:scale-100"
+            className="rounded-2xl border border-glass-edge bg-surface-container-lowest/10 p-2.5 text-on-surface-variant shadow-sm backdrop-blur-md transition-colors duration-150 hover:bg-surface-container-lowest/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-container-lowest/10"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
@@ -139,9 +113,9 @@ export default function TimelineCards({ onEditEntry }: TimelineCardsProps) {
             disabled
             title="Próximamente"
             aria-label="Siguiente"
-            className="rounded-2xl border border-white/20 bg-surface-container-lowest/10 p-2.5 shadow-sm backdrop-blur-md transition-all hover:bg-surface-container-lowest/20 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-container-lowest/10 disabled:active:scale-100"
+            className="rounded-2xl border border-glass-edge bg-surface-container-lowest/10 p-2.5 text-on-surface-variant shadow-sm backdrop-blur-md transition-colors duration-150 hover:bg-surface-container-lowest/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-container-lowest/10"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
@@ -150,7 +124,6 @@ export default function TimelineCards({ onEditEntry }: TimelineCardsProps) {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {upcomingEntries.map((entry, i) => {
-          const platformStyle = PLATFORM_STYLES[entry.platform] ?? DEFAULT_PLATFORM_STYLE;
           const statusStyle = STATUS_STYLES[entry.status] ?? DEFAULT_STATUS_STYLE;
 
           return (
@@ -160,28 +133,27 @@ export default function TimelineCards({ onEditEntry }: TimelineCardsProps) {
               initial="hidden"
               animate="visible"
               variants={fadeUp}
-              className="group overflow-hidden rounded-[2rem] border border-white/10 bg-surface-container-lowest/5 shadow-2xl backdrop-blur-md transition-all duration-500 hover:scale-[1.02] hover:border-white/20"
+              className="group overflow-hidden rounded-3xl border border-glass-edge-soft bg-surface-container-lowest/5 shadow-2xl backdrop-blur-md transition-colors duration-150 hover:border-glass-edge"
             >
-              {/* Imagen placeholder con gradiente */}
-              <div
-                className={`relative h-44 overflow-hidden bg-gradient-to-br ${platformStyle.gradient} sm:h-48`}
-              >
+              {/* Imagen placeholder: superficie de vidrio plana, sin gradiente
+                  decorativo (DESIGN.md prohíbe el gradiente como relleno). */}
+              <div className={`relative h-44 overflow-hidden ${PLATFORM_PANEL_STYLE} sm:h-48`}>
                 {/* Patrón decorativo */}
                 <div className="absolute inset-0 opacity-30">
-                  <div className="absolute left-1/4 top-1/4 h-32 w-32 rounded-full bg-surface-container-lowest/10 blur-2xl transition-transform duration-700 group-hover:scale-125" />
+                  <div className="absolute left-1/4 top-1/4 h-32 w-32 rounded-full bg-surface-container-lowest/10 blur-2xl" />
                   <div className="absolute bottom-1/4 right-1/4 h-24 w-24 rounded-full bg-surface-container-lowest/5 blur-xl" />
                 </div>
                 {/* Icono de plataforma */}
                 <div className="absolute left-4 top-4">
                   <span
-                    className={`rounded-full bg-surface-container-lowest/90 px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider shadow-lg backdrop-blur-xl ${platformStyle.color}`}
+                    className={`rounded-full bg-surface-container-lowest/90 px-3.5 py-1 text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-xl ${PLATFORM_BADGE_STYLE}`}
                   >
-                    {platformStyle.label}
+                    {platformLabel(entry.platform)}
                   </span>
                 </div>
                 <div className="absolute bottom-4 right-4">
                   <span
-                    className={`rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest shadow-lg ${statusStyle.style}`}
+                    className={`rounded-full px-3.5 py-1 text-xs font-bold uppercase tracking-widest shadow-lg ${statusStyle.style}`}
                   >
                     {statusStyle.label}
                   </span>
@@ -197,14 +169,14 @@ export default function TimelineCards({ onEditEntry }: TimelineCardsProps) {
                   {entry.description ?? entry.hook ?? ""}
                 </p>
                 <div className="mt-5 flex items-center justify-between">
-                  <span className="rounded-lg bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-container">
+                  <span className="rounded-lg bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary-container">
                     {formatScheduledAt(entry)}
                   </span>
                   <button
                     type="button"
                     onClick={() => onEditEntry?.(entry.id)}
                     aria-label="Más opciones"
-                    className="text-on-surface-variant/60 transition-all hover:text-primary-container"
+                    className="text-on-surface-variant/60 transition-colors duration-150 hover:text-primary-container"
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                       <circle cx="5" cy="12" r="1.5" />

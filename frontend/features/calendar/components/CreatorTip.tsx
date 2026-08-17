@@ -8,7 +8,7 @@ export default function CreatorTip() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.7, duration: 0.5 }}
-      className="rounded-[2rem] border border-white/20 bg-surface-container-lowest/10 p-6 shadow-xl backdrop-blur-2xl sm:p-8"
+      className="rounded-3xl border border-glass-edge bg-surface-container-lowest/10 p-6 shadow-xl backdrop-blur-2xl sm:p-8"
     >
       <div className="mb-3 flex items-center gap-2.5 text-primary-container sm:mb-4">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

@@ -1,13 +1,15 @@
 "use client";
 
+import { useCurrentUser } from "@/shared/hooks/useCurrentUser";
 import { useCalendarStore } from "../store/calendarStore";
 
 export default function TopBar() {
   const view = useCalendarStore((s) => s.viewMode);
   const setView = useCalendarStore((s) => s.setViewMode);
+  const user = useCurrentUser();
 
   return (
-    <header className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-surface-container-lowest/5 px-6 py-5 backdrop-blur-xl sm:px-8">
+    <header className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-glass-edge-soft bg-surface-container-lowest/5 px-6 py-5 backdrop-blur-xl sm:px-8">
       {/* Breadcrumb */}
       <nav className="flex items-center text-sm font-light text-on-surface-variant">
         <span>Workflow</span>
@@ -27,7 +29,7 @@ export default function TopBar() {
               key={tab}
               disabled
               title="Próximamente"
-              className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant transition-colors hover:text-primary-container disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-white/50"
+              className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant transition-colors duration-150 hover:text-primary-container disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-on-surface-variant"
             >
               {tab}
             </button>
@@ -35,7 +37,7 @@ export default function TopBar() {
         </div>
 
         {/* Toggle mes/semana */}
-        <div className="flex rounded-2xl border border-white/10 bg-surface-container-lowest/5 p-1 backdrop-blur-md">
+        <div className="flex rounded-2xl border border-glass-edge-soft bg-surface-container-lowest/5 p-1 backdrop-blur-md">
           <button
             onClick={() => setView("month")}
             className={`rounded-xl px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-all ${
@@ -62,7 +64,7 @@ export default function TopBar() {
         <button
           disabled
           title="Próximamente"
-          className="rounded-full border border-white/20 bg-surface-container-lowest/10 px-5 py-2 text-xs font-bold uppercase tracking-widest text-on-surface shadow-sm backdrop-blur-md transition-all hover:bg-surface-container-lowest/20 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-container-lowest/10 disabled:active:scale-100"
+          className="rounded-full border border-glass-edge bg-surface-container-lowest/10 px-5 py-2 text-xs font-bold uppercase tracking-widest text-on-surface shadow-sm backdrop-blur-md transition-colors duration-150 hover:bg-surface-container-lowest/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-container-lowest/10"
         >
           Sync Calendar
         </button>
@@ -72,7 +74,7 @@ export default function TopBar() {
           disabled
           title="Próximamente"
           aria-label="Notificaciones"
-          className="text-on-surface-variant transition-colors hover:text-primary-container disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-white/50"
+          className="text-on-surface-variant transition-colors duration-150 hover:text-primary-container disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-on-surface-variant"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -81,10 +83,20 @@ export default function TopBar() {
         </button>
 
         {/* Avatar */}
-        <div className="h-9 w-9 rounded-full border-2 border-white/30 bg-gradient-to-br from-primary to-primary-container p-0.5 shadow-md">
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-surface-container-lowest/10 text-xs font-bold text-white">
-            M
-          </div>
+        <div className="h-9 w-9 overflow-hidden rounded-full border-2 border-glass-edge bg-primary-container p-0.5 shadow-md">
+          {user?.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.avatar}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="h-full w-full rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center rounded-full bg-surface-container-lowest/10 text-xs font-bold text-on-primary">
+              {(user?.name?.charAt(0) ?? "?").toUpperCase()}
+            </div>
+          )}
         </div>
       </div>
     </header>

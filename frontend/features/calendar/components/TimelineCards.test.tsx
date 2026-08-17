@@ -6,6 +6,14 @@ import CalendarView from "../CalendarView";
 import { useCalendarStore } from "../store/calendarStore";
 import TimelineCards from "./TimelineCards";
 
+vi.mock("@/shared/lib/supabase", () => ({
+  createClient: () => ({
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null } }),
+    },
+  }),
+}));
+
 const NOW = new Date("2026-08-03T10:00:00");
 
 function resetStore(entries: unknown[] = []) {

@@ -18,7 +18,7 @@ export default function CalendarEmptyState() {
   if (!hasNoCalendars && !profileIncomplete) return null;
 
   return (
-    <section className="rounded-[2rem] border border-white/20 bg-white/10 p-8 text-center shadow-2xl backdrop-blur-xl sm:rounded-[3rem] sm:p-12">
+    <section className="rounded-3xl border border-glass-edge bg-surface-container-lowest/10 p-8 text-center shadow-2xl backdrop-blur-xl sm:p-12">
       <h2 className="text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">
         {profileIncomplete
           ? "Completa tu perfil para generar tu calendario"
@@ -31,7 +31,7 @@ export default function CalendarEmptyState() {
       </p>
       <Link
         href="/onboarding"
-        className="mt-6 inline-block rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.01] active:scale-95"
+        className="mt-6 inline-block rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-on-primary shadow-lg transition-colors duration-150 hover:bg-primary-hover"
       >
         Completar perfil
       </Link>

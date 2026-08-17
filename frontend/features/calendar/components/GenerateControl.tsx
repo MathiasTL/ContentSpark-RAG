@@ -1,5 +1,9 @@
 "use client";
 
+import { Repeat2 } from "lucide-react";
+import Alert from "@/shared/components/ui/Alert";
+import Button from "@/shared/components/ui/Button";
+import Field, { FIELD_ICON_CLASS, FIELD_LABEL_CLASS, inputClass } from "@/shared/components/ui/Field";
 import { FORMATS } from "@/shared/constants";
 import { useCalendarGeneration } from "../hooks/useCalendarGeneration";
 
@@ -34,17 +38,14 @@ export default function GenerateControl() {
   }
 
   return (
-    <section className="rounded-[2rem] border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-xl sm:rounded-[3rem] sm:p-8">
+    <section className="rounded-3xl border border-glass-edge bg-surface-container-lowest/10 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
       <h2 className="mb-6 text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">
         Generar calendario
       </h2>
 
       <div className="space-y-5">
         <div className="space-y-1.5">
-          <label
-            htmlFor="generate-period"
-            className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-          >
+          <label htmlFor="generate-period" className={FIELD_LABEL_CLASS}>
             Periodo
           </label>
           <select
@@ -53,7 +54,7 @@ export default function GenerateControl() {
             onChange={(e) =>
               updateDraft({ period: e.target.value as typeof draft.period })
             }
-            className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className={inputClass(false, false)}
           >
             {PERIOD_OPTIONS.map((period) => (
               <option key={period} value={period}>
@@ -63,39 +64,30 @@ export default function GenerateControl() {
           </select>
         </div>
 
-        <div className="space-y-1.5">
-          <label
-            htmlFor="generate-frequency"
-            className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-          >
-            Frecuencia (opcional)
-          </label>
-          <input
-            id="generate-frequency"
-            type="number"
-            min={1}
-            max={14}
-            value={draft.frequency ?? ""}
-            onChange={(e) =>
-              updateDraft({
-                frequency: e.target.value === "" ? null : Number(e.target.value),
-              })
-            }
-            placeholder="Usar recomendación del servidor"
-            className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
+        <Field
+          id="generate-frequency"
+          label="Frecuencia (opcional)"
+          type="number"
+          min={1}
+          max={14}
+          value={draft.frequency ?? ""}
+          onChange={(e) =>
+            updateDraft({
+              frequency: e.target.value === "" ? null : Number(e.target.value),
+            })
+          }
+          placeholder="Usar recomendación del servidor"
+          icon={<Repeat2 aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+        />
 
         <fieldset className="space-y-2">
-          <legend className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant">
-            Cantidad por formato (opcional)
-          </legend>
+          <legend className={FIELD_LABEL_CLASS}>Cantidad por formato (opcional)</legend>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {FORMATS.map((format) => {
               const id = `generate-format-${format}`;
               return (
                 <div key={format} className="space-y-1">
-                  <label htmlFor={id} className="ml-1 text-[11px] text-on-surface-variant">
+                  <label htmlFor={id} className="ml-1 text-xs text-on-surface-variant">
                     {FORMAT_LABELS[format] ?? format}
                   </label>
                   <input
@@ -104,7 +96,7 @@ export default function GenerateControl() {
                     min={0}
                     value={draft.formats?.[format] ?? ""}
                     onChange={(e) => handleFormatCountChange(format, e.target.value)}
-                    className="w-full rounded-xl border border-white/40 bg-surface-container-lowest/30 px-3 py-2 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-xl border border-glass-edge bg-surface-container-lowest/30 px-3 py-2 text-sm text-on-surface outline-none transition-colors duration-150 focus:border-primary focus:ring-2 focus:ring-primary/25"
                   />
                 </div>
               );
@@ -112,23 +104,11 @@ export default function GenerateControl() {
           </div>
         </fieldset>
 
-        {error && (
-          <p
-            role="alert"
-            className="rounded-2xl border border-red-400/40 bg-red-500/10 px-4 py-2.5 text-sm text-red-200"
-          >
-            {error}
-          </p>
-        )}
+        {error && <Alert tone="danger">{error}</Alert>}
 
-        <button
-          type="button"
-          onClick={() => void submit()}
-          disabled={isGenerating}
-          className="w-full rounded-2xl bg-primary px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.01] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <Button type="button" onClick={() => void submit()} disabled={isGenerating} className="shadow-lg">
           {isGenerating ? "Generando…" : "Generar con AI"}
-        </button>
+        </Button>
       </div>
     </section>
   );

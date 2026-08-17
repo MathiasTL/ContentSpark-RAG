@@ -29,17 +29,12 @@ const MONTH_NAMES = [
   "Diciembre",
 ];
 
-const PLATFORM_CHIP_STYLES: Record<string, { color: string; textColor: string }> = {
-  instagram: { color: "border-primary bg-primary/10", textColor: "text-primary-container" },
-  tiktok: { color: "border-pink-500 bg-pink-500/10", textColor: "text-pink-400" },
-  youtube: { color: "border-red-500 bg-red-500/10", textColor: "text-red-400" },
-  x: { color: "border-blue-400 bg-blue-400/10", textColor: "text-blue-400" },
-  linkedin: { color: "border-sky-500 bg-sky-500/10", textColor: "text-sky-400" },
-};
-const DEFAULT_CHIP_STYLE = {
-  color: "border-white/20 bg-surface-container-lowest/10",
-  textColor: "text-on-surface-variant",
-};
+// Un único tratamiento de chip para todas las plataformas: ver la nota en
+// platformStyles.ts sobre por qué el sistema de diseño no soporta una
+// paleta de color por red social. El acento primario marca aquí lo
+// accionable (el chip abre el editor), no la identidad de la plataforma.
+const CHIP_STYLE = "border-primary bg-surface-container-lowest/10";
+const CHIP_TEXT_STYLE = "text-on-surface-variant";
 
 function toISODate(date: Date): string {
   const year = date.getFullYear();
@@ -101,7 +96,7 @@ export default function CalendarGrid({ onEditEntry }: CalendarGridProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.5 }}
-      className="rounded-[2rem] border border-white/10 bg-surface-container-lowest/5 p-6 shadow-2xl backdrop-blur-md sm:rounded-[3rem] sm:p-8 lg:p-10"
+      className="rounded-3xl border border-glass-edge-soft bg-surface-container-lowest/5 p-6 shadow-2xl backdrop-blur-md sm:p-8 lg:p-10"
     >
       {/* Header */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -114,7 +109,7 @@ export default function CalendarGrid({ onEditEntry }: CalendarGridProps) {
       </div>
 
       {/* Grid del calendario */}
-      <div className="overflow-hidden rounded-2xl border border-white/10 sm:rounded-[2rem]">
+      <div className="overflow-hidden rounded-2xl border border-glass-edge-soft sm:rounded-3xl">
         {/* Headers de días */}
         <div className="grid grid-cols-7">
           {DAYS_OF_WEEK.map((day) => (
@@ -134,9 +129,6 @@ export default function CalendarGrid({ onEditEntry }: CalendarGridProps) {
             const dayEntries = cell.isCurrentMonth ? entriesByDate.get(isoDate) : undefined;
             const entry = dayEntries?.[0];
             const additionalCount = (dayEntries?.length ?? 0) - 1;
-            const chipStyle = entry
-              ? PLATFORM_CHIP_STYLES[entry.platform] ?? DEFAULT_CHIP_STYLE
-              : undefined;
 
             return (
               <div
@@ -156,15 +148,15 @@ export default function CalendarGrid({ onEditEntry }: CalendarGridProps) {
                   {cell.date.getDate()}
                 </span>
 
-                {entry && chipStyle && (
+                {entry && (
                   <button
                     type="button"
                     onClick={() => onEditEntry?.(entry.id)}
                     aria-label={`Editar ${entry.title}`}
-                    className={`mt-2 block w-full rounded-lg border-l-[3px] p-1.5 text-left shadow-sm transition-transform hover:scale-[1.02] sm:mt-3 sm:rounded-xl sm:p-2 ${chipStyle.color}`}
+                    className={`mt-2 block w-full rounded-lg border-l-[3px] p-1.5 text-left shadow-sm transition-colors duration-150 hover:bg-surface-container-lowest/20 sm:mt-3 sm:rounded-xl sm:p-2 ${CHIP_STYLE}`}
                   >
                     <p
-                      className={`truncate text-[8px] font-bold uppercase tracking-tight sm:text-[10px] sm:tracking-tighter ${chipStyle.textColor}`}
+                      className={`truncate text-xs font-bold uppercase tracking-tight sm:tracking-tighter ${CHIP_TEXT_STYLE}`}
                     >
                       {entry.title}
                     </p>
@@ -177,7 +169,7 @@ export default function CalendarGrid({ onEditEntry }: CalendarGridProps) {
                 {additionalCount > 0 && (
                   <span
                     aria-label={`${additionalCount} entradas adicionales este día`}
-                    className="mt-1 block text-[8px] font-bold text-on-surface-variant/70 sm:text-[10px]"
+                    className="mt-1 block text-xs font-bold text-on-surface-variant/70"
                   >
                     +{additionalCount}
                   </span>

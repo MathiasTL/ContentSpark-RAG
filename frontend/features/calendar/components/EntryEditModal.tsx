@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Type, Zap } from "lucide-react";
+import Alert from "@/shared/components/ui/Alert";
+import Button from "@/shared/components/ui/Button";
+import Field, { FIELD_ICON_CLASS, FIELD_LABEL_CLASS, inputClass } from "@/shared/components/ui/Field";
 import { FORMATS, PLATFORMS, TIME_SLOT_LABELS, TIME_SLOTS } from "@/shared/constants";
 import type { EntryItem, EntryUpdateInput } from "../services/calendar-api";
 import { useCalendarStore } from "../store/calendarStore";
@@ -132,7 +136,7 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
         role="dialog"
         aria-modal="true"
         aria-label="Editar entrada"
-        className="w-full max-w-lg rounded-[2rem] border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-8"
+        className="w-full max-w-lg rounded-3xl border border-glass-edge bg-surface-container-lowest/10 p-6 shadow-2xl backdrop-blur-xl sm:p-8"
       >
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold tracking-tight text-on-surface sm:text-2xl">
@@ -142,59 +146,39 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="text-on-surface-variant/60 transition-all hover:text-primary-container"
+            className="text-on-surface-variant/60 transition-colors duration-150 hover:text-primary-container"
           >
             ✕
           </button>
         </div>
 
         {error && (
-          <p
-            role="alert"
-            className="mb-4 rounded-2xl border border-red-400/40 bg-red-500/10 px-4 py-2.5 text-sm text-red-200"
-          >
+          <Alert tone="danger" className="mb-4">
             {error}
-          </p>
+          </Alert>
         )}
 
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label
-              htmlFor="entry-title"
-              className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-            >
-              Título
-            </label>
-            <input
-              id="entry-title"
-              type="text"
-              value={fields.title}
-              onChange={(e) => updateField("title", e.target.value)}
-              className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
+          <Field
+            id="entry-title"
+            label="Título"
+            type="text"
+            value={fields.title}
+            onChange={(e) => updateField("title", e.target.value)}
+            icon={<Type aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+          />
+
+          <Field
+            id="entry-hook"
+            label="Hook"
+            type="text"
+            value={fields.hook}
+            onChange={(e) => updateField("hook", e.target.value)}
+            icon={<Zap aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+          />
 
           <div className="space-y-1.5">
-            <label
-              htmlFor="entry-hook"
-              className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-            >
-              Hook
-            </label>
-            <input
-              id="entry-hook"
-              type="text"
-              value={fields.hook}
-              onChange={(e) => updateField("hook", e.target.value)}
-              className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label
-              htmlFor="entry-description"
-              className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-            >
+            <label htmlFor="entry-description" className={FIELD_LABEL_CLASS}>
               Descripción
             </label>
             <textarea
@@ -202,23 +186,20 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
               value={fields.description}
               onChange={(e) => updateField("description", e.target.value)}
               rows={3}
-              className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className={inputClass(false, false)}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label
-                htmlFor="entry-format"
-                className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-              >
+              <label htmlFor="entry-format" className={FIELD_LABEL_CLASS}>
                 Formato
               </label>
               <select
                 id="entry-format"
                 value={fields.format}
                 onChange={(e) => updateField("format", e.target.value)}
-                className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={inputClass(false, false)}
               >
                 {FORMATS.map((format) => (
                   <option key={format} value={format}>
@@ -229,17 +210,14 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
             </div>
 
             <div className="space-y-1.5">
-              <label
-                htmlFor="entry-platform"
-                className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-              >
+              <label htmlFor="entry-platform" className={FIELD_LABEL_CLASS}>
                 Plataforma
               </label>
               <select
                 id="entry-platform"
                 value={fields.platform}
                 onChange={(e) => updateField("platform", e.target.value)}
-                className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={inputClass(false, false)}
               >
                 {PLATFORMS.map((platform) => (
                   <option key={platform} value={platform}>
@@ -250,17 +228,14 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
             </div>
 
             <div className="space-y-1.5">
-              <label
-                htmlFor="entry-status"
-                className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-              >
+              <label htmlFor="entry-status" className={FIELD_LABEL_CLASS}>
                 Estado
               </label>
               <select
                 id="entry-status"
                 value={fields.status}
                 onChange={(e) => updateField("status", e.target.value)}
-                className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={inputClass(false, false)}
               >
                 {STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
@@ -271,17 +246,14 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
             </div>
 
             <div className="space-y-1.5">
-              <label
-                htmlFor="entry-time-slot"
-                className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-              >
+              <label htmlFor="entry-time-slot" className={FIELD_LABEL_CLASS}>
                 Horario
               </label>
               <select
                 id="entry-time-slot"
                 value={fields.time_slot}
                 onChange={(e) => updateField("time_slot", e.target.value)}
-                className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className={inputClass(false, false)}
               >
                 <option value="">Sin definir</option>
                 {TIME_SLOTS.map((slot) => (
@@ -295,20 +267,17 @@ export default function EntryEditModal({ entry, onClose }: EntryEditModalProps) 
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-2xl border border-white/40 bg-surface-container-lowest/20 px-5 py-2.5 text-sm font-medium text-on-surface transition-all hover:bg-surface-container-lowest/40"
-          >
+          <Button type="button" variant="ghost" onClick={onClose} className="!w-auto px-5">
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
             onClick={() => void handleSubmit()}
-            className="rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.01] active:scale-95"
+            className="!w-auto px-5 shadow-lg"
           >
             Guardar
-          </button>
+          </Button>
         </div>
       </div>
     </div>
