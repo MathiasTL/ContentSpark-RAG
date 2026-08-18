@@ -21,7 +21,7 @@ export default function AppSidebar() {
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-50 hidden h-screen flex-col justify-between border-r border-white/10 bg-surface-container-lowest/5 shadow-[0_40px_60px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-[width] duration-300 ease-out lg:flex ${
+      className={`fixed left-0 top-0 z-50 hidden h-screen flex-col justify-between border-r border-glass-edge bg-surface-container-lowest/5 backdrop-blur-xl transition-[width] duration-300 ease-out lg:flex ${
         collapsed ? "w-20 p-3" : "w-64 p-6"
       }`}
     >
@@ -81,7 +81,7 @@ export default function AppSidebar() {
       </div>
 
       <div className="space-y-4">
-        <div className="border-t border-white/5 pt-4">
+        <div className="border-t border-glass-edge-soft pt-4">
           {user && (
             <UserMenu
               name={user.name}

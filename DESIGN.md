@@ -572,12 +572,38 @@ del sistema de la app):
    bloque de definicion de landing-tokens.css.
    LANDING QUEDA CERRADO bajo su propio sistema (no aplica el ledger de
    "utilidades hardcodeadas pendientes" de la app: ver punto 4 actualizado).
+21. [x] SHARED CERRADO, 2026-08-18. La cifra original de ~16 del ledger era
+   aproximada; la auditoria real encontro 4 violaciones concretas en 2
+   archivos: AppSidebar.tsx:24 (border-white/10 -> border-glass-edge, mas una
+   sombra shadow-[0_40px_60px_rgba(0,0,0,0.04)] no documentada en ningun lado
+   del Shadow Vocabulary — eliminada por completo: la sidebar esta en reposo y
+   "La Regla de la Sombra Muda" dice explicitamente que una superficie en
+   reposo no proyecta sombra), AppSidebar.tsx:84 (border-white/5 ->
+   border-glass-edge-soft), scroll-area.tsx:48 (bg-indigo-400/45
+   hover:bg-indigo-400/65 -> bg-on-surface-variant/40 hover:bg-on-surface-variant/60,
+   un azul indigo ajeno a la paleta reemplazado por un neutro documentado).
+   Background.tsx (los hex del fondo de aurora) NO es deuda — ya esta
+   exceptuado explicitamente en la seccion "Fondo de aurora" de este mismo
+   documento. NOTA APARTE (no corregida, fuera de alcance de esta pasada): esa
+   misma seccion documenta que las manchas "derivan en ciclos de 16 a 25
+   segundos" pero Background.tsx no tiene ninguna clase de animacion —
+   documentacion y codigo estan desincronizados, a resolver en una pasada de
+   animate si el usuario lo pide.
+   El detector de impeccable encontro un solo finding (gradient-text en el
+   wordmark "ContentSpark" de AppSidebar.tsx:49) — falso positivo verificado:
+   es exactamente la excepcion documentada de "Violeta Difuso" ("se usa como
+   extremo de gradiente en el logotipo").
+   Verificacion: tsc limpio, 213/213 tests, eslint sin warnings, grep de
+   sanidad en cero (border-white/bg-white//hover:scale/active:scale/indigo-).
+   SHARED QUEDA CERRADO. Con esto se cierra el ledger completo de superficies
+   del design system (auth, onboarding, chat, calendar, profile, landing,
+   shared).
 
 PENDIENTE:
-4. ~16 utilidades de color hardcodeadas en las vistas que faltan.
-   Reparto: shared 16 (unico rubro pendiente; landing salio del conteo:
-   cerro bajo su propio sistema de tokens, ver punto 20, no bajo el de la app).
-   (onboarding: 0, chat: 0, calendar: 0, profile: 0, resueltos)
+4. [x] RESUELTO 2026-08-18, ver punto 21. Cero utilidades hardcodeadas
+   pendientes en el ledger de la app (landing corre bajo su propio sistema,
+   ver punto 20, y no cuenta aca).
+   (onboarding: 0, chat: 0, calendar: 0, profile: 0, shared: 0, resueltos)
 5b. [x] RESUELTO junto con el punto 5. Las cuatro vistas bajaron de 1005 a 681 lineas
    (-32%) y los primitivos suman 463. El total sube ~139 lineas: extraer NO ahorra
    codigo, elimina puntos de cambio. Un ajuste de sistema que antes habia que hacer
