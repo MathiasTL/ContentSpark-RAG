@@ -59,7 +59,7 @@ export default function ChatMobileDrawer() {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm lg:hidden motion-reduce:transition-none"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-md lg:hidden motion-reduce:transition-none"
           onClick={close}
           aria-hidden="true"
         />
@@ -71,7 +71,7 @@ export default function ChatMobileDrawer() {
         aria-modal="true"
         aria-label="Conversaciones"
         aria-hidden={!isOpen}
-        className={`fixed inset-y-0 left-0 z-[70] flex h-dvh w-72 max-w-[85vw] flex-col border-r border-white/10 bg-surface/90 p-4 backdrop-blur-2xl transition-transform duration-300 ease-out motion-reduce:duration-0 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-[70] flex h-dvh w-72 max-w-[85vw] flex-col border-r border-glass-edge bg-surface/90 p-4 backdrop-blur-2xl transition-transform duration-300 ease-out motion-reduce:duration-0 lg:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

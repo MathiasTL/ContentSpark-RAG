@@ -602,12 +602,44 @@ del sistema de la app):
    SHARED QUEDA CERRADO. Con esto se cierra el ledger completo de superficies
    del design system (auth, onboarding, chat, calendar, profile, landing,
    shared).
+22. [x] CHAT REABIERTO Y RE-CERRADO (solo P1 de tokens), 2026-08-18. Un
+   critique corrido en otra sesion (snapshot
+   .impeccable/critique/2026-08-18T03-55-42Z__frontend-features-chat.md,
+   22/40 "Aceptable banda baja") encontro que el cierre anterior de chat
+   (ver c14a8fd/5ef2ea5/a671d62) nunca barrio border-white — su grep de
+   verificacion cubrio paleta/hex pero no ese patron, y detect.mjs volvio a
+   dar falso negativo (segunda vez en el proyecto, la primera fue en
+   profile). El punto 4/5c de este ledger daba "chat: 0" — ERA INCORRECTO,
+   corregido aca.
+   Aplicado (solo el P1 mecanico, los 3 P1 de producto del critique —
+   personalizacion por perfil invisible, insignia de procedencia RAG/web,
+   modal de fuentes sin scopear — quedan pendientes, ver critique completo):
+   22 border-white/* -> border-glass-edge (planos flotantes/interactivos:
+   burbujas, botones, composer, toggles) o border-glass-edge-soft (planos de
+   fondo: header, sidebar, divisores internos de modal), 3 backdrop-blur-sm
+   -> backdrop-blur-md (ChatView seccion principal, scrims de SourcesModal y
+   ChatMobileDrawer — backdrop-blur-sm es un cuarto nivel prohibido por "La
+   Regla de los Tres Vidrios"), 1 text-white/80 -> text-on-primary (icono de
+   avatar de usuario).
+   NOTA: EntryEditModal.tsx en calendar (ya cerrado, commit 81efee4) tambien
+   usa backdrop-blur-sm en su scrim — mismo patron, no corregido en esta
+   pasada por estar fuera de alcance (el usuario pidio solo el P1 de chat).
+   Si se audita calendar de nuevo, revisar ese archivo.
+   Verificacion: tsc limpio, 213/213 tests, eslint sin warnings, detect.mjs
+   [], grep de sanidad en cero. Sin verificacion visual en browser real —
+   /chat exige auth y no habia credenciales disponibles en la sesion.
+   PENDIENTE EN CHAT (no P0, quedan para otra pasada si el usuario lo pide):
+   los 3 P1 de producto del critique (arriba) y 2 P2 (modal de fuentes
+   filtra PDFs y descarta URLs / sin scopear a la respuesta activa; sin
+   acciones por mensaje como copiar).
 
 PENDIENTE:
 4. [x] RESUELTO 2026-08-18, ver punto 21. Cero utilidades hardcodeadas
    pendientes en el ledger de la app (landing corre bajo su propio sistema,
    ver punto 20, y no cuenta aca).
-   (onboarding: 0, chat: 0, calendar: 0, profile: 0, shared: 0, resueltos)
+   (onboarding: 0, chat: 0 border-white/backdrop-blur-sm — ver punto 22 para
+   la correccion y los P1/P2 de producto aun pendientes, calendar: 0,
+   profile: 0, shared: 0, resueltos)
 5b. [x] RESUELTO junto con el punto 5. Las cuatro vistas bajaron de 1005 a 681 lineas
    (-32%) y los primitivos suman 463. El total sube ~139 lineas: extraer NO ahorra
    codigo, elimina puntos de cambio. Un ajuste de sistema que antes habia que hacer
