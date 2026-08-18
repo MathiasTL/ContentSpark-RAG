@@ -56,7 +56,7 @@ const MARKDOWN_COMPONENTS: Components = {
 function WelcomeMessage() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-6 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/20 bg-surface-container-lowest/30 p-3 shadow-lg backdrop-blur-2xl">
+      <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-glass-edge bg-surface-container-lowest/30 p-3 shadow-lg backdrop-blur-xl">
         <Image src="/only_logo.png" alt="ContentSpark" width={52} height={52} priority />
       </div>
       <div className="space-y-2">
@@ -75,10 +75,10 @@ function WelcomeMessage() {
 function TypingIndicator() {
   return (
     <div className="flex max-w-3xl gap-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-surface-container-lowest/20 p-1.5 shadow-lg backdrop-blur-2xl">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-glass-edge bg-surface-container-lowest/20 p-1.5 shadow-lg backdrop-blur-xl">
         <Image src="/only_logo.png" alt="AI" width={28} height={28} />
       </div>
-      <div className="rounded-3xl rounded-tl-none border border-white/10 bg-surface-container-lowest/40 px-6 py-4 backdrop-blur-2xl">
+      <div className="rounded-3xl rounded-tl-none border border-glass-edge bg-surface-container-lowest/40 px-6 py-4 backdrop-blur-xl">
         <span className="flex h-5 items-center gap-1">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-on-surface-variant [animation-delay:-0.3s]" />
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-on-surface-variant [animation-delay:-0.15s]" />
@@ -201,7 +201,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
   return (
     <div className="flex h-dvh w-full">
-      <section className="relative flex h-dvh min-w-0 flex-1 flex-col overflow-hidden bg-surface/60 backdrop-blur-sm">
+      <section className="relative flex h-dvh min-w-0 flex-1 flex-col overflow-hidden bg-surface/60 backdrop-blur-md">
         <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/10 blur-[120px]" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-secondary/10 blur-[120px]" />
 
@@ -242,10 +242,10 @@ export default function ChatView({ chatId }: ChatViewProps) {
                     transition={{ duration: 0.5, delay: 0.08, ease: [0.4, 0, 0.2, 1] }}
                     className="ml-auto flex max-w-3xl flex-row-reverse gap-4"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-primary-container shadow-lg">
-                      <UserCircle2 className="h-7 w-7 text-white/80" strokeWidth={1.25} />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-glass-edge bg-primary shadow-lg">
+                      <UserCircle2 className="h-7 w-7 text-on-primary/80" strokeWidth={1.25} />
                     </div>
-                    <div className="rounded-3xl rounded-tr-none border border-white/10 bg-primary p-6 leading-relaxed text-on-primary shadow-xl shadow-primary/10 backdrop-blur-2xl">
+                    <div className="rounded-3xl rounded-tr-none border border-glass-edge bg-primary p-6 leading-relaxed text-on-primary shadow-xl shadow-primary/10 backdrop-blur-xl">
                       <p className="whitespace-pre-wrap font-light">{msg.content}</p>
                     </div>
                   </motion.div>
@@ -257,10 +257,10 @@ export default function ChatView({ chatId }: ChatViewProps) {
                     transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
                     className="flex max-w-3xl gap-4"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-surface-container-lowest/20 p-1.5 shadow-lg backdrop-blur-2xl">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-glass-edge bg-surface-container-lowest/20 p-1.5 shadow-lg backdrop-blur-xl">
                       <Image src="/only_logo.png" alt="AI" width={28} height={28} />
                     </div>
-                    <div className="rounded-3xl rounded-tl-none border border-white/10 bg-surface-container-lowest/40 p-6 leading-relaxed text-on-surface shadow-sm backdrop-blur-2xl">
+                    <div className="rounded-3xl rounded-tl-none border border-glass-edge bg-surface-container-lowest/40 p-6 leading-relaxed text-on-surface shadow-sm backdrop-blur-xl">
                       <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
                         {msg.content}
                       </ReactMarkdown>
@@ -320,7 +320,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
                     type="button"
                     onClick={() => handleSend(prompt)}
                     disabled={isStreaming || pendingNewChat}
-                    className="rounded-full border border-white/10 bg-surface-container-lowest/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-2xl transition-colors duration-150 hover:bg-surface-container-lowest/40 disabled:opacity-40"
+                    className="rounded-full border border-glass-edge bg-surface-container-lowest/20 px-5 py-2.5 text-xs font-semibold text-on-surface-variant backdrop-blur-xl transition-colors duration-150 hover:bg-surface-container-lowest/40 disabled:opacity-40"
                   >
                     {prompt}
                   </button>
@@ -331,7 +331,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
           <div className="group relative">
             <div className="absolute inset-0 rounded-full bg-primary/5 opacity-0 blur-2xl transition-opacity group-focus-within:opacity-100" />
-            <div className="relative flex items-end gap-2 rounded-full border border-white/10 bg-surface-container-lowest/30 p-2 pl-8 shadow-2xl backdrop-blur-2xl">
+            <div className="relative flex items-end gap-2 rounded-full border border-glass-edge bg-surface-container-lowest/30 p-2 pl-8 shadow-2xl backdrop-blur-xl">
               <textarea
                 ref={textareaRef}
                 rows={1}
@@ -359,7 +359,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
                 className={`${buttonClass("primary")} !w-12 h-12 shrink-0 !py-0 flex items-center justify-center rounded-full shadow-lg shadow-primary/30 disabled:cursor-not-allowed`}
               >
                 {pendingNewChat ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary/30 border-t-on-primary" />
                 ) : isStreaming ? (
                   <Square size={16} strokeWidth={2} fill="currentColor" />
                 ) : (

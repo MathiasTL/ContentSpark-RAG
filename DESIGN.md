@@ -603,6 +603,51 @@ del sistema de la app):
    del design system (auth, onboarding, chat, calendar, profile, landing,
    shared).
 
+22. [x] CHAT REABIERTO Y RECERRADO EN VIDRIO, 2026-08-18. El punto 16 declaraba
+   "CHAT QUEDA CERRADO (P0+P1+P2): cero red-*/green-*/gray-*/slate-*/hex
+   sueltos en todo el feature (verificado con grep)". Esa afirmacion era cierta
+   PERO INCOMPLETA: el grep de verificacion cubria paleta y hex, y nunca
+   grepeo border-white. La barrida de border-white/bg-white que sí se corrio
+   sobre otras superficies (puntos 18, 19, 21) nunca incluyo features/chat/**.
+   LECCION GENERAL: un "cerrado" verificado por grep vale exactamente lo que
+   cubre el patron del grep. Al declarar una superficie cerrada, listar los
+   patrones efectivamente corridos, no solo el veredicto.
+   Encontrado por critique dual-agent (score 22/40, snapshot
+   .impeccable/critique/2026-08-18T03-55-42Z__frontend-features-chat.md):
+   22 `border-white/*` en 7 archivos, 3 `backdrop-blur-sm` y 1 `text-white/80`.
+   Impacto real, no cosmetico: este documento mide un filo blanco sobre fondo
+   claro en 1.03:1 — en modo claro esos 22 bordes sencillamente no existian.
+   FIX: todos los bordes a glass-edge (vidrio de trabajo/flotante) o
+   glass-edge-soft (vidrio de fondo: header, sidebar, drawer, divisor interno
+   del modal). `text-white/80` del avatar de usuario: el contenedor era
+   bg-primary-container, que es un violeta CLARO en ambos modos, asi que
+   ningun token de texto claro podia funcionar ahi y no existe un token
+   on-primary-container. Se resolvio migrando el avatar al par documentado y
+   medido bg-primary + text-on-primary (6.77:1 claro / 6.18:1 oscuro), que
+   ademas lo hace coherente con la burbuja de usuario que ya era bg-primary.
+   REJERARQUIZACION DE LOS TRES VIDRIOS (hallazgo derivado): ChatView tenia
+   los 8 paneles en backdrop-blur-2xl, es decir declaraba TODO como vidrio
+   flotante — el nivel reservado a modales y popovers. Con SourcesModal
+   tambien en flotante, el modal y una burbuja de mensaje ocupaban el mismo
+   plano y el difuminado dejaba de codificar distancia, que es su unica
+   funcion. Reasignado por plano real: `md` (fondo) para header, sidebar,
+   drawer, toggles, velos y la seccion contenedora; `xl` (trabajo) para
+   burbujas, indicador de escritura, tarjeta de bienvenida, prompts sugeridos
+   y composer; `2xl` (flotante) solo para el panel de SourcesModal. Conteo
+   final: 9 / 8 / 1.
+   De paso, y solo en los controles ya tocados: `transition-colors` sin
+   duracion paso a `duration-150`, y los tres botones-icono a mano
+   (ChatHeader, ChatSidebarToggle, ChatMobileDrawerToggle) recibieron
+   focus-visible explicito, que no tenian.
+   Verificacion: tsc limpio, 213/213 tests, eslint sin warnings, grep de
+   sanidad en cero (border-white/text-white/paleta/hex/scale/gradiente/
+   radios arbitrarios), solo tres niveles de blur presentes.
+   DETECTOR: detect.mjs devolvio [] antes y despues del fix — SEGUNDO falso
+   negativo confirmado en este proyecto (el primero, en profile, esta en el
+   punto 19). En ContentSpark el detector no es fuente confiable para esta
+   clase de hallazgo; el barrido manual con rg sí. Tratarlo como señal
+   complementaria, nunca como verificacion.
+
 PENDIENTE:
 4. [x] RESUELTO 2026-08-18, ver punto 21. Cero utilidades hardcodeadas
    pendientes en el ledger de la app (landing corre bajo su propio sistema,

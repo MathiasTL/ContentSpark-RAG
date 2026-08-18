@@ -8,7 +8,7 @@ export default function ChatSidebar() {
 
   return (
     <aside
-      className={`hidden h-dvh shrink-0 flex-col border-r border-white/10 bg-surface-container-lowest/5 backdrop-blur-xl transition-[width] duration-300 ease-out lg:flex ${
+      className={`hidden h-dvh shrink-0 flex-col border-r border-glass-edge-soft bg-surface-container-lowest/5 backdrop-blur-md transition-[width] duration-300 ease-out lg:flex ${
         collapsed ? "w-16 p-2" : "w-72 p-4"
       }`}
     >

@@ -21,7 +21,7 @@ export default function ChatMobileDrawerToggle() {
       onClick={toggle}
       aria-label={isOpen ? "Ocultar chats" : "Mostrar chats"}
       aria-expanded={isOpen}
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-surface-container-lowest/20 text-on-surface backdrop-blur-2xl transition-colors hover:bg-surface-container-lowest/40 lg:hidden"
+      className="flex h-11 w-11 items-center justify-center rounded-full border border-glass-edge bg-surface-container-lowest/20 text-on-surface backdrop-blur-md transition-colors duration-150 hover:bg-surface-container-lowest/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
     >
       <Icon size={18} strokeWidth={1.5} />
     </button>

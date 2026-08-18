@@ -11,7 +11,7 @@ export default function ChatSidebarToggle() {
       type="button"
       onClick={toggle}
       aria-label={collapsed ? "Mostrar chats" : "Ocultar chats"}
-      className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-surface-container-lowest/20 text-on-surface backdrop-blur-2xl transition-colors hover:bg-surface-container-lowest/40 lg:flex"
+      className="hidden h-10 w-10 items-center justify-center rounded-full border border-glass-edge bg-surface-container-lowest/20 text-on-surface backdrop-blur-md transition-colors duration-150 hover:bg-surface-container-lowest/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:flex"
     >
       <Icon size={18} strokeWidth={1.5} />
     </button>
