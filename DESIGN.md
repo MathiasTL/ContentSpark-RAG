@@ -648,7 +648,73 @@ del sistema de la app):
    clase de hallazgo; el barrido manual con rg sí. Tratarlo como señal
    complementaria, nunca como verificacion.
 
+23. [x] CHAT P1 — PERSONALIZACION VISIBLE Y BIENVENIDA HONESTA, 2026-08-18.
+   Cierra el primero de los dos P1 de producto del critique 22/40.
+   PROBLEMA: PRODUCT.md establece que el perfil del creador es "la fuente de
+   verdad que personaliza todo; ninguna feature debe ignorarlo", pero el chat
+   no mostraba ni un rastro de el. La bienvenida era copy de marketing
+   generico y SUGGESTED_PROMPTS eran tres strings fijos ("Dame hooks
+   virales"...) sin relacion con nicho, formato ni plataforma. La
+   personalizacion existia solo en el backend, sin ninguna prueba en la
+   interfaz — es decir, la diferenciacion central del producto era invisible
+   justo en la superficie que la ejerce.
+   El dato ya estaba disponible en el frontend: profileStore expone niche,
+   sub_niche, primary_goal, preferred_formats y social_accounts, y onboarding
+   ya importaba de @/features/profile, asi que no se creo acoplamiento nuevo.
+   NUEVO: features/chat/lib/personalization.ts (+ test, 11 casos) con
+   buildPersonalizationSummary y buildSuggestedPrompts. El header muestra
+   ahora "Fitness · TikTok · Video corto" en estilo Label, y los prompts
+   sugeridos se derivan del nicho/sub-nicho, el formato preferido, la
+   plataforma principal y el objetivo.
+   REGLA DE HONESTIDAD (la parte que importa): sin perfil, o con perfil sin
+   nicho, se devuelven los prompts genericos y el resumen es null — no se
+   renderiza nada. Un placeholder que insinue que sabemos algo del creador
+   que no sabemos es el mismo defecto que las metricas inventadas del
+   calendario (punto 17). Ademas, todo valor cae al crudo (`MAP[x] ?? x`)
+   porque un perfil viejo puede traer un nicho fuera de la lista curada.
+   BIENVENIDA HONESTA: WelcomeMessage prometia literalmente que "ContentSpark
+   busca en sus documentos ingestados" a TODO usuario, incluido el recien
+   onboardeado con cero ingesta, para quien era falso. Ahora consulta el
+   estado de la base solo en la pantalla de bienvenida (donde la pregunta
+   aplica) y tiene tres estados: `unknown` no afirma nada, `ready` promete la
+   base, y `empty` dice la verdad — que responde con contexto general — y
+   enlaza a agregar fuentes. Esto cubre la mitad no bloqueada del segundo P1;
+   la insignia de procedencia POR MENSAJE sigue pendiente porque necesita
+   backend (ver PENDIENTE mas abajo).
+   ETIQUETAS: NICHE_LABELS/FORMAT_LABELS/PLATFORM_LABELS estaban duplicados a
+   mano en SEIS archivos (ProfileForm, Step1Niche, Step4Formats,
+   GenerateControl, EntryEditModal, NicheMarquee/platformStyles). En vez de
+   agregar una septima copia se extrajo shared/constants/labels.ts como
+   fuente unica, y chat la consume. LAS OTRAS SEIS COPIAS SIGUEN EN PIE: se
+   migran cuando se toque cada superficie, para no reabrir vistas ya
+   cerradas en una pasada de chat. Queda anotado abajo como deuda explicita.
+   Verificacion: tsc limpio, 224/224 tests (11 nuevos), eslint sin warnings,
+   grep de sanidad en cero.
+
 PENDIENTE:
+24. INSIGNIA DE PROCEDENCIA POR MENSAJE (segundo P1 del critique de chat).
+   BLOQUEADO POR BACKEND, y vale la pena registrar por que: el dato YA EXISTE
+   y se esta tirando. El grafo CRAG calcula `final_state["web_search"]` (si
+   cayo al fallback de DuckDuckGo) y `final_state["documents"]` (las fuentes
+   reales), pero rag_service.generate_response_stream solo emite texto plano,
+   y chat.py persiste el mensaje AI con `add_message(role="ai", content=full)`
+   sin sources — pese a que el modelo Message TIENE columna sources y el tipo
+   ChatMessage del frontend TIENE `sources?: Source[]`. O sea: el contrato
+   esta declarado de punta a punta y nunca se llena.
+   Implementarlo exige cambiar el protocolo del stream de texto plano a
+   frames estructurados (SSE con evento de metadata), tocando backend y
+   frontend a la vez. Es una decision de arquitectura, no un ajuste de UI.
+25. SOURCESMODAL descarta las fuentes ingeridas por URL: openSourcesModal()
+   filtra `type.includes("pdf") || title.endsWith(".pdf")` pese a que el
+   pipeline de ingesta soporta PDFs Y URLs. Ademas muestra la misma lista
+   global sin importar que respuesta estabas leyendo. Lo segundo depende del
+   punto 24; lo primero (sacar el filtro y diferenciar por icono) no.
+26. SIN ACCIONES POR MENSAJE (copiar/regenerar). Copiar es la accion de
+   conversion real de este producto — el creador saca hooks y guiones del
+   chat — y hoy exige seleccionar texto a mano.
+27. ETIQUETAS DUPLICADAS: migrar ProfileForm, Step1Niche, Step4Formats,
+   GenerateControl, EntryEditModal y NicheMarquee/platformStyles a
+   shared/constants/labels.ts (ver punto 23).
 4. [x] RESUELTO 2026-08-18, ver punto 21. Cero utilidades hardcodeadas
    pendientes en el ledger de la app (landing corre bajo su propio sistema,
    ver punto 20, y no cuenta aca).

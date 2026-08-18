@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AnimatePresence, motion } from "framer-motion";
@@ -10,6 +11,11 @@ import { Paperclip, Send, Square, UserCircle2 } from "lucide-react";
 
 import { getSourcesFromBackend } from "@/shared/lib/api-client";
 import type { Source } from "@/shared/lib/api-client";
+import { useProfileStore } from "@/features/profile";
+import {
+  buildPersonalizationSummary,
+  buildSuggestedPrompts,
+} from "./lib/personalization";
 import { useChatSessionsStore } from "./store/chatSessionsStore";
 import {
   useChatSession,
@@ -25,11 +31,6 @@ interface ChatViewProps {
   chatId?: string;
 }
 
-const SUGGESTED_PROMPTS = [
-  "Dame hooks virales",
-  "Estrategia de contenido para esta semana",
-  "Ideas de contenido trending",
-];
 
 // Referencia estable: si se define inline en cada render, ReactMarkdown
 // re-diffea todos los mensajes ya renderizados en cada token de streaming.
@@ -53,7 +54,20 @@ const MARKDOWN_COMPONENTS: Components = {
   li: ({ children }) => <li>{children}</li>,
 };
 
-function WelcomeMessage() {
+// El estado de la base de conocimiento decide QUE se le promete al creador.
+// "unknown" es el estado por defecto y a proposito no afirma nada: mientras no
+// sepamos si hay documentos ingestados, no repetimos la promesa vieja de que
+// "ContentSpark busca en sus documentos ingestados", que para un creador recien
+// onboardeado con cero ingesta era sencillamente falsa.
+type KnowledgeBaseState = "unknown" | "empty" | "ready";
+
+function WelcomeMessage({
+  summary,
+  knowledgeBase,
+}: {
+  summary: string | null;
+  knowledgeBase: KnowledgeBaseState;
+}) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-6 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-glass-edge bg-surface-container-lowest/30 p-3 shadow-lg backdrop-blur-xl">
@@ -61,13 +75,38 @@ function WelcomeMessage() {
       </div>
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight text-on-surface">
-          Desata tu creatividad con ContentSpark
+          {summary
+            ? `Tu estudio de ${summary.split(" · ")[0]}`
+            : "Desata tu creatividad con ContentSpark"}
         </h2>
         <p className="mx-auto max-w-md text-sm font-light leading-relaxed text-on-surface-variant">
-          Consulta tu base de conocimiento. ContentSpark busca en sus documentos
-          ingestados y genera respuestas contextualizadas.
+          {knowledgeBase === "empty" ? (
+            <>
+              Todavía no ingresaste documentos a tu base de conocimiento, así que
+              por ahora respondo con contexto general.{" "}
+              <Link
+                href="/profile"
+                className="text-primary underline underline-offset-4 transition-colors duration-150 hover:text-primary-hover"
+              >
+                Agregá tus fuentes
+              </Link>{" "}
+              para que las respuestas salgan de tu propio material.
+            </>
+          ) : knowledgeBase === "ready" ? (
+            <>
+              Consulto tu base de conocimiento y adapto cada respuesta a tu
+              perfil de creador.
+            </>
+          ) : (
+            <>Preguntá sobre tu contenido y adapto la respuesta a tu perfil.</>
+          )}
         </p>
       </div>
+      {summary && (
+        <p className="text-[0.75rem] font-medium uppercase tracking-[0.1em] text-on-surface-variant">
+          {summary}
+        </p>
+      )}
     </div>
   );
 }
@@ -103,6 +142,10 @@ export default function ChatView({ chatId }: ChatViewProps) {
   const [sources, setSources] = useState<Source[]>([]);
   const [isSourcesLoading, setIsSourcesLoading] = useState(false);
   const [sourcesError, setSourcesError] = useState<string | null>(null);
+  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseState>("unknown");
+
+  const profile = useProfileStore((s) => s.profile);
+  const loadProfile = useProfileStore((s) => s.load);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -114,10 +157,33 @@ export default function ChatView({ chatId }: ChatViewProps) {
   const error = session?.error ?? null;
   const activeSessionChatId = session?.chatId ?? chatId;
   const lastUserMessage = [...messages].reverse().find((m) => m.role === "user")?.content;
+  const showWelcome = messages.length === 0 && !isLoading && !pendingNewChat;
 
   useEffect(() => {
     setActiveChat(chatId ?? null);
   }, [chatId, setActiveChat]);
+
+  // El perfil alimenta los prompts sugeridos y el resumen del header. El store
+  // es compartido con /profile, asi que si ya esta cargado no se vuelve a pedir.
+  useEffect(() => {
+    if (profile) return;
+    void loadProfile();
+  }, [profile, loadProfile]);
+
+  // Solo importa saber si la base esta vacia cuando hay algo que prometerle al
+  // creador, es decir en la pantalla de bienvenida. En una conversacion en curso
+  // la pregunta ya no aplica y no gastamos la llamada.
+  useEffect(() => {
+    if (!showWelcome || knowledgeBase !== "unknown") return;
+    let cancelled = false;
+    void getSourcesFromBackend().then((result) => {
+      if (cancelled || !result.success) return;
+      setKnowledgeBase(result.sources.length > 0 ? "ready" : "empty");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [showWelcome, knowledgeBase]);
 
   useEffect(() => {
     if (!chatId) return;
@@ -197,7 +263,8 @@ export default function ChatView({ chatId }: ChatViewProps) {
     }
   }
 
-  const showWelcome = messages.length === 0 && !isLoading && !pendingNewChat;
+  const personalization = buildPersonalizationSummary(profile);
+  const suggestedPrompts = buildSuggestedPrompts(profile);
 
   return (
     <div className="flex h-dvh w-full">
@@ -205,7 +272,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
         <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/10 blur-[120px]" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-secondary/10 blur-[120px]" />
 
-        <ChatHeader onOpenSources={openSourcesModal} />
+        <ChatHeader onOpenSources={openSourcesModal} personalization={personalization} />
 
         <ScrollArea className="relative z-10 min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]>div]:!flex [&_[data-radix-scroll-area-viewport]>div]:!min-h-full [&_[data-radix-scroll-area-viewport]>div]:!flex-col">
           <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col space-y-8 px-12 pt-20 pb-6">
@@ -227,7 +294,10 @@ export default function ChatView({ chatId }: ChatViewProps) {
                   transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
                   className="flex flex-1 items-center justify-center"
                 >
-                  <WelcomeMessage />
+                  <WelcomeMessage
+                    summary={personalization}
+                    knowledgeBase={knowledgeBase}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -314,7 +384,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
                 transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
                 className="flex flex-wrap justify-center gap-3"
               >
-                {SUGGESTED_PROMPTS.map((prompt) => (
+                {suggestedPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
