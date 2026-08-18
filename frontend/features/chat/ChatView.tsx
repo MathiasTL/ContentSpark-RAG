@@ -22,6 +22,7 @@ import {
   useIsPendingNewChat,
 } from "./hooks/useChatSession";
 import ChatHeader from "./components/ChatHeader";
+import CopyButton from "./components/CopyButton";
 import SourcesModal from "./components/SourcesModal";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { buttonClass } from "@/shared/components/ui/Button";
@@ -178,7 +179,14 @@ export default function ChatView({ chatId }: ChatViewProps) {
     let cancelled = false;
     void getSourcesFromBackend().then((result) => {
       if (cancelled || !result.success) return;
-      setKnowledgeBase(result.sources.length > 0 ? "ready" : "empty");
+      // Solo cuenta lo VECTORIZADO. Un PDF con estado "Disponible" existe en
+      // data/ pero no se ingesto, asi que el RAG no lo puede consultar: contarlo
+      // como base lista reintroduce exactamente la promesa falsa que este
+      // estado vino a corregir.
+      const indexed = result.sources.filter((s) =>
+        s.status.toLowerCase().includes("vectorizado"),
+      );
+      setKnowledgeBase(indexed.length > 0 ? "ready" : "empty");
     });
     return () => {
       cancelled = true;
@@ -219,12 +227,11 @@ export default function ChatView({ chatId }: ChatViewProps) {
       return;
     }
 
-    const pdfSources = result.sources.filter((s) => {
-      const type = s.type.toLowerCase();
-      const title = s.title.toLowerCase();
-      return type.includes("pdf") || title.endsWith(".pdf");
-    });
-    setSources(pdfSources);
+    // Sin filtrar: el pipeline de ingesta soporta PDFs Y URLs, y filtrar a
+    // `type.includes("pdf")` descartaba en silencio todo lo ingestado por web.
+    // El modal diferencia el tipo por icono y marca lo que todavia no esta
+    // indexado, que es la distincion que de verdad le importa al creador.
+    setSources(result.sources);
     setIsSourcesLoading(false);
   }
 
@@ -325,15 +332,18 @@ export default function ChatView({ chatId }: ChatViewProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                    className="flex max-w-3xl gap-4"
+                    className="group flex max-w-3xl gap-4"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-glass-edge bg-surface-container-lowest/20 p-1.5 shadow-lg backdrop-blur-xl">
                       <Image src="/only_logo.png" alt="AI" width={28} height={28} />
                     </div>
-                    <div className="rounded-3xl rounded-tl-none border border-glass-edge bg-surface-container-lowest/40 p-6 leading-relaxed text-on-surface shadow-sm backdrop-blur-xl">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
-                        {msg.content}
-                      </ReactMarkdown>
+                    <div className="min-w-0">
+                      <div className="rounded-3xl rounded-tl-none border border-glass-edge bg-surface-container-lowest/40 p-6 leading-relaxed text-on-surface shadow-sm backdrop-blur-xl">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                      {msg.content.trim() && <CopyButton text={msg.content} />}
                     </div>
                   </motion.div>
                 ),

@@ -704,14 +704,40 @@ PENDIENTE:
    Implementarlo exige cambiar el protocolo del stream de texto plano a
    frames estructurados (SSE con evento de metadata), tocando backend y
    frontend a la vez. Es una decision de arquitectura, no un ajuste de UI.
-25. SOURCESMODAL descarta las fuentes ingeridas por URL: openSourcesModal()
-   filtra `type.includes("pdf") || title.endsWith(".pdf")` pese a que el
-   pipeline de ingesta soporta PDFs Y URLs. Ademas muestra la misma lista
-   global sin importar que respuesta estabas leyendo. Lo segundo depende del
-   punto 24; lo primero (sacar el filtro y diferenciar por icono) no.
-26. SIN ACCIONES POR MENSAJE (copiar/regenerar). Copiar es la accion de
-   conversion real de este producto — el creador saca hooks y guiones del
-   chat — y hoy exige seleccionar texto a mano.
+25. [x] RESUELTO 2026-08-18. SourcesModal ya no filtra: openSourcesModal()
+   descartaba en silencio todo lo ingestado por web con
+   `type.includes("pdf") || title.endsWith(".pdf")`. El modal ahora lista
+   todo y diferencia el tipo por icono (FileText / Globe).
+   HALLAZGO AL LEER EL BACKEND: /api/sources devuelve tambien `status`, que
+   vale "Vectorizado" (esta en Qdrant, el RAG lo puede consultar) o
+   "Disponible" (el PDF existe en data/ pero NO se ingesto todavia, asi que
+   NO responde preguntas). Esa distincion nunca se mostraba. Ahora las
+   fuentes sin indexar se marcan "· sin indexar".
+   BUG PROPIO CORREGIDO: el estado de base vacia introducido en el punto 23
+   contaba `result.sources.length > 0` como base lista, lo que incluia PDFs
+   meramente "Disponible" — es decir, reintroducia por otra puerta la misma
+   promesa falsa que ese punto vino a corregir. Ahora solo cuenta lo
+   vectorizado.
+   TOKEN MAL USADO, aparte: el badge "PDF" usaba bg-danger-container /
+   text-danger. `danger` es el unico rojo del sistema y esta reservado a
+   errores y confirmaciones destructivas — etiquetar un tipo de archivo en
+   rojo lo gasta. Reemplazado por estilo Label neutro.
+26. [x] RESUELTO 2026-08-18. Nuevo components/CopyButton.tsx (+ test, 4 casos)
+   bajo cada respuesta del asistente.
+   VISIBILIDAD: se revela en hover SOLO en pointer devices (`sm:`); en
+   pantallas chicas queda siempre visible, porque en tactil no hay hover y
+   esconder la unica accion del mensaje detras de el la vuelve inalcanzable.
+   Tambien aparece con foco de teclado (`group-focus-within`).
+   El fallo de portapapeles (contexto no seguro, permiso denegado) se trata
+   como estado esperable y se anuncia por texto en un role="status", no solo
+   por el cambio de icono, que un lector de pantalla no percibe.
+   Boton de 44px, cumpliendo la Regla del Pulgar.
+26b. PENDIENTE (menor, ya observado en el critique y no numerado como P0-P3):
+   los botones Si/No de confirmar borrado en ChatListItem.tsx:127,135 usan
+   `px-2 py-0.5 text-[11px]`, muy por debajo de los 44px de la Regla del
+   Pulgar. El cierre del drawer movil (ChatMobileDrawer.tsx) es h-9 w-9 (36px)
+   en contexto tactil. Tambien sigue pendiente el nombre accesible del
+   textarea del composer (hoy solo placeholder, que no es label).
 27. ETIQUETAS DUPLICADAS: migrar ProfileForm, Step1Niche, Step4Formats,
    GenerateControl, EntryEditModal y NicheMarquee/platformStyles a
    shared/constants/labels.ts (ver punto 23).
