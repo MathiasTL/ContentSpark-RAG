@@ -56,6 +56,7 @@ export interface ProfileUpdateInput {
   desired_frequency?: string | null;
   preferred_formats?: string[] | null;
   timezone?: string | null;
+  social_accounts?: SocialAccount[] | null;
 }
 
 async function ensureOk(response: Response, action: string): Promise<void> {

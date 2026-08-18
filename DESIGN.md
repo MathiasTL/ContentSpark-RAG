@@ -442,23 +442,62 @@ de un HTML de referencia, nunca paso por el sistema de diseño):
    progresivo (mismo patron ya resuelto en Step4Formats.tsx de onboarding,
    pero explicitamente fuera de alcance de esta pasada por decision del
    usuario de ir solo P2+P3 tokens/primitivos, no reestructurar IA).
+19. [x] PROFILE CERRADO (P0+P1), 2026-08-18, metodo dual-agent (critique
+   19/40, "Poor" — banda mas baja del feature, confirmado por evidencia:
+   0 de 11 controles usaban Field/Button/Alert antes de esta pasada).
+   HALLAZGO: el detector mecanico detect.mjs devolvio [] en profile pese a
+   15+ matches reales de border-white/bg-white/red-*/hex suelto/hover:scale
+   confirmados por grep manual — discrepancia sin explicar (posible gap de
+   reglas o path-matching del detector), no se investigo por estar fuera de
+   alcance del critique. El grep manual, no el detector, fue la fuente
+   confiable para esta superficie.
+   P0: ProfileForm.tsx no tenia forma de editar/desconectar cuentas
+   sociales tras el onboarding pese a que el backend ya lo soportaba
+   (profile_service.py:_replace_social_accounts) — agregada seccion
+   "Redes sociales" con el mismo patron de revelado progresivo de
+   Step4Formats.tsx (reutilizado 1:1: Field+icono AtSign, select nativo
+   con inputClass, Button ghost). ProfileUpdateInput ganó
+   `social_accounts?: SocialAccount[] | null`.
+   P1 (los tres juntos, decision del usuario): (a) los 9 inputs/textarea/
+   selects/boton/error de ProfileForm.tsx migrados a Field/Alert/Button —
+   bio y los dos <select> (niche, timezone) usan inputClass/FIELD_LABEL_CLASS
+   igual que el select de plataforma en Step4Formats.tsx porque Field es
+   input-only; placeholder hex `text-[#75777b]` desaparecio con el primitivo;
+   TimezoneNudge.tsx y ProfileView.tsx: border-white/* -> border-glass-edge,
+   hover bg-white/20 -> hover:bg-surface-container-lowest/20 (mismo token
+   que UserMenu.tsx usa para su fila ghost); shadow arbitraria de
+   ProfileView.tsx NO se toco — es el mismo valor ya usado en
+   OnboardingWizard.tsx y AuthShell.tsx, patron establecido de superficie
+   primaria cerrada, no un arbitrario suelto. (b) saveSuccess:boolean +
+   clearSaveSuccess() en profileStore.ts, Alert tone="success" tras guardar
+   (mutuamente excluyente con el error), se limpia en cualquier edicion
+   nueva. (c) niche/primary_goal/tone/target_audience (los 4 campos que
+   ProfileOnboardingInput trata como obligatorios) ya no se mapean a null
+   silenciosamente al vaciarlos — bloquean el submit con error de campo
+   antes de que diffEditable corra.
+   Verificacion: tsc limpio, 213/213 tests, lint sin warnings, detect.mjs []
+   (grep de sanidad manual post-fix confirmo cero matches reales).
+   PROFILE QUEDA CERRADO (P0+P1). P2 diferido (agrupacion visual de los 5
+   campos sueltos nicho/sub-nicho/objetivo/tono/audiencia en secciones) por
+   decision del usuario de priorizar P0+P1 en esta pasada.
 
 PENDIENTE:
-4. ~143 utilidades de color hardcodeadas en las vistas que faltan.
+4. ~123 utilidades de color hardcodeadas en las vistas que faltan.
    Reparto: landing 107 (aun no auditado con este metodo, cifra original del
-   ledger), profile 20, shared 16, calendar 0. (onboarding: 0, chat: 0, calendar: 0, resueltos)
+   ledger), shared 16. (onboarding: 0, chat: 0, calendar: 0, profile: 0, resueltos)
    Nota: landing es la unica cifra no confirmada por un critique real todavia.
    Mientras existan, esas zonas no responden al tema.
 5b. [x] RESUELTO junto con el punto 5. Las cuatro vistas bajaron de 1005 a 681 lineas
    (-32%) y los primitivos suman 463. El total sube ~139 lineas: extraer NO ahorra
    codigo, elimina puntos de cambio. Un ajuste de sistema que antes habia que hacer
    cuatro veces ahora se hace una.
-5c. REGLA PARA LAS SUPERFICIES QUE FALTAN: profile y landing deben consumir
+5c. REGLA PARA LAS SUPERFICIES QUE FALTAN: landing debe consumir
    Button, Alert, Field y PasswordField. Si una vista nueva vuelve a escribir
    la clase de un input a mano, es un defecto, no una variante.
    (onboarding: [x] resuelto 2026-08-17 ver punto 12; calendar: [x] resuelto
-   2026-08-17 ver punto 18; chat: parcial, Alert/Button adoptados en
-   SourcesModal/ChatView/ChatSidebarContent, resto del feature sin Field)
+   2026-08-17 ver punto 18; profile: [x] resuelto 2026-08-18 ver punto 19;
+   chat: parcial, Alert/Button adoptados en SourcesModal/ChatView/
+   ChatSidebarContent, resto del feature sin Field)
 5. [x] RESUELTO 2026-08-09. Primitivos extraidos a shared/components/ui: Button (con
        buttonClass exportado para los casos en que la accion primaria es un Link),
        Alert (el role lo decide el tono), Field (ata label/input y arma aria-describedby;

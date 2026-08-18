@@ -6,18 +6,26 @@ export interface ProfileState {
   profile: Profile | null;
   isLoading: boolean;
   error: string | null;
+  // Flag transitorio: true justo después de un save() exitoso, para que
+  // ProfileForm muestre una confirmación. Se limpia al iniciar cualquier
+  // load()/save() nuevo, o cuando el formulario vuelve a editarse
+  // (ver clearSaveSuccess, invocado desde updateField/toggleFormat/
+  // addSocialAccount/removeSocialAccount).
+  saveSuccess: boolean;
 
   load: () => Promise<void>;
   save: (partial: ProfileUpdateInput) => Promise<void>;
+  clearSaveSuccess: () => void;
 }
 
 export const useProfileStore = create<ProfileState>((set) => ({
   profile: null,
   isLoading: false,
   error: null,
+  saveSuccess: false,
 
   load: async () => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, saveSuccess: false });
     try {
       const profile = await profileApi.getProfile();
       set({ profile, isLoading: false, error: null });
@@ -30,10 +38,10 @@ export const useProfileStore = create<ProfileState>((set) => ({
   },
 
   save: async (partial) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, saveSuccess: false });
     try {
       const profile = await profileApi.updateProfile(partial);
-      set({ profile, isLoading: false, error: null });
+      set({ profile, isLoading: false, error: null, saveSuccess: true });
     } catch (err) {
       set({
         isLoading: false,
@@ -42,4 +50,6 @@ export const useProfileStore = create<ProfileState>((set) => ({
       throw err;
     }
   },
+
+  clearSaveSuccess: () => set({ saveSuccess: false }),
 }));

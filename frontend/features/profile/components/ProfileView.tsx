@@ -22,7 +22,7 @@ export default function ProfileView() {
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col justify-center overflow-y-auto px-4 py-10 pb-24 sm:px-6 lg:pb-10">
-      <div className="rounded-3xl border border-white/20 bg-surface-container-lowest/40 p-6 shadow-[0_32px_64px_-16px_rgba(110,44,224,0.12)] backdrop-blur-xl sm:p-10">
+      <div className="rounded-3xl border border-glass-edge bg-surface-container-lowest/40 p-6 shadow-[0_32px_64px_-16px_rgba(110,44,224,0.12)] backdrop-blur-xl sm:p-10">
         <h1 className="text-xl font-semibold tracking-tight text-on-surface sm:text-2xl">
           Tu perfil
         </h1>

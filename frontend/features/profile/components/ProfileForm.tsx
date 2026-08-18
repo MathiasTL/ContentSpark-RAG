@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { AtSign, Calendar, CalendarClock, Compass, MessageCircle, Plus, Target, User, Users, X } from "lucide-react";
 import { useProfileStore } from "../store/profileStore";
-import type { Profile, ProfileUpdateInput } from "../services/profile-api";
-import { FORMATS, NICHES, TIMEZONES } from "@/shared/constants";
+import type { Profile, ProfileUpdateInput, SocialAccount } from "../services/profile-api";
+import { FORMATS, NICHES, PLATFORMS, TIMEZONES } from "@/shared/constants";
+import Alert from "@/shared/components/ui/Alert";
+import Button from "@/shared/components/ui/Button";
+import Field, { FIELD_ICON_CLASS, FIELD_LABEL_CLASS, inputClass } from "@/shared/components/ui/Field";
 
 const NICHE_LABELS: Record<string, string> = {
   tecnologia: "Tecnología",
@@ -22,6 +26,24 @@ const FORMAT_LABELS: Record<string, string> = {
   post: "Publicación",
 };
 
+const PLATFORM_LABELS: Record<string, string> = {
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  youtube: "YouTube",
+  linkedin: "LinkedIn",
+  x: "X",
+};
+
+const REQUIRED_MESSAGE = "Este campo es obligatorio.";
+
+// Campos que el backend trata como obligatorios para un "perfil completo"
+// (ver ProfileOnboardingInput en profile-api.ts: sin `?`, a diferencia de
+// bio/sub_niche/current_frequency/desired_frequency/timezone). Vaciarlos no
+// debe convertirse en `null` en silencio — bloquea el submit.
+type RequiredKey = "niche" | "primary_goal" | "tone" | "target_audience";
+const REQUIRED_KEYS: RequiredKey[] = ["niche", "primary_goal", "tone", "target_audience"];
+type RequiredFieldErrors = Partial<Record<RequiredKey, string>>;
+
 // Campos editables del formulario (todos strings vacíos en vez de null
 // para controlar los inputs; se re-mapean a null al armar el diff).
 interface EditableFields {
@@ -36,6 +58,7 @@ interface EditableFields {
   desired_frequency: string;
   preferred_formats: string[];
   timezone: string;
+  social_accounts: SocialAccount[];
 }
 
 function toEditable(profile: Profile | null): EditableFields {
@@ -51,6 +74,7 @@ function toEditable(profile: Profile | null): EditableFields {
     desired_frequency: profile?.desired_frequency ?? "",
     preferred_formats: profile?.preferred_formats ?? [],
     timezone: profile?.timezone ?? "",
+    social_accounts: profile?.social_accounts ?? [],
   };
 }
 
@@ -58,6 +82,10 @@ function toEditable(profile: Profile | null): EditableFields {
 // las claves que realmente cambiaron, para no resobrescribir campos
 // que el usuario no tocó (consistente con el contrato de PUT parcial
 // del backend — spec: "Partial update preserves other fields").
+//
+// Precondición: los 4 campos obligatorios (REQUIRED_KEYS) ya fueron
+// validados como no vacíos por el llamador (handleSubmit) — acá nunca
+// se los mapea a null.
 function diffEditable(
   baseline: EditableFields,
   edited: EditableFields,
@@ -77,6 +105,15 @@ function diffEditable(
       return;
     }
 
+    if (key === "social_accounts") {
+      const beforeArr = before as SocialAccount[];
+      const afterArr = after as SocialAccount[];
+      if (JSON.stringify(beforeArr) !== JSON.stringify(afterArr)) {
+        out.social_accounts = afterArr;
+      }
+      return;
+    }
+
     if (before === after) return;
     const value = after as string;
     (out as Record<string, unknown>)[key] = value.trim() === "" ? null : value;
@@ -89,7 +126,9 @@ export default function ProfileForm() {
   const profile = useProfileStore((s) => s.profile);
   const error = useProfileStore((s) => s.error);
   const isLoading = useProfileStore((s) => s.isLoading);
+  const saveSuccess = useProfileStore((s) => s.saveSuccess);
   const save = useProfileStore((s) => s.save);
+  const clearSaveSuccess = useProfileStore((s) => s.clearSaveSuccess);
 
   // Sincroniza baseline/edited con el perfil del store cuando cambia de
   // identidad (p. ej. tras `load()`). Ajuste de estado durante el
@@ -107,11 +146,27 @@ export default function ProfileForm() {
     });
   }
 
+  const [fieldErrors, setFieldErrors] = useState<RequiredFieldErrors>({});
+
+  // Revelado progresivo (mismo patrón que Step4Formats.tsx en onboarding):
+  // el selector de plataforma + usuario arranca oculto para no apilar dos
+  // decisiones de +4 opciones sobre el resto del formulario.
+  const [newPlatform, setNewPlatform] = useState<string>(PLATFORMS[0]);
+  const [newHandle, setNewHandle] = useState("");
+  const [isAddingAccount, setIsAddingAccount] = useState(false);
+
   function updateField<K extends keyof EditableFields>(
     key: K,
     value: EditableFields[K],
   ): void {
     setFormState((prev) => ({ ...prev, edited: { ...prev.edited, [key]: value } }));
+    setFieldErrors((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key as RequiredKey];
+      return next;
+    });
+    clearSaveSuccess();
   }
 
   function toggleFormat(format: string): void {
@@ -122,10 +177,50 @@ export default function ProfileForm() {
         : [...current, format];
       return { ...prev, edited: { ...prev.edited, preferred_formats: next } };
     });
+    clearSaveSuccess();
+  }
+
+  function addSocialAccount(): void {
+    if (!newHandle.trim()) return;
+    setFormState((prev) => ({
+      ...prev,
+      edited: {
+        ...prev.edited,
+        social_accounts: [
+          ...prev.edited.social_accounts,
+          { platform: newPlatform, handle: newHandle.trim(), url: null, follower_count: null },
+        ],
+      },
+    }));
+    setNewHandle("");
+    clearSaveSuccess();
+  }
+
+  function removeSocialAccount(index: number): void {
+    setFormState((prev) => ({
+      ...prev,
+      edited: {
+        ...prev.edited,
+        social_accounts: prev.edited.social_accounts.filter((_, i) => i !== index),
+      },
+    }));
+    clearSaveSuccess();
   }
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
+
+    const { edited } = formState;
+    const errors: RequiredFieldErrors = {};
+    REQUIRED_KEYS.forEach((key) => {
+      if (edited[key].trim() === "") errors[key] = REQUIRED_MESSAGE;
+    });
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+    setFieldErrors({});
+
     const partial = diffEditable(formState.baseline, formState.edited);
     if (Object.keys(partial).length === 0) return;
     try {
@@ -162,35 +257,22 @@ export default function ProfileForm() {
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-5">
       {error ? (
-        <p
-          role="alert"
-          className="rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-700"
-        >
-          {error}
-        </p>
+        <Alert tone="danger">{error}</Alert>
+      ) : saveSuccess ? (
+        <Alert tone="success">Perfil actualizado.</Alert>
       ) : null}
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="display_name"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
-          Nombre
-        </label>
-        <input
-          id="display_name"
-          type="text"
-          value={edited.display_name}
-          onChange={(e) => updateField("display_name", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+      <Field
+        id="display_name"
+        label="Nombre"
+        type="text"
+        value={edited.display_name}
+        onChange={(e) => updateField("display_name", e.target.value)}
+        icon={<User aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+      />
 
       <div className="space-y-1.5">
-        <label
-          htmlFor="bio"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
+        <label htmlFor="bio" className={FIELD_LABEL_CLASS}>
           Biografía
         </label>
         <textarea
@@ -198,22 +280,21 @@ export default function ProfileForm() {
           value={edited.bio}
           onChange={(e) => updateField("bio", e.target.value)}
           rows={3}
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className={inputClass(false, false)}
         />
       </div>
 
       <div className="space-y-1.5">
-        <label
-          htmlFor="niche"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
+        <label htmlFor="niche" className={FIELD_LABEL_CLASS}>
           Nicho
         </label>
         <select
           id="niche"
           value={edited.niche}
           onChange={(e) => updateField("niche", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+          aria-invalid={fieldErrors.niche ? true : undefined}
+          aria-describedby={fieldErrors.niche ? "niche-message" : undefined}
+          className={inputClass(Boolean(fieldErrors.niche), false)}
         >
           <option value="">Selecciona un nicho</option>
           {NICHES.map((n) => (
@@ -222,111 +303,75 @@ export default function ProfileForm() {
             </option>
           ))}
         </select>
+        {fieldErrors.niche ? (
+          <p id="niche-message" role="alert" className="ml-1 text-xs font-light text-danger">
+            {fieldErrors.niche}
+          </p>
+        ) : null}
       </div>
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="sub_niche"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
-          Sub-nicho
-        </label>
-        <input
-          id="sub_niche"
-          type="text"
-          value={edited.sub_niche}
-          onChange={(e) => updateField("sub_niche", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+      <Field
+        id="sub_niche"
+        label="Sub-nicho"
+        type="text"
+        value={edited.sub_niche}
+        onChange={(e) => updateField("sub_niche", e.target.value)}
+        icon={<Compass aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+      />
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="primary_goal"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
-          Objetivo principal
-        </label>
-        <input
-          id="primary_goal"
-          type="text"
-          value={edited.primary_goal}
-          onChange={(e) => updateField("primary_goal", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+      <Field
+        id="primary_goal"
+        label="Objetivo principal"
+        type="text"
+        value={edited.primary_goal}
+        onChange={(e) => updateField("primary_goal", e.target.value)}
+        error={fieldErrors.primary_goal}
+        icon={<Target aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+      />
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="tone"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
-          Tono
-        </label>
-        <input
-          id="tone"
-          type="text"
-          value={edited.tone}
-          onChange={(e) => updateField("tone", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+      <Field
+        id="tone"
+        label="Tono"
+        type="text"
+        value={edited.tone}
+        onChange={(e) => updateField("tone", e.target.value)}
+        error={fieldErrors.tone}
+        icon={<MessageCircle aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+      />
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="target_audience"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
-          Audiencia objetivo
-        </label>
-        <input
-          id="target_audience"
-          type="text"
-          value={edited.target_audience}
-          onChange={(e) => updateField("target_audience", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+      <Field
+        id="target_audience"
+        label="Audiencia objetivo"
+        type="text"
+        value={edited.target_audience}
+        onChange={(e) => updateField("target_audience", e.target.value)}
+        error={fieldErrors.target_audience}
+        icon={<Users aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label
-            htmlFor="current_frequency"
-            className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-          >
-            Frecuencia actual
-          </label>
-          <input
-            id="current_frequency"
-            type="text"
-            value={edited.current_frequency}
-            onChange={(e) => updateField("current_frequency", e.target.value)}
-            placeholder="Ej. 3 por semana"
-            className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label
-            htmlFor="desired_frequency"
-            className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-          >
-            Frecuencia deseada
-          </label>
-          <input
-            id="desired_frequency"
-            type="text"
-            value={edited.desired_frequency}
-            onChange={(e) => updateField("desired_frequency", e.target.value)}
-            placeholder="Ej. 5 por semana"
-            className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all placeholder:text-[#75777b]/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
+        <Field
+          id="current_frequency"
+          label="Frecuencia actual"
+          type="text"
+          value={edited.current_frequency}
+          onChange={(e) => updateField("current_frequency", e.target.value)}
+          placeholder="Ej. 3 por semana"
+          icon={<Calendar aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+        />
+        <Field
+          id="desired_frequency"
+          label="Frecuencia deseada"
+          type="text"
+          value={edited.desired_frequency}
+          onChange={(e) => updateField("desired_frequency", e.target.value)}
+          placeholder="Ej. 5 por semana"
+          icon={<CalendarClock aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+        />
       </div>
 
       <fieldset className="space-y-2">
-        <legend className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant">
-          Formatos preferidos
-        </legend>
+        <legend className={FIELD_LABEL_CLASS}>Formatos preferidos</legend>
         <div className="flex flex-wrap gap-2">
           {FORMATS.map((format) => {
             const id = `preferred-format-${format}`;
@@ -334,13 +379,14 @@ export default function ProfileForm() {
               <label
                 key={format}
                 htmlFor={id}
-                className="flex items-center gap-2 rounded-full border border-white/40 bg-surface-container-lowest/20 px-3 py-1.5 text-sm text-on-surface"
+                className="flex items-center gap-2 rounded-full border border-glass-edge bg-surface-container-lowest/20 px-3 py-1.5 text-sm text-on-surface"
               >
                 <input
                   id={id}
                   type="checkbox"
                   checked={edited.preferred_formats.includes(format)}
                   onChange={() => toggleFormat(format)}
+                  className="h-4 w-4 accent-primary"
                 />
                 {FORMAT_LABELS[format] ?? format}
               </label>
@@ -349,18 +395,95 @@ export default function ProfileForm() {
         </div>
       </fieldset>
 
+      <fieldset className="space-y-2">
+        <legend className={FIELD_LABEL_CLASS}>Redes sociales</legend>
+
+        {edited.social_accounts.length > 0 ? (
+          <ul className="space-y-2">
+            {edited.social_accounts.map((account, index) => (
+              <li
+                key={`${account.platform}-${account.handle}-${index}`}
+                className="flex items-center justify-between rounded-xl border border-glass-edge bg-surface-container-lowest/30 px-3 py-2 text-sm text-on-surface"
+              >
+                <span>
+                  {PLATFORM_LABELS[account.platform] ?? account.platform}: @{account.handle}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => removeSocialAccount(index)}
+                  aria-label={`Eliminar red social ${account.platform} ${account.handle}`}
+                  className="!w-auto !rounded-sm !p-1.5 !text-danger"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {isAddingAccount ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-1.5">
+              <label htmlFor="social-platform" className={FIELD_LABEL_CLASS}>
+                Plataforma
+              </label>
+              <select
+                id="social-platform"
+                value={newPlatform}
+                onChange={(e) => setNewPlatform(e.target.value)}
+                className={inputClass(false, false)}
+              >
+                {PLATFORMS.map((p) => (
+                  <option key={p} value={p}>
+                    {PLATFORM_LABELS[p] ?? p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <Field
+                id="social-handle"
+                label="Usuario"
+                type="text"
+                value={newHandle}
+                onChange={(e) => setNewHandle(e.target.value)}
+                placeholder="@usuario"
+                icon={<AtSign aria-hidden="true" size={18} strokeWidth={1.5} className={FIELD_ICON_CLASS} />}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={addSocialAccount}
+              className="!w-auto inline-flex items-center justify-center gap-2 !py-2.5 px-4"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Agregar
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setIsAddingAccount(true)}
+            className="!w-auto inline-flex items-center justify-center gap-2 !py-2.5 px-4"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Agregar red social
+          </Button>
+        )}
+      </fieldset>
+
       <div className="space-y-1.5">
-        <label
-          htmlFor="timezone"
-          className="ml-1 text-xs font-medium uppercase tracking-widest text-on-surface-variant"
-        >
+        <label htmlFor="timezone" className={FIELD_LABEL_CLASS}>
           Zona horaria
         </label>
         <select
           id="timezone"
           value={edited.timezone}
           onChange={(e) => updateField("timezone", e.target.value)}
-          className="w-full rounded-2xl border border-white/40 bg-surface-container-lowest/30 px-4 py-3 text-sm text-on-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className={inputClass(false, false)}
         >
           <option value="">Sin especificar</option>
           {timezoneOptions.map((tz) => (
@@ -371,13 +494,9 @@ export default function ProfileForm() {
         </select>
       </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full rounded-full bg-gradient-to-r from-primary to-primary-container py-3 font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100"
-      >
+      <Button type="submit" disabled={isLoading}>
         {isLoading ? "Guardando..." : "Guardar cambios"}
-      </button>
+      </Button>
     </form>
   );
 }

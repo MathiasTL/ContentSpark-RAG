@@ -61,7 +61,7 @@ export default function TimezoneNudge() {
   return (
     <div
       role="status"
-      className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-2xl border border-white/30 bg-surface-container-lowest/40 px-4 py-3 text-sm text-on-surface backdrop-blur-md sm:mx-6"
+      className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-2xl border border-glass-edge bg-surface-container-lowest/40 px-4 py-3 text-sm text-on-surface backdrop-blur-md sm:mx-6"
     >
       <p className="flex-1">
         Todavía no configuraste tu zona horaria: tu calendario se está
@@ -75,7 +75,7 @@ export default function TimezoneNudge() {
         type="button"
         onClick={dismiss}
         aria-label="Descartar aviso de zona horaria"
-        className="rounded-full p-1.5 text-on-surface-variant transition-colors hover:bg-white/20"
+        className="rounded-full p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container-lowest/20"
       >
         <X className="h-4 w-4" />
       </button>
