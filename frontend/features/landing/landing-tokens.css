@@ -1,0 +1,137 @@
+/*
+ * Landing — paleta "Estudio Editorial"
+ * ─────────────────────────────────────
+ * La landing es un mundo de marketing propio, deliberadamente separado del
+ * sistema de tokens de la app (frontend/app/globals.css, "El Estudio de
+ * Cristal"). No es deuda: el resto del producto es una herramienta de
+ * trabajo en vidrio claro/oscuro; esta página es una pieza editorial de
+ * conversión de una sola pieza, sin conmutador de tema. Documentado en
+ * DESIGN.md (entrada "Landing — Estudio Editorial").
+ *
+ * Estos tokens viven SOLO bajo `.landing-root` (aplicada en LandingView.tsx,
+ * el único punto de entrada de este feature) y se consumen con clases
+ * arbitrarias de Tailwind: `bg-[var(--landing-canvas)]`,
+ * `text-[var(--landing-ink-muted)]`, etc. Ningún componente de landing debe
+ * escribir un hex o un rgba() suelto fuera de este archivo — si hace falta
+ * un matiz nuevo, se agrega acá con nombre y comentario, no inline.
+ */
+
+.landing-root {
+  /* ── Canvas: carbón cálido, nunca negro puro. ── */
+  --landing-canvas: #171310;
+  --landing-canvas-raised: #221c17;
+  --landing-canvas-raised-strong: #2b241d;
+  /* Versión translúcida del canvas, para barras ancladas (nav) sobre contenido
+     que se desplaza detrás. */
+  --landing-canvas-overlay: rgba(23, 19, 16, 0.72);
+  --landing-canvas-veil: rgba(15, 12, 10, 0.6);
+
+  /* ── Tinta: texto cálido, nunca blanco puro. ── */
+  --landing-ink: #f4ede2;
+  --landing-ink-muted: #b7ab9c;
+  --landing-ink-faint: #837767;
+
+  /* ── Filo: bordes translúcidos cálidos que definen las superficies. ── */
+  --landing-border: rgba(244, 237, 226, 0.1);
+  --landing-border-strong: rgba(244, 237, 226, 0.18);
+
+  /*
+   * ── Acento: el Violeta Eléctrico del resto del sistema (#6e2ce0 / #a97dff
+   * de referencia), calibrado para este fondo cálido. Firma, no relleno:
+   * mismo espíritu que la Regla del Diez Por Ciento del resto de la app,
+   * aunque la paleta sea propia. Vive en CTAs y en un detalle puntual por
+   * sección — nunca en fondos de sección ni tarjetas completas.
+   */
+  --landing-accent: #6e2ce0;
+  --landing-accent-hover: #7d3ef2;
+  /* Texto/ícono sobre un relleno de acento sólido: 6.78:1 medido, AA sobrado. */
+  --landing-accent-on: #ffffff;
+  /* Variante clara del acento para texto y enlaces que caen directo sobre el
+     canvas oscuro (el acento base pierde contraste ahí): 5.9:1 medido contra
+     --landing-canvas. */
+  --landing-accent-text: #b48cff;
+  /* Halos y trazos decorativos de baja intensidad — nunca relleno de panel. */
+  --landing-accent-soft: rgba(110, 44, 224, 0.16);
+  --landing-accent-soft-strong: rgba(110, 44, 224, 0.32);
+
+  --landing-shadow-accent: 0 32px 64px -24px rgba(110, 44, 224, 0.45);
+}
+
+/*
+ * ── Fondo del estudio ──
+ * Dos manchas de acento muy diluidas que derivan lento sobre el canvas.
+ * Restringidas a dos (no cinco, como el fondo de auth) porque acá el acento
+ * ya tiene trabajo que hacer en los CTAs — el fondo solo sugiere la luz del
+ * estudio, no compite por atención. Se anulan bajo `prefers-reduced-motion`.
+ */
+.landing-glow {
+  will-change: transform;
+}
+
+.landing-glow-1 {
+  animation: landing-drift-1 26s ease-in-out infinite;
+}
+
+.landing-glow-2 {
+  animation: landing-drift-2 22s ease-in-out infinite;
+}
+
+@keyframes landing-drift-1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(60px, 90px) scale(1.12);
+  }
+}
+
+@keyframes landing-drift-2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-70px, -50px) scale(0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-glow {
+    animation: none !important;
+  }
+}
+
+/*
+ * ── Marquee (nichos) ──
+ * Dos copias del mismo track puestas lado a lado (ver Marquee.tsx); el track
+ * recorre exactamente -50% para empalmar sin salto con la copia siguiente.
+ */
+.landing-marquee-track {
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes landing-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes landing-marquee-reverse {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-marquee-track {
+    animation: none !important;
+  }
+}

@@ -1,65 +1,17 @@
-"use client";
+import TextReveal from "./TextReveal";
 
-import { motion } from "framer-motion";
+const QUOTE =
+  "Un chat que responde con tu propio conocimiento, un perfil que recuerda tu nicho y tu tono, y un calendario que convierte esa conversación en contenido listo para publicar.";
 
+// Momento editorial entre el hero y las features, adaptado de Magic UI
+// "Text Reveal". Reemplaza el bloque "Tu creatividad, potenciada por datos"
+// con texto genérico del template — esta es la propuesta de valor real del
+// producto (RAG + perfil de creador + calendario, ver PRODUCT.md), sin
+// métricas inventadas.
 export default function BrandSection() {
   return (
-    <section id="about" className="relative overflow-hidden py-24 sm:py-32">
-      <div className="absolute inset-0 bg-white/5" />
-      <div className="relative mx-auto flex max-w-7xl flex-col items-center justify-between gap-12 px-6 sm:px-8 md:flex-row md:gap-16">
-        {/* Text */}
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
-          className="md:w-1/2"
-        >
-          <h2 className="mb-6 text-3xl font-semibold leading-tight text-white sm:mb-8 sm:text-4xl md:text-5xl">
-            Tu creatividad,
-            <br />
-            <span className="text-primary-container">potenciada por datos.</span>
-          </h2>
-          <p className="mb-10 text-base font-light leading-relaxed text-white/50 sm:mb-12 sm:text-lg">
-            ContentSpark no es solo una herramienta; es un socio estratégico.
-            Analizamos tu producción creativa y entregamos insights accionables
-            que te ayudan a escalar sin burnout.
-          </p>
-          <div className="space-y-5 sm:space-y-6">
-            {[
-              { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "Respuestas personalizadas a tu nicho y objetivos" },
-              { icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6", text: "Calendario de contenido sincronizado con Google Calendar" },
-            ].map(({ icon, text }) => (
-              <div key={text} className="flex items-center gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary-container">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d={icon} />
-                  </svg>
-                </div>
-                <span className="font-medium text-white/80">{text}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Visual */}
-        <motion.div
-          initial={{ opacity: 0, x: 30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="relative md:w-1/2"
-        >
-          <div className="aspect-[4/3] overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-primary/20 via-secondary/15 to-[#005da6]/20 shadow-2xl sm:rounded-[2.5rem]">
-            <div className="flex h-full flex-col items-center justify-center p-8">
-              <svg className="mb-4 text-white/20" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
-              </svg>
-              <p className="text-sm font-light text-white/30">Vista previa del dashboard</p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+    <section id="about" aria-label="Propuesta de valor">
+      <TextReveal text={QUOTE} />
     </section>
   );
 }

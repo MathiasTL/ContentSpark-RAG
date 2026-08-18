@@ -481,23 +481,116 @@ de un HTML de referencia, nunca paso por el sistema de diseño):
    campos sueltos nicho/sub-nicho/objetivo/tono/audiencia en secciones) por
    decision del usuario de priorizar P0+P1 en esta pasada.
 
+RESUELTO — landing, rediseno "Estudio Editorial", 2026-08-17 (decision explicita
+del usuario, no deuda: landing pasa a ser un mundo de marketing propio, separado
+del sistema de la app):
+20. [x] LANDING: rediseno completo bajo la direccion "Estudio Editorial". Antes
+   del sistema de tokens de la app (glassmorphism "Estudio de Cristal"), LandingView
+   era un template generico: hero centrado con texto en gradiente, cards
+   bg-white/5 / bg-white/10 sueltas, y un mockup de chat fake dibujado a mano
+   con divs (violaba directamente "sparklines/progress rings/rectangulos con
+   sombra suave en lugar de contenido" del piso de calidad, y el gradiente de
+   texto del titulo violaba el Don't del propio DESIGN.md).
+   DECISION DE DISENO (explicita, no deuda): landing es una pieza editorial de
+   conversion de una sola pantalla, sin conmutador de tema — no responde al
+   par claro/oscuro de la app ni a sus tokens (--color-primary, --color-surface,
+   etc.). Vive bajo su PROPIA paleta ("Estudio Editorial"): fondo carbon calido
+   (nunca negro puro), tinta calida (nunca blanco puro), y el mismo Violeta
+   Electrico del resto del sistema (#6e2ce0 / #a97dff de referencia) recalibrado
+   como firma escasa, con el mismo espiritu que la Regla del Diez Por Ciento
+   aunque la paleta sea separada.
+   TOKENS NUEVOS: frontend/features/landing/landing-tokens.css, bajo el
+   selector `.landing-root` (aplicado una sola vez, en LandingView.tsx) para
+   que no se filtren al resto de la app. --landing-canvas/-raised/-raised-strong
+   (carbon calido), --landing-canvas-overlay/-veil (variantes translucidas para
+   nav y vignette), --landing-ink/-muted/-faint (tinta calida), --landing-border/
+   -strong (filo), --landing-accent/-hover/-on/-text/-soft/-soft-strong (acento,
+   con variante clara --landing-accent-text para texto sobre el canvas oscuro
+   porque el acento base pierde contraste ahi: 5.9:1 medido vs 2.6:1), y
+   --landing-shadow-accent (la unica sombra, reservada para el panel de CTA
+   final). Todo componente de landing consume estos tokens via clases
+   arbitrarias (`bg-[var(--landing-canvas)]`), cero hex/rgba sueltos fuera del
+   bloque de definicion (verificado por grep).
+   TIPOGRAFIA: se agrego Fraunces como segunda fuente, exclusiva de landing.
+   frontend/app/layout.tsx la carga con next/font/google igual que Inter
+   (variable --font-fraunces, axes opsz/SOFT/WONK, display swap);
+   frontend/app/globals.css declara `--font-display` en el bloque `@theme inline`
+   junto a `--font-sans`, lo que genera la utilidad `font-display` — usada
+   solo en h1/h2 de hero, features y la cita editorial. El resto de la app
+   sigue en Inter unicamente.
+   COMPONENTES ADAPTADOS (codigo propio, sin instalar CLI, sin dependencias
+   nuevas — framer-motion y lucide-react ya eran dependencias):
+   - Magic UI "Bento Grid" (magicui.design/docs/components/bento-grid) ->
+     BentoGrid.tsx/BentoCard.tsx nuevos, usados por FeaturesGrid.tsx para
+     reestructurar las 3 features reales (RAG para Creadores, Onboarding
+     Inteligente, Calendario Accionable) en un layout asimetrico (RAG 2 cols +
+     Onboarding 1 col arriba, Calendario 3 cols abajo). Se eliminaron la barra
+     de progreso fake ("Analizando tono... 67%") y la grilla de calendario fake
+     (divs de colores) del template original — exactamente el patron de
+     "contenido de relleno" prohibido por el piso de calidad.
+   - Magic UI "Text Reveal" (magicui.design/docs/components/text-reveal) ->
+     TextReveal.tsx nuevo, absorbe BrandSection.tsx (que mostraba "Tu
+     creatividad, potenciada por datos", copy generico de template) con una
+     cita editorial real entre el hero y las features: "Un chat que responde
+     con tu propio conocimiento, un perfil que recuerda tu nicho y tu tono, y
+     un calendario que convierte esa conversacion en contenido listo para
+     publicar" — la propuesta de valor real (RAG + perfil + calendario, ver
+     PRODUCT.md), sin metricas inventadas.
+   - Magic UI "Marquee" (magicui.design/docs/components/marquee) ->
+     Marquee.tsx nuevo, usado por NicheMarquee.tsx para mostrar los 6 nichos
+     reales de NICHES (shared/constants) en scroll infinito. Explicitamente NO
+     logos de clientes ni testimonios — no existen (PRODUCT.md prohibe prueba
+     social fabricada, mismo hallazgo ya corregido en calendar/PerformancePanel).
+   - Hero editorial split (referencia de composicion de 21st.dev, patron
+     copy+visual asimetrico no centrado) -> HeroSection.tsx reescrito: copy a
+     la izquierda (7/12), pieza visual a la derecha (5/12). El mockup de chat
+     fake se reemplazo por PipelineDiagram.tsx (nuevo): una composicion SVG
+     geometrica y animada (framer-motion, trazo de linea + nodos) que dibuja el
+     pipeline real del producto — base de conocimiento -> perfil del creador ->
+     calendario — no una imitacion de interfaz.
+   Explicitamente descartado: Number Ticker / contador de stats (no hay backend
+   de analytics real para landing).
+   MOTION: un momento orquestado al cargar en HeroSection (stagger de
+   framer-motion sobre badge/titulo/subtitulo/CTAs) + revelados en scroll
+   (`whileInView`) en BrandSection, FeaturesGrid y CTASection. GradientBackground.tsx
+   se re-implemento sobre los tokens nuevos: dos manchas de acento diluidas
+   (no cinco, como el fondo de auth) que derivan lento, mas vignette de
+   profundidad; toda la animacion se anula bajo prefers-reduced-motion. Cero
+   hover:scale/active:scale (verificado por grep, mismo estandar que el resto
+   del sistema).
+   Navbar.tsx, CTASection.tsx y Footer.tsx migrados a los tokens de landing sin
+   componente externo nuevo (misma funcion: nav con links a login/signup, CTA
+   final, footer).
+   REGLA 5c REVISADA PARA LANDING: la regla previa ("landing debe consumir
+   Button/Alert/Field/PasswordField de shared/ui") queda sin efecto para esta
+   superficie por la decision de este punto — landing no comparte tokens con
+   la app, por lo tanto tampoco comparte primitivos que dependen de esos
+   tokens. Boton/CTA de landing son marcado propio sobre --landing-accent.
+   Verificacion: tsc limpio, 213/213 tests, eslint sin warnings, detect.mjs []
+   sobre frontend/features/landing, grep de sanidad manual confirmo cero
+   hover:scale/active:scale/rounded-arbitrario y cero hex sueltos fuera del
+   bloque de definicion de landing-tokens.css.
+   LANDING QUEDA CERRADO bajo su propio sistema (no aplica el ledger de
+   "utilidades hardcodeadas pendientes" de la app: ver punto 4 actualizado).
+
 PENDIENTE:
-4. ~123 utilidades de color hardcodeadas en las vistas que faltan.
-   Reparto: landing 107 (aun no auditado con este metodo, cifra original del
-   ledger), shared 16. (onboarding: 0, chat: 0, calendar: 0, profile: 0, resueltos)
-   Nota: landing es la unica cifra no confirmada por un critique real todavia.
-   Mientras existan, esas zonas no responden al tema.
+4. ~16 utilidades de color hardcodeadas en las vistas que faltan.
+   Reparto: shared 16 (unico rubro pendiente; landing salio del conteo:
+   cerro bajo su propio sistema de tokens, ver punto 20, no bajo el de la app).
+   (onboarding: 0, chat: 0, calendar: 0, profile: 0, resueltos)
 5b. [x] RESUELTO junto con el punto 5. Las cuatro vistas bajaron de 1005 a 681 lineas
    (-32%) y los primitivos suman 463. El total sube ~139 lineas: extraer NO ahorra
    codigo, elimina puntos de cambio. Un ajuste de sistema que antes habia que hacer
    cuatro veces ahora se hace una.
-5c. REGLA PARA LAS SUPERFICIES QUE FALTAN: landing debe consumir
-   Button, Alert, Field y PasswordField. Si una vista nueva vuelve a escribir
-   la clase de un input a mano, es un defecto, no una variante.
+5c. REGLA PARA LAS SUPERFICIES DE LA APP (no landing, ver punto 20 — landing
+   corre bajo su propio sistema de tokens y por lo tanto no comparte estos
+   primitivos): consumir Button, Alert, Field y PasswordField. Si una vista
+   nueva vuelve a escribir la clase de un input a mano, es un defecto, no una
+   variante.
    (onboarding: [x] resuelto 2026-08-17 ver punto 12; calendar: [x] resuelto
    2026-08-17 ver punto 18; profile: [x] resuelto 2026-08-18 ver punto 19;
-   chat: parcial, Alert/Button adoptados en SourcesModal/ChatView/
-   ChatSidebarContent, resto del feature sin Field)
+   landing: no aplica, ver punto 20; chat: parcial, Alert/Button adoptados en
+   SourcesModal/ChatView/ChatSidebarContent, resto del feature sin Field)
 5. [x] RESUELTO 2026-08-09. Primitivos extraidos a shared/components/ui: Button (con
        buttonClass exportado para los casos en que la accion primaria es un Link),
        Alert (el role lo decide el tono), Field (ata label/input y arma aria-describedby;

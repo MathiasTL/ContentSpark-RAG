@@ -12,6 +12,11 @@
    token que deba cambiar en tiempo de ejecucion puede vivir en este bloque. */
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Fraunces: solo para titulares dentro del scope de landing (clase `font-display`,
+     ver frontend/features/landing/landing-tokens.css). El resto de la app se queda
+     en Inter — no aplicar `font-display` fuera de frontend/features/landing/. */
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
 }
 
 /* Tokens de color: SIN `inline`, para que las utilidades emitan `var(...)`
