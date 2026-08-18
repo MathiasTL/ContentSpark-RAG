@@ -584,11 +584,15 @@ del sistema de la app):
    un azul indigo ajeno a la paleta reemplazado por un neutro documentado).
    Background.tsx (los hex del fondo de aurora) NO es deuda — ya esta
    exceptuado explicitamente en la seccion "Fondo de aurora" de este mismo
-   documento. NOTA APARTE (no corregida, fuera de alcance de esta pasada): esa
-   misma seccion documenta que las manchas "derivan en ciclos de 16 a 25
-   segundos" pero Background.tsx no tiene ninguna clase de animacion —
-   documentacion y codigo estan desincronizados, a resolver en una pasada de
-   animate si el usuario lo pide.
+   documento.
+   FIX APARTE, mismo dia: la desincronizacion entre esa seccion (manchas que
+   "derivan en ciclos de 16 a 25 segundos") y Background.tsx (sin ninguna
+   clase de animacion) se corrigio de inmediato — los keyframes ya existian
+   en globals.css (.auth-blob-1..5 sobre blob-drift-1..5, exactamente
+   18/22/20/25/16s) pero Background.tsx nunca les aplicaba la clase. Se
+   agrego `auth-blob auth-blob-N` a cada una de las 5 manchas. Verificado en
+   browser real (no solo screenshot): getComputedStyle().animationPlayState
+   === "running" en las 5, con animationDuration exacta por mancha.
    El detector de impeccable encontro un solo finding (gradient-text en el
    wordmark "ContentSpark" de AppSidebar.tsx:49) — falso positivo verificado:
    es exactamente la excepcion documentada de "Violeta Difuso" ("se usa como

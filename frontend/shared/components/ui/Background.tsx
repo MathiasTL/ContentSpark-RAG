@@ -2,11 +2,11 @@ export default function Background() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       <div className="absolute inset-0 bg-[linear-gradient(140deg,#9fb6e8_0%,#b8bde9_34%,#d8c7e8_63%,#eab8d5_100%)] dark:bg-[linear-gradient(140deg,#141225_0%,#1f1b33_34%,#2b1f3d_63%,#3a1f36_100%)]" />
-      <div className="absolute -left-24 top-16 h-96 w-96 rounded-full bg-[#8ca8df]/40 blur-3xl dark:bg-[#3a4f8f]/30" />
-      <div className="absolute right-[-140px] top-[-60px] h-[26rem] w-[26rem] rounded-full bg-[#d8bde8]/45 blur-3xl dark:bg-[#6a3f8f]/30" />
-      <div className="absolute left-[28%] top-[20%] h-72 w-72 rounded-full bg-[#fbd36c]/22 blur-3xl dark:bg-[#8a6a1f]/15" />
-      <div className="absolute right-[14%] bottom-[-80px] h-[30rem] w-[30rem] rounded-full bg-[#e8b0d4]/50 blur-3xl dark:bg-[#8f3f6f]/30" />
-      <div className="absolute left-[18%] bottom-[8%] h-56 w-56 rounded-full bg-[#9ac7ee]/30 blur-3xl dark:bg-[#3f6f8f]/25" />
+      <div className="auth-blob auth-blob-1 absolute -left-24 top-16 h-96 w-96 rounded-full bg-[#8ca8df]/40 blur-3xl dark:bg-[#3a4f8f]/30" />
+      <div className="auth-blob auth-blob-2 absolute right-[-140px] top-[-60px] h-[26rem] w-[26rem] rounded-full bg-[#d8bde8]/45 blur-3xl dark:bg-[#6a3f8f]/30" />
+      <div className="auth-blob auth-blob-3 absolute left-[28%] top-[20%] h-72 w-72 rounded-full bg-[#fbd36c]/22 blur-3xl dark:bg-[#8a6a1f]/15" />
+      <div className="auth-blob auth-blob-4 absolute right-[14%] bottom-[-80px] h-[30rem] w-[30rem] rounded-full bg-[#e8b0d4]/50 blur-3xl dark:bg-[#8f3f6f]/30" />
+      <div className="auth-blob auth-blob-5 absolute left-[18%] bottom-[8%] h-56 w-56 rounded-full bg-[#9ac7ee]/30 blur-3xl dark:bg-[#3f6f8f]/25" />
     </div>
   );
 }
