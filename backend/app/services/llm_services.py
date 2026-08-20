@@ -10,17 +10,17 @@ load_dotenv()
 class LLMService:
     def __init__(self):
         """
-        Inicializa la conexión con Groq usando el modelo Llama 3.
-        Elegimos llama3-8b-8192 porque es absurdamente rápido y excelente para 
-        tareas creativas y estructuradas como los hooks.
+        Inicializa la conexión con Groq.
+        llama-3.1-8b-instant fue dado de baja por Groq; usamos openai/gpt-oss-20b
+        como reemplazo del free tier (~1000 tok/s, límites en docs.groq.com/docs/rate-limits).
         """
         api_key =os.getenv("GROQ_API_KEY")
         if not api_key:
             raise ValueError("⚠️ ERROR: No se encontró GROQ_API_KEY en el archivo .env")
-        
+
         self.llm = ChatGroq(
             api_key=api_key,
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-20b",
             temperature=0.7,  # balance between creativity and coherence
         )
         

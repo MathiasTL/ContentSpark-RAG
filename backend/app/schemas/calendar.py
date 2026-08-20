@@ -1,4 +1,5 @@
 # Fase 3: Esquemas Pydantic para calendarios de contenido
+import uuid
 from datetime import date
 from typing import Literal
 
@@ -63,6 +64,11 @@ class EntryResponse(BaseModel):
     status: str
     google_calendar_event_id: str | None = None
 
+    @field_validator("id", "calendar_id", mode="before")
+    @classmethod
+    def _stringify_uuid(cls, value: object) -> object:
+        return str(value) if isinstance(value, uuid.UUID) else value
+
 
 class CalendarResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -72,6 +78,11 @@ class CalendarResponse(BaseModel):
     end_date: date
     frequency: int
     status: str
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def _stringify_uuid(cls, value: object) -> object:
+        return str(value) if isinstance(value, uuid.UUID) else value
 
 
 class CalendarDetailResponse(CalendarResponse):
