@@ -37,3 +37,8 @@ docker-compose.override.yml
 # Caches de Python
 __pycache__/
 *.py[cod]
+
+# Dependencias Node — frontend/.gitignore ya cubre frontend/node_modules;
+# esta regla evita que un `npm install` corrido por error desde la raíz
+# (o cachés como .vite) se cuele como untracked en git status.
+node_modules/
