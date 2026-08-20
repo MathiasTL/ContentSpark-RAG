@@ -19,8 +19,8 @@ TITLE_FALLBACK_CHARS = 50
 def _to_uuid(value: str, label: str) -> uuid.UUID:
     try:
         return uuid.UUID(value)
-    except (ValueError, AttributeError, TypeError):
-        raise HTTPException(status_code=400, detail=f"{label} no es un UUID valido")
+    except (ValueError, AttributeError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail=f"{label} no es un UUID valido") from exc
 
 
 class ChatService:

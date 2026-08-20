@@ -47,7 +47,7 @@ async def test_llm(request: HookRequest):
         hook = await llm_service.generate_text_hook(request.topic)
         return {"success": True, "topic": request.topic, "hook": hook}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/test-embedding")
@@ -62,7 +62,7 @@ async def test_embedding(request: EmbeddingRequest):
             "sample_vector": vector[:5],
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/ingest")
@@ -82,7 +82,7 @@ async def ingest_text(request: IngestTextRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/ingest-url")
@@ -101,7 +101,7 @@ async def ingest_url(request: IngestURLRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/ingest-urls")
@@ -134,7 +134,7 @@ async def ingest_urls_batch(request: IngestURLsRequest):
             "results": results,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/search")
@@ -152,7 +152,7 @@ async def search_similar(request: SearchRequest):
             "results": formatted_results,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/sources")
@@ -204,7 +204,7 @@ async def get_sources():
 
         return {"success": True, "sources": sources}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/stats")
@@ -239,4 +239,4 @@ async def get_stats():
             "by_language": by_language,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

@@ -41,4 +41,4 @@ def verify_supabase_token(token: str) -> Any:
         raise
     except Exception as exc:
         print(f"Auth error: {exc}")
-        raise HTTPException(status_code=401, detail="Error de autenticacion")
+        raise HTTPException(status_code=401, detail="Error de autenticacion") from exc
