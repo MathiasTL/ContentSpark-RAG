@@ -7,7 +7,7 @@ export default function SidebarShell({ children }: { children: ReactNode }) {
   const { collapsed } = useSidebar();
   return (
     <main
-      className={`relative h-dvh overflow-hidden transition-[margin] duration-300 ease-out ${
+      className={`relative h-dvh overflow-y-auto overflow-x-hidden transition-[margin] duration-300 ease-out ${
         collapsed ? "lg:ml-20" : "lg:ml-64"
       }`}
     >

@@ -632,6 +632,97 @@ del sistema de la app):
    los 3 P1 de producto del critique (arriba) y 2 P2 (modal de fuentes
    filtra PDFs y descarta URLs / sin scopear a la respuesta activa; sin
    acciones por mensaje como copiar).
+23. [x] CALENDAR: bug P0 real de hidratacion + reorganizacion, 2026-08-19/20
+   (reportado por el usuario como "confirmar no funciona" y "no hay scroll").
+   CAUSA RAIZ DEL "CONFIRMAR NO FUNCIONA": CalendarView.tsx nunca llamaba
+   loadCalendar(id) al montar — loadCalendars() solo trae la lista liviana
+   (CalendarItem, sin entries), no el detalle. En una carga fresca de pagina
+   con un calendario ya guardado, currentCalendar quedaba en null para
+   siempre: ConfirmBar retorna null si !currentCalendar (se auto-oculta por
+   completo, sin pill ni boton) y TimelineCards/CalendarGrid renderizaban
+   vacios pese a que el backend si tenia datos. El flujo funcionaba dentro de
+   la misma sesion (generate() puebla currentCalendar en memoria) — por eso
+   no se detecto en la auditoria e2e previa, que nunca recargo la pagina
+   despues de generar. Fix: efecto que llama loadCalendar(calendars[0].id)
+   (el backend ordena por created_at desc) cuando hay calendars pero no
+   currentCalendar, mas un estado isHydratingCalendar con skeleton
+   (animate-pulse, mismo patron que ChatSidebarContent/ChatView) en vez de
+   mostrar ConfirmBar/Timeline/Grid vacios durante ese fetch.
+   BUG P1 DE SCROLL: SidebarShell.tsx (el <main> que envuelve toda la app,
+   no solo calendar) tenia h-dvh overflow-hidden sin ningun overflow-y-auto
+   en la cadena de ancestros — cualquier vista con mas contenido que el
+   viewport quedaba clippeada sin forma de llegar a lo que sobraba. Cambiado
+   a h-dvh overflow-y-auto overflow-x-hidden. Verificado con
+   scrollHeight/clientHeight reales en browser (1896 vs 800) y scroll
+   funcional hasta el fondo.
+   FEEDBACK DE CONFIRMAR (percepcion de "no funciona" aun cuando el fetch
+   si resolvia): ConfirmBar.tsx no tenia loading state (a diferencia de
+   handleDelete, que si tiene isDeleting) y el unico cambio visible era el
+   texto de una pill chica sin color ni icono; el boton solo bajaba a
+   opacity-60 con el mismo texto, leible como "roto" en vez de "listo".
+   Agregado isConfirming (mismo patron que isDeleting, boton dice
+   "Confirmando…" y se deshabilita durante el fetch); la pill pasa a
+   success/success-container + icono CheckCircle2 (lucide-react) cuando
+   status !== draft; el boton "Confirmar calendario" se reemplaza por un
+   indicador estatico "Calendario confirmado" con el mismo icono en vez de
+   quedar dimeado con el mismo label.
+   REORGANIZACION (pedido explicito del usuario, "distribuir o reorganizar
+   la vista"): GenerateControl ya no se renderiza siempre arriba de todo —
+   ahora arranca colapsado detras de un toggle "Generar otro calendario"
+   (Button ghost, mismo patron de revelado progresivo que "+ Agregar red
+   social" de Step4Formats.tsx) cuando ya existe un calendario, y se
+   auto-colapsa de nuevo tras una generacion exitosa (ajuste de estado
+   durante el render comparando currentCalendar.id, no un efecto — evita la
+   regla set-state-in-effect de eslint-plugin-react-hooks). TopBar.tsx
+   perdio 3 controles muertos: tabs "Timeline/Grid View/Statistics"
+   (disabled, sin handler alguno), "Sync Calendar" (duplicaba exactamente
+   GoogleSyncButton.tsx / "Importar a Google" del sidebar, mismo
+   disabled/Proximamente) y el icono de notificaciones (disabled, sin
+   ningun sistema de notificaciones detras). Quedan breadcrumb, toggle
+   Mes/Semana (funcional) y avatar.
+   Verificacion: tsc limpio, 214/214 tests (2 tests de ConfirmBar y 1 de
+   CalendarView actualizados/agregados para el nuevo comportamiento),
+   eslint sin warnings, detect.mjs [], verificado en browser real (docker
+   dev, no mock) incluyendo reload de pagina para reproducir el bug de
+   hidratacion, ciclo completo generar->confirmar con el nuevo feedback, y
+   viewport mobile 390x844.
+   PENDIENTE (fuera de alcance de esta pasada, no reportado por el usuario):
+   los chips truncados de CalendarGrid ("LOS...", "¿QU...") con texto largo
+   en semanas con muchas entradas, y el fieldset "Cantidad por formato" de
+   GenerateControl.tsx sin revelado progresivo (ya diferido en el punto 18).
+24. [x] CALENDAR: header limpio + timeline semanal + metricas fuera de
+   calendar, 2026-08-20 (mismo pedido del usuario, tres cambios puntuales).
+   TopBar.tsx: sacado el breadcrumb "Workflow > Visual Workflow" (no llevaba
+   a ningun lado, "Visual Workflow" no es un concepto real del producto) y
+   el avatar de usuario (useCurrentUser ya no se usa en este archivo) —
+   reemplazados por un <h1> Title "Calendar" (mismo label que ya usa
+   AppSidebar.tsx, evita una segunda traduccion incosistente tipo
+   "Calendario" conviviendo con "Calendar" en el nav). Queda breadcrumb: no,
+   avatar: no, solo titulo + toggle Mes/Semana.
+   TimelineCards.tsx: la card ya no filtra por una ventana movil de 48h
+   desde "ahora" (isWithinNextWindow) sino por la semana calendario actual
+   completa, domingo a sabado (isWithinCurrentWeek + startOfWeek) —
+   consistente con como CalendarGrid ya agrupa la semana en el grid mensual.
+   Subtitulo actualizado de "las proximas 48 horas" a "esta semana".
+   Verificado con los datos reales del calendario confirmado: antes
+   mostraba 1 entrada (la unica dentro de 48h desde el momento del reload),
+   despues muestra las 3 entradas de lunes/martes/miercoles de esa semana.
+   CalendarView.tsx: PerformancePanel y ActivityPanel sacados del sidebar de
+   calendar — decision explicita del usuario de que las metricas no
+   corresponden a esta vista y deberian vivir en un apartado de Dashboard
+   aparte (ruta/nav nuevos, fuera de alcance de esta pasada, el usuario
+   pidio expresamente NO armarlo ahora). Los componentes NO se borraron
+   (quedan sin uso en components/PerformancePanel.tsx y
+   components/ActivityPanel.tsx) porque el plan es reutilizarlos tal cual
+   en el futuro Dashboard. Sidebar de calendar queda con GoogleSyncButton +
+   CreatorTip unicamente.
+   Verificacion: tsc limpio, 214/214 tests (TimelineCards.test.tsx
+   actualizado: 2 nombres de test y el titulo de la entry de control
+   renombrados de "48h"/"ventana" a "semana actual", misma logica de fechas
+   ya validaba correctamente contra el nuevo limite semanal sin cambios de
+   fixture), eslint sin warnings, detect.mjs [], verificado en browser real
+   (docker dev) con reload de pagina y el calendario confirmado de la
+   pasada anterior.
 
 PENDIENTE:
 4. [x] RESUELTO 2026-08-18, ver punto 21. Cero utilidades hardcodeadas

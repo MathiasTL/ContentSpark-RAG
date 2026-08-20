@@ -53,7 +53,7 @@ const outsideWindowEntry = {
   ...withinWindowEntry,
   id: "e2",
   date: "2026-08-10",
-  title: "Fuera de la ventana de 48h",
+  title: "Fuera de la semana actual",
 };
 
 beforeEach(() => {
@@ -73,7 +73,7 @@ describe("TimelineCards — código fuente", () => {
 });
 
 describe("TimelineCards — render", () => {
-  it("renderiza exactamente las entries del calendario actual dentro de las próximas 48h", () => {
+  it("renderiza exactamente las entries del calendario actual dentro de la semana en curso", () => {
     resetStore([withinWindowEntry, outsideWindowEntry]);
 
     render(<TimelineCards />);
@@ -81,7 +81,7 @@ describe("TimelineCards — render", () => {
     expect(
       screen.getByText("Estrategia de hooks para retener audiencia"),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Fuera de la ventana de 48h")).not.toBeInTheDocument();
+    expect(screen.queryByText("Fuera de la semana actual")).not.toBeInTheDocument();
   });
 
   it("no muestra datos hardcodeados de las tarjetas de ejemplo previas", () => {
@@ -93,11 +93,11 @@ describe("TimelineCards — render", () => {
     expect(screen.queryByText(/tutorial: edición con capcut/i)).not.toBeInTheDocument();
   });
 
-  it("una entry con un time_slot real del backend ('morning'/'afternoon'/'evening') aparece en el timeline de 48h", () => {
+  it("una entry con un time_slot real del backend ('morning'/'afternoon'/'evening') aparece en el timeline de la semana", () => {
     // Regression: the backend's format_calendar assigns time_slot from the
     // semantic TIME_SLOTS labels, never clock times. Parsing the label
     // directly as "${date}T${time_slot}:00" used to yield an Invalid Date
-    // for every real entry, making isWithinNextWindow always false and the
+    // for every real entry, making isWithinCurrentWeek always false and the
     // timeline permanently empty for any real calendar.
     resetStore([
       { ...withinWindowEntry, time_slot: "afternoon" },

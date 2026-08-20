@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import Alert from "@/shared/components/ui/Alert";
 import { useCalendarStore } from "../store/calendarStore";
@@ -17,12 +18,23 @@ export default function ConfirmBar() {
   const error = useCalendarStore((s) => s.error);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   if (!currentCalendar) return null;
 
   const { status, id } = currentCalendar;
   const isDraft = status === "draft";
   const isSynced = status === "synced";
+
+  async function handleConfirm() {
+    if (isConfirming) return;
+    setIsConfirming(true);
+    try {
+      await confirm();
+    } finally {
+      setIsConfirming(false);
+    }
+  }
 
   async function handleDelete() {
     if (isDeleting) return;
@@ -37,7 +49,14 @@ export default function ConfirmBar() {
 
   return (
     <section className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-glass-edge bg-surface-container-lowest/10 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
-      <span className="rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary-container">
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest ${
+          isDraft
+            ? "bg-primary/10 text-primary-container"
+            : "bg-success-container text-success"
+        }`}
+      >
+        {!isDraft && <CheckCircle2 aria-hidden="true" size={14} strokeWidth={2} />}
         {STATUS_LABELS[status] ?? status}
       </span>
 
@@ -48,14 +67,21 @@ export default function ConfirmBar() {
       )}
 
       <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => void confirm()}
-          disabled={!isDraft}
-          className="rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-lg transition-colors duration-150 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Confirmar calendario
-        </button>
+        {isDraft ? (
+          <button
+            type="button"
+            onClick={() => void handleConfirm()}
+            disabled={isConfirming}
+            className="rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-lg transition-colors duration-150 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isConfirming ? "Confirmando…" : "Confirmar calendario"}
+          </button>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 rounded-2xl border border-glass-edge bg-surface-container-lowest/20 px-5 py-2.5 text-sm font-medium text-on-surface-variant">
+            <CheckCircle2 aria-hidden="true" size={16} strokeWidth={2} className="text-success" />
+            Calendario confirmado
+          </span>
+        )}
         {confirmingDelete ? (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-on-surface-variant">¿Eliminar?</span>

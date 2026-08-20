@@ -68,7 +68,7 @@ describe("ConfirmBar — confirmar", () => {
     expect(confirmSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("el botón de confirmar está deshabilitado cuando el estado no es draft", () => {
+  it('el botón "Confirmar calendario" desaparece cuando el estado no es draft, reemplazado por un indicador de éxito', () => {
     resetStore({
       currentCalendar: {
         id: "c1",
@@ -83,7 +83,10 @@ describe("ConfirmBar — confirmar", () => {
 
     render(<ConfirmBar />);
 
-    expect(screen.getByRole("button", { name: /confirmar calendario/i })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /confirmar calendario/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/calendario confirmado/i)).toBeInTheDocument();
   });
 });
 

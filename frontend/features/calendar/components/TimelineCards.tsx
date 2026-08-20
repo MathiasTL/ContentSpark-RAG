@@ -10,8 +10,6 @@ interface TimelineCardsProps {
   onEditEntry?: (entryId: string) => void;
 }
 
-const NEXT_WINDOW_HOURS = 48;
-
 const DAYS_OF_WEEK = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
 // Ver platformStyles.ts: una plataforma se identifica solo por su etiqueta de
@@ -54,7 +52,7 @@ function parseEntryDateTime(entry: EntryItem): Date {
   // never a clock time — map it to a representative hour via the shared
   // constant instead of parsing the label itself as HH:MM. `new Date` on
   // an unmapped/legacy value (or the label itself) would silently produce
-  // an Invalid Date, which always compares false and made the 48h window
+  // an Invalid Date, which always compares false and made the week
   // filter permanently empty.
   const hours =
     (entry.time_slot && TIME_SLOT_HOURS[entry.time_slot as keyof typeof TIME_SLOT_HOURS]) ??
@@ -62,10 +60,17 @@ function parseEntryDateTime(entry: EntryItem): Date {
   return new Date(`${entry.date}T${hours}:00`);
 }
 
-function isWithinNextWindow(entry: EntryItem, now: Date, windowHours: number): boolean {
+function startOfWeek(date: Date): Date {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  start.setDate(start.getDate() - start.getDay());
+  return start;
+}
+
+function isWithinCurrentWeek(entry: EntryItem, weekStart: Date): boolean {
   const entryDateTime = parseEntryDateTime(entry);
-  const windowEnd = new Date(now.getTime() + windowHours * 60 * 60 * 1000);
-  return entryDateTime >= now && entryDateTime <= windowEnd;
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+  return entryDateTime >= weekStart && entryDateTime < weekEnd;
 }
 
 function formatScheduledAt(entry: EntryItem): string {
@@ -82,9 +87,9 @@ function formatScheduledAt(entry: EntryItem): string {
 export default function TimelineCards({ onEditEntry }: TimelineCardsProps) {
   const currentCalendar = useCalendarStore((s) => s.currentCalendar);
 
-  const now = new Date();
+  const weekStart = startOfWeek(new Date());
   const upcomingEntries = (currentCalendar?.entries ?? [])
-    .filter((entry) => isWithinNextWindow(entry, now, NEXT_WINDOW_HOURS))
+    .filter((entry) => isWithinCurrentWeek(entry, weekStart))
     .sort((a, b) => parseEntryDateTime(a).getTime() - parseEntryDateTime(b).getTime());
 
   return (
@@ -95,7 +100,7 @@ export default function TimelineCards({ onEditEntry }: TimelineCardsProps) {
             Línea de tiempo
           </h2>
           <p className="mt-1 text-sm font-light text-on-surface-variant">
-            Tu cola de contenido para las próximas 48 horas
+            Tu cola de contenido para esta semana
           </p>
         </div>
         <div className="hidden gap-3 sm:flex">

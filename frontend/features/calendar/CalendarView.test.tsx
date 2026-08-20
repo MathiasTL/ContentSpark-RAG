@@ -66,7 +66,7 @@ describe("CalendarView — carga inicial", () => {
 });
 
 describe("CalendarView — composición con calendario existente", () => {
-  it("compone GenerateControl, ConfirmBar y el modal de edición cuando hay un calendario con entradas", () => {
+  it("compone ConfirmBar, el toggle de generar otro y el modal de edición cuando hay un calendario con entradas", () => {
     resetStore({
       calendars: [
         {
@@ -92,9 +92,45 @@ describe("CalendarView — composición con calendario existente", () => {
 
     render(<CalendarView />);
 
-    expect(screen.getByRole("heading", { name: /generar calendario/i })).toBeInTheDocument();
+    // El form de generacion arranca colapsado cuando ya hay un calendario
+    // (evita que empuje ConfirmBar/Timeline/Grid fuera de vista).
+    expect(
+      screen.queryByRole("heading", { name: /generar calendario/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /generar otro calendario/i })).toBeInTheDocument();
     expect(screen.getByText("Borrador")).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it('el toggle "Generar otro calendario" revela GenerateControl', () => {
+    resetStore({
+      calendars: [
+        {
+          id: "c1",
+          name: null,
+          start_date: "2026-08-01",
+          end_date: "2026-08-31",
+          frequency: 3,
+          status: "draft",
+          entries: [entry],
+        } as never,
+      ],
+      currentCalendar: {
+        id: "c1",
+        name: null,
+        start_date: "2026-08-01",
+        end_date: "2026-08-31",
+        frequency: 3,
+        status: "draft",
+        entries: [entry],
+      },
+    });
+
+    render(<CalendarView />);
+
+    fireEvent.click(screen.getByRole("button", { name: /generar otro calendario/i }));
+
+    expect(screen.getByRole("heading", { name: /generar calendario/i })).toBeInTheDocument();
   });
 
   it("abre el modal de edición de entrada al elegir editar una entrada del grid", () => {
